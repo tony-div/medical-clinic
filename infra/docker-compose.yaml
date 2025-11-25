@@ -12,41 +12,37 @@ services:
     expose:
       - 3306
     environment:
-      MYSQL_DATABASE: medicinal_clinic
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: admin
-      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_USER: ${DATABASE_USER}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
       SERVICE_TAGS: prod
-      SERVICE_NAME: medicinalClinic
     networks:
       - internalnet
   apiapp:
     container_name: apiAppContainer
     build: 
-      context: ..
+      context: ../
       dockerfile: infra/Dockerfile.api
     ports:
-      - "${API_PORT}:3000"
-    expose:
-      - 3000
+      - "${API_PORT}:${API_PORT}"
     depends_on:
       - medicinalClinic
     environment:
-      DATABASE_HOST: medicinalClinic
-      DATABASE_USER: admin
-      DATABASE_PASSWORD : 'admin'
-      DATABASE_NAME: medicinal_clinic
-      DATABASE_CONNECTION_LIMIT: 10
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_CONNECTION_LIMIT: ${DATABASE_CONNECTION_LIMIT}
       DATABASE_PORT: 3306
       SERVER_PORT: ${API_PORT}
       SERVICE_TAGS: prod
-      SERVICE_NAME: medicinalClinic
     networks:
       - internalnet
   clientapp:
     container_name: clientContainer
     build: 
-      context: ..
+      context: ../
       dockerfile: infra/Dockerfile.client
     ports:
       - "${CLIENT_PORT}:5173"
