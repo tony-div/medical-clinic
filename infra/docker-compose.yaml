@@ -1,0 +1,61 @@
+services:
+
+  medicinalClinic:
+    container_name: medicinalDBContainer
+    image: mysql:8.0
+    restart: unless-stopped
+    volumes:
+      - ./medicalClinic.sql:/docker-entrypoint-initdb.d/0_medicalClinic.sql
+      - ${HOME_DIR}/databaseMC:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    expose:
+      - 3306
+    environment:
+      MYSQL_DATABASE: medicinal_clinic
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+      MYSQL_ROOT_PASSWORD: admin
+      SERVICE_TAGS: prod
+      SERVICE_NAME: medicinalClinic
+    networks:
+      - internalnet
+  apiapp:
+    container_name: apiAppContainer
+    build: 
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    ports:
+      - "${API_PORT}:3000"
+    expose:
+      - 3000
+    depends_on:
+      - medicinalClinic
+    environment:
+      DATABASE_HOST: medicinalClinic
+      DATABASE_USER: admin
+      DATABASE_PASSWORD : 'admin'
+      DATABASE_NAME: medicinal_clinic
+      DATABASE_CONNECTION_LIMIT: 10
+      DATABASE_PORT: 3306
+      SERVER_PORT: ${API_PORT}
+      SERVICE_TAGS: prod
+      SERVICE_NAME: medicinalClinic
+    networks:
+      - internalnet
+  clientapp:
+    container_name: clientContainer
+    build: 
+      context: ..
+      dockerfile: infra/Dockerfile.client
+    ports:
+      - "${CLIENT_PORT}:5173"
+    depends_on:
+      - apiapp
+    environment:
+      VITE_API_URL: "http://apiapp:${API_PORT}"
+    networks:
+      - internalnet
+networks:
+  internalnet:
+    driver: bridge
