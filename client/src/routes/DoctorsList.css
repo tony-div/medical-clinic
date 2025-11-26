@@ -1,0 +1,157 @@
+.page-container {
+    background-color: #F4F6F7;
+    min-height: 100vh;
+    padding-top: 100px; 
+    padding-bottom: 50px;
+}
+
+.doctors-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-title {
+    text-align: center;
+    color: #2C3E50;
+    margin-bottom: 30px;
+}
+
+
+.filter-bar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 10px 25px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    text-decoration: none;
+    color: #555;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.filter-btn:hover, .filter-btn.active {
+    background-color: #3498DB;
+    color: white;
+    border-color: #3498DB;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
+}
+
+
+.doctors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+
+.doctor-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #eee;
+}
+
+.doctor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-color: #3498DB;
+}
+
+
+.card-header {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.img-box img {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #EBF5FB;
+}
+
+.header-info h3 {
+    font-size: 1.1rem;
+    margin: 0 0 5px 0;
+    color: #2C3E50;
+}
+
+.specialty-badge {
+    font-size: 0.85rem;
+    color: #3498DB;
+    background: #EBF5FB;
+    padding: 2px 8px;
+    border-radius: 5px;
+}
+
+.rating {
+    margin-top: 5px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #F1C40F;
+}
+
+.price-tag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #2C3E50;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+
+.card-body {
+    background-color: #FAFAFA;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px dashed #ccc;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    color: #555;
+    text-align: center;
+}
+
+
+.book-btn-small {
+    display: block;
+    background-color: #3498DB;
+    color: white;
+    text-align: center;
+    padding: 12px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background 0.3s;
+    margin-top: auto;
+}
+
+.book-btn-small:hover {
+    background-color: #21618C;
+}
+
+.no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 50px;
+    color: #777;
+}

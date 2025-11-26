@@ -96,3 +96,21 @@ html {
         width: 100%;
     }
 }
+
+.dept-card {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none; 
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.2rem;
+}
+
+.dept-card:hover {
+    transform: translateY(-10px); 
+    box-shadow: 0 10px 20px rgba(52, 152, 219, 0.2); 
+    background-color: #3498DB; 
+    color: white;
+    border-color: #3498DB;
+}

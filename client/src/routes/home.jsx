@@ -1,5 +1,9 @@
+import React from 'react';
+import { Link } from 'react-router-dom'; 
+import '../components/Nav.css'; 
+import Nav from '../components/Nav.jsx'; 
 import './home.css';
-import Nav from '../components/Nav';
+
 export default function Home() {
   return (
     <div className="App">
@@ -8,17 +12,19 @@ export default function Home() {
         <div className="content-box">
            <h1>Premium Treatments for a Healthy Lifestyle</h1>
            <p>Seamlessly advance scalable architectures with future-ready growth strategies.</p>
-           <button className="book-btn">Book Appointment</button>
+           <Link to="/login" className="book-btn" style={{ textDecoration: 'none', display: 'inline-block' }}>
+             Book Appointment
+           </Link>
         </div>
       </section>
 
       <section id="departments" className="section departments-section">
         <h2>Our Departments</h2>
         <div className="grid-placeholder">
-            <div className="card">Cardiology</div>
-            <div className="card">Neurology</div>
-            <div className="card">Dental</div>
-            <div className="card">Pediatrics</div>
+            <Link to="/doctors?dept=Cardiology" className="card dept-card">Cardiology</Link>
+            <Link to="/doctors?dept=Neurology" className="card dept-card">Neurology</Link>
+            <Link to="/doctors?dept=Dental" className="card dept-card">Dental</Link>
+            <Link to="/doctors?dept=Pediatrics" className="card dept-card">Pediatrics</Link>
         </div>
       </section>
 
