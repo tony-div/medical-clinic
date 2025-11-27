@@ -54,6 +54,7 @@ export const getDoctorsBySpecialty = async (req, res) => {
   }
 };
 
+//endpoint without returning available slots
 export const getDoctorById = async (req, res) => {
   const doctorId = req.params.doctorId;
   const query = `
