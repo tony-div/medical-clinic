@@ -4,6 +4,7 @@ import appointmentsRouter from './routes/appointments.route.js';
 import reviewsRouter from './routes/reviews.route.js';
 import doctorsRouter from './routes/doctors.route.js';
 import diagnosisRouter from './routes/diagnosis.route.js';
+import specialtiesRouter from './routes/specialties.route.js';
 
 const routes = [
   {
@@ -29,6 +30,11 @@ const routes = [
   {
     path: '/diagnosis',
     router: diagnosisRouter,
+  },
+  {
+    path: '/specialties',
+    router: specialtiesRouter
+
   },
 ];
 
