@@ -6,7 +6,7 @@ jobs:
   deploy:
     runs-on: self-hosted
     steps:
-      - name: pull changes, compose build and up
+      - name: Build and deploy with Docker Compose
         run: |
           cd medical-clinic/infra || { echo "Directory not found"; exit 1; }
           git pull
