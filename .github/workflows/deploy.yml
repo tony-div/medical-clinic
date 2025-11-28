@@ -8,5 +8,6 @@ jobs:
     steps:
       - name: pull changes, compose build and up
         run: |
-          cd medical-clinic/infra
-          docker compose up --build -d
+          cd medical-clinic/infra || { echo "Directory not found"; exit 1; }
+          docker compose up --build -d || { echo "Docker compose failed"; exit 1; }
+          docker compose ps  # Verify containers are running
