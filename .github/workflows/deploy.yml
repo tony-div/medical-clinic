@@ -1,7 +1,7 @@
 name: auto deployment
 on:
   push: 
-    branches: [ test-cd ]
+    branches: [ dev ]
 jobs:
   deploy:
     runs-on: self-hosted
