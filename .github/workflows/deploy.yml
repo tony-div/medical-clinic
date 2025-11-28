@@ -1,0 +1,12 @@
+name: auto deployment
+on:
+  push: 
+    branches: [ test-cd ]
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: pull changes, compose build and up
+        run: |
+          cd medical-clinic/infra
+          docker compose up --build -d
