@@ -5,6 +5,7 @@ import reviewsRouter from './routes/reviews.route.js';
 import doctorsRouter from './routes/doctors.route.js';
 import diagnosisRouter from './routes/diagnosis.route.js';
 import specialtiesRouter from './routes/specialties.route.js';
+import timeSlotsRouter from './routes/time-slots.route.js'
 
 const routes = [
   {
@@ -36,6 +37,10 @@ const routes = [
     router: specialtiesRouter
 
   },
+  {
+    path: '/time-slots',
+    router: timeSlotsRouter
+  }
 ];
 
 export default routes;
