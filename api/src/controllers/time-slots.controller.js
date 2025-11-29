@@ -1,4 +1,4 @@
-import db from '../../database.js';
+import { db } from '../../config/database.js';
 
 export const getTimeSlots = async (req, res) => {
     const doctorId = req.params.doctorId;

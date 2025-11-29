@@ -1,4 +1,6 @@
 import express from 'express';
+import { authenticate } from "../middleware/auth.middleware.js";
+
 import {
   getUserById,
   updateUser,
@@ -9,14 +11,11 @@ import {
 
 const usersRouter = express.Router();
 
-usersRouter.get('/:userId', getUserById);
-
-usersRouter.patch('/:userId', updateUser);
-
-usersRouter.delete('/:userId', deleteUser);
-
 usersRouter.post('/', createUser);
-
 usersRouter.post('/login', loginUser);
+
+usersRouter.get('/:userId', getUserById);
+usersRouter.patch('/:userId', authenticate, updateUser);
+usersRouter.delete('/:userId', authenticate, deleteUser);
 
 export default usersRouter;

@@ -2,24 +2,23 @@ import express from 'express';
 import {
   createMedicalTest,
   updateMedicalTest,
-  deleteMedicalTest,
   uploadMedicalTestFile,
   getMedicalTestById,
   deleteMedicalTestById,
 } from '../controllers/medical-tests.controller.js';
 
+import upload from '../middleware/upload.file.js';
+
 const medicalTestsRouter = express.Router();
 
 medicalTestsRouter.post('/', createMedicalTest);
 
-medicalTestsRouter.patch('/', updateMedicalTest);
+medicalTestsRouter.patch('/:id', updateMedicalTest);
 
-medicalTestsRouter.delete('/', deleteMedicalTest);
+medicalTestsRouter.get('/:id', getMedicalTestById);
 
-medicalTestsRouter.get('/:medicalTestId', getMedicalTestById);
+medicalTestsRouter.delete('/:id', deleteMedicalTestById);
 
-medicalTestsRouter.delete('/:medicalTestId', deleteMedicalTestById);
-
-medicalTestsRouter.post('/file', uploadMedicalTestFile);
+medicalTestsRouter.post('/:id/file', upload.single("file"), uploadMedicalTestFile);
 
 export default medicalTestsRouter;
