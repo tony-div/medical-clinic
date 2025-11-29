@@ -14,7 +14,7 @@ export const sendAppointmentEmail = async (to, patientName, doctorName, appointm
     to,
     subject: `Appointment Confirmation: with Dr. ${doctorName} on ${appointmentDateFormatted}`,
     html: `
-    <strong>Dear  ${patientName},</strong><br/><br/>
+    <strong>Dear ${patientName},</strong><br/><br/>
     This email is to confirm your upcoming appointment with <strong>Dr. ${doctorName}.</strong><br/><br/>
     <strong>Appointment Details:</strong><br/>
     <ul>
@@ -39,7 +39,7 @@ export const sendAppointmentEmail = async (to, patientName, doctorName, appointm
   try {
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Error sending appointment confirmation email to", to, ":", error);
   }
 }
 
@@ -49,7 +49,7 @@ export const sendCancelledAppointmentEmail = async (to, patientName, doctorName,
     to,
     subject: `Appointment Cancellation: with Dr. ${doctorName} on ${appointmentDateFormatted}`,
     html: `
-    <strong>Dear  ${patientName},</strong><br/><br/>
+    <strong>Dear ${patientName},</strong><br/><br/>
     We regret to inform you that your appointment with <strong>Dr. ${doctorName}</strong> scheduled for <strong>${appointmentDateFormatted} at ${appointmentTimeFormatted}</strong> has been cancelled.<br/><br/>
     We apologize for any inconvenience this may cause. If you have any questions or need to reschedule, please contact us at your earliest convenience.<br/><br/>
     <strong>Best regards,</strong><br/>
@@ -65,7 +65,7 @@ export const sendCancelledAppointmentEmail = async (to, patientName, doctorName,
   try {
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error(`Error sending cancellation email to ${to} (Dr. ${doctorName} on ${appointmentDateFormatted}):`, error);
   }
 }
 
@@ -75,7 +75,7 @@ export const sendRescheduledAppointmentEmail = async (to, patientName, doctorNam
     to,
     subject: `Appointment Rescheduled: with Dr. ${doctorName}`,
     html: `
-    <strong>Dear  ${patientName},</strong><br/><br/>
+    <strong>Dear ${patientName},</strong><br/><br/>
     Your appointment with <strong>Dr. ${doctorName}</strong> has been rescheduled.<br/><br/>
     <strong>Old Appointment Details:</strong><br/>
     <ul>
