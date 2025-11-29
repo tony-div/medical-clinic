@@ -99,7 +99,7 @@ export const getTimeSlots = async (req, res) => {
             error: error.message
         });
     }
-   
+    
 };
 
 const addMinutes = (date, minutes) => new Date(date.getTime() + minutes * 60000);
