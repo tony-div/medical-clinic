@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; 
+import { DB_PATIENTS_KEY, DB_DOCTORS_KEY } from '../data/initDB'; 
 import './login.css';
 
 export default function Login() {
@@ -7,44 +8,69 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false); 
   const [errors, setErrors] = useState({}); 
+  
   const navigate = useNavigate();
+  const location = useLocation(); 
+
+  const admins = [
+    { email: 'admin@clinic.com', password: '123', role: 'admin', name: 'System Admin' }
+  ];
 
   const handleEmailChange = (e) => {
     const value = e.target.value;
     setEmail(value);
     
     let newErrors = { ...errors };
+    if (newErrors.auth) delete newErrors.auth;
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.com$/;
-    
-    if (!emailRegex.test(value)) {
-        newErrors.email = "Email must have '@' and end with '.com'";
+    if (!value.includes('@')) {
+        newErrors.email = "Invalid email format";
     } else {
         delete newErrors.email;
     }
-    
     setErrors(newErrors);
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    if (errors.auth) {
+        let newErrors = { ...errors };
+        delete newErrors.auth;
+        setErrors(newErrors);
+    }
   };
 
   const handleLogin = (e) => {
     e.preventDefault();
-    
-    if (Object.keys(errors).length > 0) return;
+    if (Object.keys(errors).length > 0 && !errors.auth) return;
 
-    if (!email.endsWith('.com')) {
-      setErrors({...errors, email: "Invalid email format"});
-      return;
-    }
-    
-    if (email.includes('.admin')) {
-      alert("Logged in as Admin");
-      navigate('/admin/dashboard');
-    } else if (email.includes('.doctor')) {
-      alert("Logged in as Doctor");
-      navigate('/doctor/dashboard');
+    const dbPatients = JSON.parse(localStorage.getItem(DB_PATIENTS_KEY) || "[]");
+    const dbDoctors  = JSON.parse(localStorage.getItem(DB_DOCTORS_KEY) || "[]");
+
+    const realPatients = dbPatients.map(p => ({ ...p, role: 'patient' }));
+    const realDoctors  = dbDoctors.map(d => ({ ...d, role: 'doctor' })); 
+
+    const allUsers = [...admins, ...realDoctors, ...realPatients];
+
+    const foundUser = allUsers.find(user => user.email === email && user.password === password);
+
+    if (foundUser) {
+        localStorage.setItem("activeUserEmail", foundUser.email);
+        
+        if (location.state?.from && foundUser.role === 'patient') {
+            navigate(location.state.from);
+            return; 
+        }
+
+        if (foundUser.role === 'admin') {
+            navigate('/admin/dashboard');
+        } else if (foundUser.role === 'doctor') {
+            navigate('/doctor/dashboard');
+        } else {
+            navigate('/patient/dashboard');
+        }
     } else {
-      alert("Logged in as Patient");
-      navigate('/patient/dashboard');
+        setErrors({ ...errors, auth: "Invalid email or password. Try again" });
     }
   };
 
@@ -55,6 +81,9 @@ export default function Login() {
         <p>Please enter your credentials to access the portal.</p>
         
         <form onSubmit={handleLogin}>
+          
+          {errors.auth && <div className="error-banner">{errors.auth}</div>}
+
           <div className="form-group">
             <label>Email</label>
             <input 
@@ -65,7 +94,6 @@ export default function Login() {
               className={errors.email ? "input-error" : ""}
               required 
             />
-
             {errors.email && <span className="error-text">{errors.email}</span>}
           </div>
 
@@ -76,7 +104,7 @@ export default function Login() {
                 type={showPassword ? "text" : "password"} 
                 placeholder="••••••••" 
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 required 
               />
               <button 
@@ -84,7 +112,7 @@ export default function Login() {
                 className="eye-btn"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? "👁️" : "🙈"}
+                {showPassword ? "🙈" : "👁️"}
               </button>
             </div>
           </div>
@@ -92,8 +120,6 @@ export default function Login() {
           <button 
             type="submit" 
             className="auth-btn"
-            disabled={Object.keys(errors).length > 0}
-            style={{ opacity: Object.keys(errors).length > 0 ? 0.5 : 1 }}
           >
             Login
           </button>
