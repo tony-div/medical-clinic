@@ -1,0 +1,177 @@
+.page-container {
+    background-color: #F8F9FA;
+    min-height: 100vh;
+    padding-top: 100px;
+    padding-bottom: 50px;
+}
+
+.doctors-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-title {
+    text-align: center;
+    color: #2C3E50;
+    margin-bottom: 30px;
+}
+
+.search-filter-container {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 250px;
+    padding: 12px 20px;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.search-input:focus {
+    border-color: #3498DB;
+}
+
+.filter-group {
+    display: flex;
+    gap: 15px;
+}
+
+.filter-select {
+    padding: 12px 20px;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.95rem;
+    outline: none;
+}
+
+.doctors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+.doctor-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #eee;
+    overflow: hidden;
+}
+
+.doctor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-color: #3498DB;
+}
+
+.card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+    padding: 20px;
+}
+
+.card-header {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.img-box img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #EBF5FB;
+}
+
+.header-info h3 {
+    font-size: 1.2rem;
+    margin: 0 0 5px 0;
+    color: #2C3E50;
+}
+
+.specialty-badge {
+    font-size: 0.85rem;
+    color: #3498DB;
+    background: #EBF5FB;
+    padding: 4px 10px;
+    border-radius: 5px;
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+.rating {
+    font-size: 0.9rem;
+    color: #F1C40F;
+    font-weight: bold;
+}
+
+.price-tag {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #EBF5FB;
+    color: #2C3E50;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.card-body {
+    border-top: 1px dashed #eee;
+    padding-top: 15px;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.avail-text {
+    background-color: #F4F9FD;
+    padding: 8px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    color: #2C3E50;
+}
+
+.bio-snippet {
+    color: #7F8C8D;
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+.no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 50px;
+    color: #777;
+}
+
+.btn-reset {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #3498DB;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+}
