@@ -1,0 +1,35 @@
+export const query = {
+    CREATE_MEDICAL_TEST: `INSERT INTO MedicalTest ( appointment_id, file_path, test_date, description ) VALUES (?,?,?,?);`,
+    UPDATE_MEDICAL_TEST:  `UPDATE MedicalTest SET ? WHERE id = ?;`,
+    SELECT_APPOINTMENT_BY_ID: `SELECT * FROM Appointment WHERE id = ?`,
+    SELECT_MEDICAL_TEST_BY_ID: `SELECT * FROM MedicalTest WHERE id = ?`,
+    DELETE_MEDICAL_TEST:`DELETE FROM MedicalTest WHERE id = ?`,
+    CREATE_USER: `
+    INSERT INTO User (email, password, name, phone_number, address, gender, birth_date, role)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    SELECT_USER_BY_ID: `SELECT * FROM User WHERE id = ?`,
+    UPDATE_USER_BY_ID: `UPDATE User SET ? WHERE id = ?`,
+    SELECT_USER_BY_EMAIL: `SELECT * FROM User WHERE email = ?`,
+    DELETE_USER_BY_ID: `DELETE FROM User WHERE id = ?`,
+    CREATE_REVIEW: `INSERT INTO DoctorReview (doctor_id, user_id, rating, comment)
+    VALUES (?, ?, ?, ?)`,
+    CREATE_DIAGNOSIS: `
+    INSERT INTO Diagnosis (description, prescription, treatment_plan)
+    VALUES (?, ?, ?)`,
+    SELECT_DIAGNOSIS_BY_ID: `SELECT * FROM Diagnosis WHERE id = ?`,
+    GET_ALL_APPOINTMENTS: `SELECT * FROM Appointment`,
+    CREATE_APPOINTMENT: `INSERT INTO Appointment ( user_id, doctor_id, reason, date, starts_at, ends_at, diagnosis_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+    UPDATE_APPOINTMENT: `UPDATE Appointment SET ? WHERE id = ?;`,
+    SELECT_APPOINTMENT_BY_USERID: `SELECT * FROM Appointment WHERE user_id = ?`,
+    SELECT_APPOINTMENT_BY_DOCID: `SELECT * FROM Appointment WHERE doctor_id = ?`,
+    SELECT_DOCTOR_BY_USERID: `SELECT * FROM Doctor WHERE user_id = ?`,
+    CREATE_DOCTOR: `INSERT INTO Doctor SET ?`,
+    UPDATE_DOCTOR_BY_USERID: `UPDATE Doctor SET ? WHERE user_id = ?`,
+    DELETE_DOCTOR_BY_USERID: `DELETE FROM Doctor WHERE user_id = ?`,
+    SELECT_DOCTOR_BY_ID: `SELECT * FROM Doctor WHERE id = ?`,
+
+
+
+
+
+}
