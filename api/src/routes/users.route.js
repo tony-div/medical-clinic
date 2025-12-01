@@ -5,16 +5,20 @@ import {
   getUserById,
   updateUser,
   deleteUser,
-  createUser,
+  createPatient,
+  createAdmin,
+  createDoctor,
   loginUser,
 } from '../controllers/users.controller.js';
 
 const usersRouter = express.Router();
 
-usersRouter.post('/', createUser);
+usersRouter.post("/", createPatient);
+usersRouter.post("/admin", authenticate, createAdmin);
+usersRouter.post("/doctor", authenticate, createDoctor);
 usersRouter.post('/login', loginUser);
 
-usersRouter.get('/:userId', getUserById);
+usersRouter.get('/:userId', authenticate, getUserById);
 usersRouter.patch('/:userId', authenticate, updateUser);
 usersRouter.delete('/:userId', authenticate, deleteUser);
 

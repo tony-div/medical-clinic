@@ -90,3 +90,35 @@ export const getDoctorById = async (req, res) => {
 
   }
 };
+
+export const getDoctorScheduleByDocId = async (req, res) => {
+  try {
+    const doctorId = Number(req.params.doctorId);
+
+    if (isNaN(doctorId)) {
+      return res.status(code.BAD_REQUEST).json({
+        error: "Invalid doctor ID"
+      });
+    }
+    const [doctorRows] = await db.query(query.SELECT_DOCTOR_BY_ID, [doctorId]);
+    if (doctorRows.length === 0) {
+      return res.status(code.NOT_FOUND).json({
+        error: "Doctor does not exist"
+      });
+    }
+    const [scheduleRows] = await db.query(query.SELECT_SCHEDULE_BY_DOCTOR_ID, [doctorId]);
+    return res.status(code.SUCCESS).json({
+      message: "Doctor schedule retrieved successfully",
+      schedule: scheduleRows
+    });
+
+  } catch (error) {
+    console.error("Error retrieving doctor schedule:", error);
+    return res.status(code.SERVER_ERROR).json({
+      error: "Internal server error"
+    });
+  }
+};
+
+
+//add schedules to doctor? create schedules? 

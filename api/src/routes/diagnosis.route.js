@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticate } from "../middleware/auth.middleware.js";
 import {
   getDiagnosisByAppointmentId,
   createDiagnosis,
@@ -6,8 +7,8 @@ import {
 
 const diagnosisRouter = express.Router();
 
-diagnosisRouter.get('/:appointmentId', getDiagnosisByAppointmentId);
+diagnosisRouter.get('/:appointmentId', authenticate, getDiagnosisByAppointmentId);
 
-diagnosisRouter.post('/', createDiagnosis);
+diagnosisRouter.post('/:appointmentId', authenticate , createDiagnosis);
 
 export default diagnosisRouter;
