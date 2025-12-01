@@ -96,7 +96,7 @@ export const getMedicalTestById = async (req, res) => {
     const appointment = appointmentRows[0];
     if (loggedUser.role !== "admin") {
       const isPatient = loggedUser.role === "patient" && appointment.user_id === loggedUser.id;
-      const isDoctor = loggedUser.role === "doctor" && appointment.doctor_id === loggedUser.id;
+      const isDoctor = loggedUser.role === "doctor" && appointment.doctor_id === loggedUser.doc_id;
 
       if (!isPatient && !isDoctor) {
         return res.status(code.FORBIDDEN).json({
