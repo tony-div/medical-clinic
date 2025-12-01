@@ -1,9 +1,7 @@
-import './App.css'
-
 function App() {
   return (
     <p>
-      hello react
+      pls cd work
     </p>
   )
 }

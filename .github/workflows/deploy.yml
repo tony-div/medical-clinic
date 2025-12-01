@@ -1,0 +1,15 @@
+name: auto deployment
+on:
+  push: 
+    branches: [ dev ]
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Build and deploy with Docker Compose
+        run: |
+          cd ~/medical-clinic/infra || { echo "Directory not found"; exit 1; }
+          git checkout dev
+          git pull
+          docker compose up --build -d || { echo "Docker compose failed"; exit 1; }
+          docker compose ps  # Verify containers are running

@@ -1,0 +1,8 @@
+FROM node:22.20.0-alpine
+WORKDIR /api
+COPY api/package*.json ./
+RUN npm install
+COPY api .
+ENV SERVER_PORT=3000
+EXPOSE $SERVER_PORT
+CMD ["npm", "run", "dev"]
