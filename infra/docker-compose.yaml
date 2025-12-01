@@ -17,6 +17,11 @@ services:
       MYSQL_PASSWORD: ${DATABASE_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
       SERVICE_TAGS: prod
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DATABASE_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - internalnet
   apiapp:
@@ -27,7 +32,8 @@ services:
     ports:
       - "${API_PORT}:${API_PORT}"
     depends_on:
-      - medicinalClinic
+      medicinalClinic:
+        condition: service_healthy
     environment:
       DATABASE_HOST: ${DATABASE_HOST}
       DATABASE_USER: ${DATABASE_USER}
