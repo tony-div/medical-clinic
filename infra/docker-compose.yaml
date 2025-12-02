@@ -42,6 +42,7 @@ services:
       DATABASE_CONNECTION_LIMIT: ${DATABASE_CONNECTION_LIMIT}
       DATABASE_PORT: 3306
       SERVER_PORT: ${API_PORT}
+      JWT_SECRET: ${JWT_SECRET}
       SERVICE_TAGS: prod
     networks:
       - internalnet
@@ -55,7 +56,7 @@ services:
     depends_on:
       - apiapp
     environment:
-      VITE_API_URL: "http://apiapp:${API_PORT}"
+      VITE_API_URL: "${API_BASE_URL}"
     networks:
       - internalnet
 networks:
