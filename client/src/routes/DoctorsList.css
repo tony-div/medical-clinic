@@ -1,7 +1,7 @@
 .page-container {
-    background-color: #F4F6F7;
+    background-color: #F8F9FA;
     min-height: 100vh;
-    padding-top: 100px; 
+    padding-top: 100px;
     padding-bottom: 50px;
 }
 
@@ -17,34 +17,48 @@
     margin-bottom: 30px;
 }
 
-
-.filter-bar {
+.search-filter-container {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 40px;
     flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
 }
 
-.filter-btn {
-    padding: 10px 25px;
-    background: white;
+.search-input {
+    flex: 1;
+    min-width: 250px;
+    padding: 12px 20px;
     border: 1px solid #ddd;
     border-radius: 25px;
-    text-decoration: none;
-    color: #555;
-    font-weight: 500;
-    transition: all 0.3s;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.3s;
 }
 
-.filter-btn:hover, .filter-btn.active {
-    background-color: #3498DB;
-    color: white;
+.search-input:focus {
     border-color: #3498DB;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
 }
 
+.filter-group {
+    display: flex;
+    gap: 15px;
+}
+
+.filter-select {
+    padding: 12px 20px;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.95rem;
+    outline: none;
+}
 
 .doctors-grid {
     display: grid;
@@ -52,16 +66,13 @@
     gap: 25px;
 }
 
-
 .doctor-card {
     background: white;
     border-radius: 15px;
-    padding: 20px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    display: flex;
-    flex-direction: column;
     border: 1px solid #eee;
+    overflow: hidden;
 }
 
 .doctor-card:hover {
@@ -70,6 +81,13 @@
     border-color: #3498DB;
 }
 
+.card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    height: 100%;
+    padding: 20px;
+}
 
 .card-header {
     display: flex;
@@ -79,15 +97,15 @@
 }
 
 .img-box img {
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #EBF5FB;
+    border: 3px solid #EBF5FB;
 }
 
 .header-info h3 {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     margin: 0 0 5px 0;
     color: #2C3E50;
 }
@@ -96,57 +114,49 @@
     font-size: 0.85rem;
     color: #3498DB;
     background: #EBF5FB;
-    padding: 2px 8px;
+    padding: 4px 10px;
     border-radius: 5px;
+    display: inline-block;
+    margin-bottom: 5px;
 }
 
 .rating {
-    margin-top: 5px;
     font-size: 0.9rem;
-    font-weight: bold;
     color: #F1C40F;
+    font-weight: bold;
 }
 
 .price-tag {
     position: absolute;
     top: 0;
     right: 0;
-    background-color: #2C3E50;
-    color: white;
+    background-color: #EBF5FB;
+    color: #2C3E50;
     padding: 5px 10px;
     border-radius: 8px;
     font-weight: bold;
     font-size: 0.9rem;
 }
 
-
 .card-body {
-    background-color: #FAFAFA;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px dashed #ccc;
-    margin-bottom: 15px;
-    font-size: 0.9rem;
+    border-top: 1px dashed #eee;
+    padding-top: 15px;
     color: #555;
-    text-align: center;
+    font-size: 0.9rem;
 }
 
-
-.book-btn-small {
-    display: block;
-    background-color: #3498DB;
-    color: white;
-    text-align: center;
-    padding: 12px;
-    border-radius: 25px;
-    text-decoration: none;
-    font-weight: bold;
-    transition: background 0.3s;
-    margin-top: auto;
+.avail-text {
+    background-color: #F4F9FD;
+    padding: 8px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    color: #2C3E50;
 }
 
-.book-btn-small:hover {
-    background-color: #21618C;
+.bio-snippet {
+    color: #7F8C8D;
+    font-style: italic;
+    font-size: 0.85rem;
 }
 
 .no-results {
@@ -154,4 +164,14 @@
     text-align: center;
     padding: 50px;
     color: #777;
+}
+
+.btn-reset {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #3498DB;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
 }
