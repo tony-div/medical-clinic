@@ -1,0 +1,183 @@
+/* 1. Main Navbar Container - Restoring the clean white look */
+.navbar {
+  height: 64px;
+  background-color: #ffffff; /* Back to white */
+  border-bottom: 1px solid #e0e0e0; /* Subtle grey divider */
+  
+  /* Fix position */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  /* Layout alignment */
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Pushes content to edges */
+  padding: 0 30px; /* Proper spacing on left/right */
+  
+  /* Remove any accidental rounded corners or margins */
+  border-radius: 0; 
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box; /* Ensures padding doesn't break width */
+}
+
+/* 2. Left Side (Menu + Breadcrumbs) - Fixing the stacking issue */
+.navbar-left {
+  display: flex;
+  align-items: center; /* Vertically centers items */
+  gap: 20px; /* Spacing between Hamburger and Text */
+}
+
+.menu-toggle {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #555;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.menu-toggle:hover {
+  background-color: #f1f5f9;
+}
+
+/* 3. Breadcrumbs Text */
+.breadcrumbs {
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.crumb-light { color: #888; }
+.crumb-separator { margin: 0 8px; color: #888; }
+.crumb-dark { color: #333; font-weight: 500; }
+
+/* 4. Profile Container - Keeping your new updates */
+.profile-container {
+  position: relative;
+  cursor: pointer;
+  height: 100%; /* Helps with alignment */
+  display: flex;
+  align-items: center;
+}
+
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px; /* Refined padding for the clickable area */
+  border-radius: 30px; /* Pill shape for hover effect */
+  transition: background-color 0.2s;
+}
+
+.profile-btn:hover {
+  background-color: #f0f4f8; /* Very light grey hover */
+}
+
+/* Avatar Circle - Restored to your desired look */
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  background-color: #e8f0fe; /* Light blue circle */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-icon {
+  font-size: 16px;
+  color: #1e4b8f;
+}
+
+.profile-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333; /* Dark text against white background */
+}
+
+.arrow-icon {
+  color: #666;
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.arrow-icon.rotate {
+  transform: rotate(180deg);
+}
+
+/* --- DROPDOWN MENU STYLES --- */
+.dropdown-menu {
+    position: absolute;
+    top: 50px;
+    /* Positions it directly below the profile button */
+    right: 0;
+    width: 160px;
+    /* Slightly narrower to match image */
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    /* Subtle light grey border */
+    border-radius: 12px;
+    /* More rounded corners */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    /* Soft, diffused shadow */
+    padding: 8px 0;
+    /* Vertical padding inside the card */
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdown-item {
+    padding: 12px 20px;
+    /* Increased padding for comfortable clicking */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    /* Space between icon and text */
+    font-size: 15px;
+    /* Slightly larger, readable text */
+    color: #4b5563;
+    /* Dark grey text for "Settings" */
+    cursor: pointer;
+    transition: background-color 0.2s;
+    text-decoration: none;
+}
+
+.dropdown-item:hover {
+    background-color: #f9fafb;
+    /* Very light hover effect */
+}
+
+/* The Line Separator */
+.dropdown-divider {
+    height: 1px;
+    background-color: #e5e7eb;
+    /* Matches border color */
+    margin: 4px 0;
+    /* Small gap around the line */
+    width: 100%;
+}
+
+/* Specific Styles for Logout */
+.dropdown-item.logout {
+    color: #dc2626;
+    /* The specific Red from your image */
+    font-weight: 500;
+    /* Slightly bolder */
+}
+
+.dropdown-item.logout:hover {
+    background-color: #fef2f2;
+    /* Light red background on hover */
+}
+
+/* Icon Sizing */
+.item-icon {
+    font-size: 16px;
+}

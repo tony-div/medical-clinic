@@ -1,0 +1,23 @@
+/* We remove fixed margins from Navbar and put them on the container */
+
+.main-container {
+    transition: margin-left 0.3s ease;
+    /* Matches sidebar transition time */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Logic to shift content */
+.main-container.expanded {
+    margin-left: 260px;
+}
+
+.main-container.collapsed {
+    margin-left: 80px;
+}
+
+.content-area {
+    padding: 30px;
+    flex-grow: 1;
+}

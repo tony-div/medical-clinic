@@ -1,0 +1,74 @@
+.sidebar {
+    width: 260px;
+    height: 100vh;
+    background-color: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    position: fixed;
+    /* Keeps sidebar fixed while scrolling */
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    overflow: hidden
+}
+
+/* MODIFIED: Optimized for Image centering */
+.logo-container {
+    height: 64px;
+    background-color: #1e4b8f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Removed text-specific styles (font-weight, etc) */
+}
+
+/* NEW: Controls the logo image size */
+.sidebar-logo {
+    height: 60px;
+    /* Fits inside the 64px container */
+    max-width: 100%;
+    /* Ensures it doesn't overflow */
+    object-fit: contain;
+}
+
+.menu {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 15px;
+}
+
+.menu-item:hover {
+    background-color: #f9fafb;
+}
+
+.menu-item.active {
+    background-color: #e8f0fe;
+    color: #1e4b8f;
+    border-left: 4px solid #1e4b8f;
+}
+
+.icon {
+    margin-right: 16px;
+    font-size: 20px;
+}
+
+.sidebar.open {
+    width: 260px;
+}
+
+.sidebar.closed {
+    width: 80px;
+}
+
+/* REMOVED: .logo-container h2 (No longer needed) */

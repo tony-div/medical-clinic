@@ -7,6 +7,7 @@ import DoctorProfile from './routes/DoctorProfile.jsx';
 import Home from './routes/home.jsx'; 
 import Login from './routes/login.jsx'; 
 import Register from './routes/register.jsx';
+import AdminPage from './Admin/AdminPage.jsx';
 
 const router = createBrowserRouter([
   {
