@@ -29,3 +29,5 @@ db.query('SELECT 1')
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
 });
+
+export default app;
