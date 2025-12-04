@@ -120,7 +120,7 @@ export const updateAppointment = async (req, res) => {
         return res.status(code.FORBIDDEN).json({ error: "Cannot modify another doctor's appointment" });
       }
 
-      if (oldAppointment.status === "cancelled") {
+      if (oldAppointment.status === "cancelled" || oldAppointment.status === "complete") {
         return res.status(code.BAD_REQUEST).json({
           error: "Cannot modify an appointment that is already complete or cancelled"
         });

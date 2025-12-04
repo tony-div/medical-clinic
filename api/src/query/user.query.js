@@ -27,8 +27,7 @@ export const query = {
     UPDATE_DOCTOR_BY_USERID: `UPDATE Doctor SET ? WHERE user_id = ?`,
     DELETE_DOCTOR_BY_USERID: `DELETE FROM Doctor WHERE user_id = ?`,
     SELECT_DOCTOR_BY_ID: `SELECT * FROM Doctor WHERE id = ?`,
-
-
+    SELECT_SCHEDULE_BY_DOCTOR_ID : `SELECT * FROM DoctorSchedule WHERE doctor_id = ?`
 
 
 
