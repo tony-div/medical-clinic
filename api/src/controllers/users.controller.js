@@ -14,6 +14,9 @@ export const getUserById = async (req, res) => {
     try{
       const id = req.params.userId;
       const loggedUser = req.user;
+      if(loggedUser.id !== Number(id) && loggedUser.role === "patient"){
+        return res.status(401).json({error:"Unauthorized"})
+      }
       if(loggedUser.role !== "admin"){
         limitedFlag = true;
       }
