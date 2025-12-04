@@ -29,11 +29,16 @@ export const createMedicalTest = async (req, res) => {
     if(loggedUser.id !== Number(appointment[0].user_id)){
       return res.status(code.FORBIDDEN).json({ error: "patients can only upload their own medical tests" });
     }
-    const [result] = await db.query(query.CREATE_MEDICAL_TEST, Object.values(mTest));
-    return res.status(code.CREATED_SUCCESSFULLY).json({
-      message: "Medical test created successfully",
-      medical_test: { id: result.insertId, ...mTest }
-    });
+    if(appointment[0].status === "scheduled"){
+      const [result] = await db.query(query.CREATE_MEDICAL_TEST, Object.values(mTest));
+      return res.status(code.CREATED_SUCCESSFULLY).json({
+        message: "Medical test created successfully",
+        medical_test: { id: result.insertId, ...mTest }
+      });
+    }
+    else{
+      return res.status(code.BAD_REQUEST).json({error: "can not create medical test for this appointment."})
+    }
   }catch(error){
     console.error(error);
     return res.status(code.SERVER_ERROR).json({ error: "Internal server error" });
