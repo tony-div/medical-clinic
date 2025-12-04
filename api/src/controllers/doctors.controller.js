@@ -1,6 +1,7 @@
 import { db } from '../../config/database.js';
 import { code } from '../http.code.js';
 import { query } from '../query/user.query.js';
+import Joi from 'joi';
 
 export const getDoctors = async (req, res) => {
   const query = `
@@ -122,5 +123,135 @@ export const getDoctorScheduleByDocId = async (req, res) => {
   }
 };
 
+const createScheduleSchema = Joi.object({
+day: Joi.string().valid("Sun","Mon","Tue","Wed","Thur","Sat","Fri").required(),
+starts_at:Joi.string().required(),
+ends_at:Joi.string().required(),
+slot_duration: Joi.number().integer().required(),
+}).unknown(false);
 
-//add schedules to doctor? create schedules? 
+export const createSchedule = async (req, res) => {
+  try{
+    const loggedUser = req.user;
+    if(loggedUser.role !== "doctor"){
+      return res.status(code.FORBIDDEN).json({error:"only doctors may add schedules"});
+    }
+    const {day, starts_at, ends_at, slot_duration} = req.body;
+    const scheduleInputs = {day, starts_at, ends_at, slot_duration};
+    const {error} = createScheduleSchema.validate(scheduleInputs);
+    if(error){
+      return res.status(code.BAD_REQUEST).json({
+        error: "Invalid entered data: " + error.message
+      });
+    }
+    const doctorId = loggedUser.doc_id;
+    const [doctorRows] = await db.query(query.SELECT_DOCTOR_BY_ID, [doctorId]);
+    if (doctorRows.length === 0) {
+      return res.status(code.NOT_FOUND).json({
+        error: "Doctor account not found in database",
+      });
+    }
+    const [result] = await db.query(query.CREATE_SCHEDULE, [
+        loggedUser.doc_id,
+        day,
+        starts_at,
+        ends_at,
+        slot_duration
+      ]);
+    return res.status(code.CREATED_SUCCESSFULLY).json({message:"created successfully", schedule_id: result.insertId});
+  }catch(error){
+    console.log(error);
+    return res.status(code.SERVER_ERROR).json({error: "Internal server error"});
+  }
+};
+const updateScheduleSchema = Joi.object({
+  id: Joi.number().integer().required(),
+  starts_at: Joi.string().optional(),
+  ends_at: Joi.string().optional(),
+  slot_duration: Joi.number().integer().optional(),
+}).unknown(false).min(2);
+
+export const updateSchedule = async (req, res) => {
+  try {
+    const loggedUser = req.user;
+
+    if (loggedUser.role !== "doctor") {
+      return res.status(code.FORBIDDEN).json({
+        error: "Doctors may only update their own schedules"
+      });
+    }
+    const newSchedule = {};
+    for (const key in req.body) {
+      if (req.body[key] !== undefined) newSchedule[key] = req.body[key];
+    }
+    const { error } = updateScheduleSchema.validate(newSchedule);
+    if (error) {
+      return res.status(code.BAD_REQUEST).json({
+        error: "Invalid entered data: " + error.message
+      });
+    }
+    const scheduleId = newSchedule.id;
+    const [schedules] = await db.query( query.SELECT_SCHEDULE_BY_ID, [scheduleId]);
+    if (schedules.length === 0) {
+      return res.status(code.NOT_FOUND).json({ error: "Schedule not found" });
+    }
+    if (schedules[0].doctor_id !== loggedUser.doc_id) {
+      return res.status(code.FORBIDDEN).json({
+        error: "You can only update your own schedules"
+      });
+    }
+    const { id, ...fieldsToUpdate } = newSchedule;
+    const [result] = await db.query(query.UPDATE_SCHEDULE_BY_ID, [fieldsToUpdate, id]);
+    return res.status(code.SUCCESS).json({
+      message: "Updated successfully",
+      affected: result.affectedRows
+    });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(code.SERVER_ERROR)
+      .json({ error: "Internal server error" });
+  }
+};
+
+export const deleteSchedule = async (req, res) => {
+  try {
+    const loggedUser = req.user;
+    if (loggedUser.role !== "doctor") {
+      return res.status(code.FORBIDDEN).json({
+        error: "Only doctors may delete schedules"
+      });
+    }
+    const schedule_id = Number(req.params.schedule_id);
+    if (!schedule_id || isNaN(schedule_id)) {
+      return res.status(code.BAD_REQUEST).json({
+        error: "Invalid schedule_id"
+      });
+    }
+    const [schedules] = await db.query(query.SELECT_SCHEDULE_BY_ID, [
+      schedule_id,
+    ]);
+    if (schedules.length === 0) {
+      return res.status(code.NOT_FOUND).json({
+        error: "Schedule not found",
+      });
+    }
+    if (schedules[0].doctor_id !== loggedUser.doc_id) {
+      return res.status(code.FORBIDDEN).json({
+        error: "You can only delete your own schedules",
+      });
+    }
+    const [result] = await db.query(query.DELETE_SCHEDULE_BY_ID, [
+      schedule_id,
+    ]);
+    return res.status(code.SUCCESS).json({
+      message: "Schedule deleted successfully",
+      affected: result.affectedRows,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(code.SERVER_ERROR).json({
+      error: "Internal server error",
+    });
+  }
+};
