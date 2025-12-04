@@ -1,10 +1,14 @@
 export const patientsData = [
     {
-        id: 1,
+        id: 1001,
         name: "John Doe",
+        gender: "Male",
         email: "john@gmail.com",
+        password: "123",
         age: 25,
-        bloodType: "O+",
+        phone: "01000000001",
+        address: "123 Elf Village, North Lands",
+        birth_date: "1000-01-01",
         upcomingAppointment: {
             id: 101,
             doctorName: "Dr. Frieren",
@@ -12,6 +16,7 @@ export const patientsData = [
             date: "2025-12-05",
             time: "04:00 PM",
             image: "/assets/frieren.png",
+            
         },
         recentHistory: [
             { id: 99, doctor: "Dr. Toothless", date: "2023-10-01", status: "Completed", diagnosis: "Wisdom Tooth Extraction" },
@@ -20,11 +25,15 @@ export const patientsData = [
     },
 
     {
-        id: 2,
+        id: 1002,
         name: "Hannah Montana",
+        gender: "Female",
         email: "hannah@gmail.com",
         age: 22,
-        bloodType: "A-",
+        password: "123",
+        phone: "01000000001",
+        address: "123 Elf Village, North Lands",
+        birth_date: "1000-01-01",
         upcomingAppointment: {
             id: 102,
             doctorName: "Dr. Miku",
@@ -39,11 +48,15 @@ export const patientsData = [
     },
 
     {
-        id: 3,
+        id: 1003,
         name: "Jane Smith",
+        gender: "Female",
         email: "jane@gmail.com",
         age: 30,
-        bloodType: "AB+",
+        password: "123",
+        phone: "01000000001",
+        address: "123 Elf Village, North Lands",
+        birth_date: "1000-01-01",
         upcomingAppointment: null,
         recentHistory: [
             { id: 55, doctor: "Dr. Ryan", date: "2023-05-12", status: "Completed", diagnosis: "Seasonal Allergies" },

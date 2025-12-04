@@ -11,14 +11,12 @@ export const doctorsData = [
         bio: "Specialized in getting trapped in obvious traps.",
         education: "MD from the Empire",
         status: "Active",
-        
         email: "frieren@clinic.com",
         phone: "01000000001",
         address: "123 Elf Village, North Lands",
         birth_date: "1000-01-01",
         gender: "female",
         password: "123",
-
         reviews: [
             { id: 1, user: "Himmel", rating: 5, comment: "Brilliant doctor <3." },
             { id: 2, user: "Fern", rating: 4, comment: "Great but long waiting time." }
@@ -36,14 +34,12 @@ export const doctorsData = [
         bio: "Expert in okaimono and mukkuri mukkuri.",
         education: "MD from Vocaloid 2 School",
         status: "Active",
-
         email: "miku@clinic.com",
         phone: "01000000002",
         address: "39 Leek Street, Digital World",
         birth_date: "2007-08-31",
         gender: "female",
         password: "123",
-
         reviews: [
             { id: 1, user: "Rin", rating: 5, comment: "BEST DOCTOR EVER!!" }
         ]
@@ -60,14 +56,12 @@ export const doctorsData = [
         bio: "Expert in everything.",
         education: "MD from Ishigame school",
         status: "Active",
-
         email: "stone@clinic.com",
         phone: "01000000003",
         address: "1 Kingdom of Science Rd, Stone World",
         birth_date: "2004-01-04",
         gender: "male",
         password: "123",
-
         reviews: [
             { id: 1, user: "Taiju Oki", rating: 4, comment: "Very kind and professional." }
         ]
@@ -84,14 +78,12 @@ export const doctorsData = [
         bio: "Expert in pediatrics stuff.",
         education: "MD from InfTrain School",
         status: "Active",
-
         email: "ryan@clinic.com",
         phone: "01000000004",
         address: "4 Infinity Train St, Car 8",
         birth_date: "1990-05-15",
         gender: "male",
         password: "123",
-
         reviews: [
             { id: 1, user: "Tulip", rating: 5, comment: "Good doctor." }
         ]
@@ -108,14 +100,12 @@ export const doctorsData = [
         bio: "Expert in dental stuff.",
         education: "MD from HTTYD School",
         status: "Active",
-
         email: "toothless@clinic.com",
         phone: "01000000005",
         address: "5 Hidden World Ave, Berk",
         birth_date: "2010-03-26",
         gender: "male",
         password: "123",
-
         reviews: [
             { id: 1, user: "Hiccup", rating: 3, comment: "Didn't imagine he can become a doc, lol." }
         ]

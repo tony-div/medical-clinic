@@ -1,0 +1,143 @@
+/* 1. Main Navbar Container */
+.admin-navbar {
+  height: 64px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  
+  /* Layout alignment */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 2. Left Side */
+.admin-navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.admin-menu-toggle {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #555;
+  display: flex;
+  align-items: center;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.admin-menu-toggle:hover {
+  background-color: #f1f5f9;
+}
+
+/* 3. Breadcrumbs */
+.admin-breadcrumbs {
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.crumb-light { color: #888; }
+.crumb-separator { margin: 0 8px; color: #888; }
+.crumb-dark { color: #333; font-weight: 500; }
+
+/* 4. Profile Container (Kept mostly same, just ensured specificity) */
+.profile-container {
+  position: relative;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border-radius: 30px;
+  transition: background-color 0.2s;
+}
+
+.profile-btn:hover {
+  background-color: #f0f4f8;
+}
+
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  background-color: #e8f0fe;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-icon {
+  font-size: 16px;
+  color: #1e4b8f;
+}
+
+.profile-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.arrow-icon {
+  color: #666;
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.arrow-icon.rotate {
+  transform: rotate(180deg);
+}
+
+/* Dropdown */
+.dropdown-menu {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  width: 160px;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 8px 0;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-item {
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  color: #4b5563;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #f9fafb;
+}
+
+.dropdown-item.logout {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.dropdown-item.logout:hover {
+  background-color: #fef2f2;
+}

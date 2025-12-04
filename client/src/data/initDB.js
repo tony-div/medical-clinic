@@ -6,6 +6,7 @@ export const DB_DOCTORS_KEY = 'db_doctors';
 export const DB_PATIENTS_KEY = 'db_users'; 
 export const DB_APPOINTMENTS_KEY = 'db_appointments';
 export const DB_SCHEDULES_KEY = 'db_schedules';
+export const DB_ADMINS_KEY = 'db_admins';
 
 export function initializeDB() {
     if (!localStorage.getItem(DB_DOCTORS_KEY)) {
@@ -26,5 +27,19 @@ export function initializeDB() {
 
     if (!localStorage.getItem(DB_SCHEDULES_KEY)) {
         localStorage.setItem(DB_SCHEDULES_KEY, JSON.stringify(initialSchedules));
+    }
+
+    if (!localStorage.getItem(DB_ADMINS_KEY)) {
+        const defaultAdmin = [
+            { 
+                id: 1, 
+                name: "Super Admin", 
+                email: "admin@clinic.com", 
+                password: "123", 
+                role: "admin" 
+            }
+        ];
+        localStorage.setItem(DB_ADMINS_KEY, JSON.stringify(defaultAdmin));
+        console.log('✅ Database: Admin initialized');
     }
 }
