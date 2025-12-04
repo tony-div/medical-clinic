@@ -6,17 +6,31 @@ import Joi from 'joi';
 export const getAppointments = async (req, res) => {
   try{
     const loggedUser = req.user;
-    if(loggedUser.role !== "admin"){
-      return res.status(code.FORBIDDEN).json({
-        error: "Only admins can see all appointments"
+    if(loggedUser.role === "doctor"){
+      console.log("REQ.USER =", req.user);
+      const [result] = await db.query(query.SELECT_APPOINTMENT_BY_DOCID, [loggedUser.doc_id]);
+      return res.status(code.SUCCESS).json({
+        message: "retrieved successfully",
+        Appointments: result
       });
     }
-
-    const [result] = await db.query(query.GET_ALL_APPOINTMENTS)
-    return res.status(code.SUCCESS).json({
-      message: "retrieved successfully",
-      Appointments: result
-    });
+    if(loggedUser.role === "patient"){
+      const [result] = await db.query(query.SELECT_APPOINTMENT_BY_USERID, [loggedUser.id]);
+      return res.status(code.SUCCESS).json({
+        message: "retrieved successfully",
+        Appointments: result
+      });
+    }
+    if(loggedUser.role === "admin"){
+      const [result] = await db.query(query.GET_ALL_APPOINTMENTS)
+      return res.status(code.SUCCESS).json({
+        message: "retrieved successfully",
+        Appointments: result
+      });
+    }
+    return res.status(code.FORBIDDEN).json({
+        error: "unidentified role"
+      });
   } catch (error) {
     console.log(error.message);
     return res.status(code.BAD_REQUEST).json({
@@ -153,47 +167,115 @@ export const getAppointmentsByUserId = async (req, res) => {
   try {
     const paramId = Number(req.params.userId);
     const loggedUser = req.user;
+
+    if (!paramId || isNaN(paramId)) {
+      return res.status(code.BAD_REQUEST).json({
+        error: "Invalid ID parameter"
+      });
+    }
     if (loggedUser.role === "admin") {
+      const [users] = await db.query(query.SELECT_USER_BY_ID, [paramId]);
+      const [doctors] = await db.query(query.SELECT_DOCTOR_BY_ID, [paramId]);
+
+      if (users.length === 0 && doctors.length === 0) {
+        return res.status(code.NOT_FOUND).json({
+          error: "No user or doctor found with the given ID"
+        });
+      }
+
       const [userAppointments, doctorAppointments] = await Promise.all([
         db.query(query.SELECT_APPOINTMENT_BY_USERID, [paramId]).then(r => r[0]),
         db.query(query.SELECT_APPOINTMENT_BY_DOCID, [paramId]).then(r => r[0])
       ]);
 
       return res.status(code.SUCCESS).json({
-        message: "retrieved successfully",
-        Appointments: [...userAppointments, ...doctorAppointments]
-      });
-    }
-    console.log(req.user);
-    if ((loggedUser.role === "patient" && loggedUser.id !== paramId) || 
-        loggedUser.role === "doctor" && loggedUser.doc_id !== paramId) {
-      return res.status(code.FORBIDDEN).json({
-        error: "other people's data is private"
+        message: "Retrieved successfully",
+        appointments: [...userAppointments, ...doctorAppointments]
       });
     }
     if (loggedUser.role === "patient") {
-      const [result] = await db.query(query.SELECT_APPOINTMENT_BY_USERID, [loggedUser.id]);
+      const patientId = loggedUser.id;
+      const [doctorRows] = await db.query(query.SELECT_DOCTOR_BY_ID, [paramId]);
+
+      if (doctorRows.length === 0) {
+        return res.status(code.NOT_FOUND).json({
+          error: "Doctor not found"
+        });
+      }
+      const [appointments] = await db.query( query.SELECT_APPOINTMENTS_SHARED, [patientId, paramId]);
       return res.status(code.SUCCESS).json({
-        message: "retrieved successfully",
-        Appointments: result
+        message: "Retrieved successfully",
+        appointments: appointments
       });
     }
     if (loggedUser.role === "doctor") {
-      console.log("REQ.USER =", req.user);
-      const [result] = await db.query(query.SELECT_APPOINTMENT_BY_DOCID, [loggedUser.doc_id]);
+      const doctorId = loggedUser.doc_id;
+
+      const [userRows] = await db.query(query.SELECT_USER_BY_ID, [paramId]);
+
+      if (userRows.length === 0) {
+        return res.status(code.NOT_FOUND).json({
+          error: "Patient not found with the given ID"
+        });
+      }
+      const [appointments] = await db.query( query.SELECT_APPOINTMENTS_SHARED, [paramId, doctorId]);
       return res.status(code.SUCCESS).json({
-        message: "retrieved successfully",
-        Appointments: result
+        message: "Retrieved successfully",
+        appointments: appointments
       });
     }
-    return res.status(code.BAD_REQUEST).json({
-      error: "Invalid role"
+    return res.status(code.FORBIDDEN).json({
+      error: "Unauthorized role"
     });
+
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
     return res.status(code.SERVER_ERROR).json({
       error: "Internal server error"
     });
   }
 };
 
+export const getAppointmentById = async (req, res) => {
+  try {
+    const loggedUser = req.user;
+    const appointmentId = Number(req.params.appointment_id);
+
+    if (!appointmentId || isNaN(appointmentId)) {
+      return res.status(code.BAD_REQUEST).json({
+        error: "Invalid appointment ID"
+      });
+    }
+
+    if (loggedUser.role === "admin") {
+      return res.status(code.FORBIDDEN).json({
+        error: "Admins are not meant to use this endpoint"
+      });
+    }
+
+    const [rows] = await db.query(query.SELECT_APPOINTMENT_BY_ID, [appointmentId]);
+    if (rows.length === 0) {
+      return res.status(code.NOT_FOUND).json({
+        error: "Appointment not found"
+      });
+    }
+
+    const appointment = rows[0];
+    if ((loggedUser.role === "patient" && appointment.user_id !== loggedUser.id) 
+      || (loggedUser.role === "doctor" && appointment.doc_id !== loggedUser.doc_id))  {
+      return res.status(code.FORBIDDEN).json({
+        error: "You are not authorized to view this appointment"
+      });
+    }
+    return res.status(code.SUCCESS).json({
+      message: "Appointment retrieved successfully",
+      appointment: appointment
+    });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(code.SERVER_ERROR).json({
+      error: "Internal server error"
+    });
+  }
+};

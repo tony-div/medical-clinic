@@ -5,16 +5,19 @@ import {
   createAppointment,
   updateAppointment,
   getAppointmentsByUserId,
+  getAppointmentById
 } from '../controllers/appointments.controller.js';
 
 const appointmentsRouter = express.Router();
 appointmentsRouter.use(authenticate);
-appointmentsRouter.get('/', getAppointments);
+appointmentsRouter.get('/list', getAppointments);
 
 appointmentsRouter.post('/',createAppointment);
 
 appointmentsRouter.patch('/:appointmentId', updateAppointment);
 
-appointmentsRouter.get('/:userId', getAppointmentsByUserId);
+appointmentsRouter.get('/shared/:userId', getAppointmentsByUserId);
+
+appointmentsRouter.get('/details/:appointment_id', getAppointmentById);
 
 export default appointmentsRouter;

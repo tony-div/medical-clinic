@@ -32,6 +32,7 @@ export const query = {
     SELECT_SCHEDULE_BY_ID: `SELECT * FROM DoctorSchedule WHERE id = ?`,
     UPDATE_SCHEDULE_BY_ID: `UPDATE DoctorSchedule  SET ? WHERE id = ?`,
     DELETE_SCHEDULE_BY_ID: `DELETE FROM DoctorSchedule WHERE id = ?`,
+    SELECT_APPOINTMENTS_SHARED: `  SELECT * FROM Appointment WHERE user_id=? AND doctor_id=?`,
 
 
 
