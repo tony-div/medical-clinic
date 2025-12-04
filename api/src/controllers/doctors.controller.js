@@ -1,4 +1,6 @@
 import { db } from '../../config/database.js';
+import { code } from '../http.code.js';
+import { query } from '../query/user.query.js';
 
 export const getDoctors = async (req, res) => {
   const query = `
@@ -113,7 +115,7 @@ export const getDoctorScheduleByDocId = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error retrieving doctor schedule:", error);
+    console.log("Error retrieving doctor schedule:", error);
     return res.status(code.SERVER_ERROR).json({
       error: "Internal server error"
     });
