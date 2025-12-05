@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaSearch, FaSort, FaSortUp, FaSortDown, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaSearch, FaSort, FaSortUp, FaSortDown, FaPlus, FaTags } from 'react-icons/fa';
 import Swal from 'sweetalert2'; 
 import './Users.css'; 
 import AddUserModal from './AddUserModal';
+import SpecialtiesModal from './SpecialtiesModal';
 import { DB_PATIENTS_KEY, DB_DOCTORS_KEY, DB_ADMINS_KEY } from '../../../../data/initDB';
 
 const Toast = Swal.mixin({
@@ -16,6 +17,7 @@ const Toast = Swal.mixin({
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSpecModalOpen, setIsSpecModalOpen] = useState(false);
   const [filterRole, setFilterRole] = useState('All'); 
   const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
@@ -145,6 +147,11 @@ const Users = () => {
         currentUser={currentUser} 
       />
 
+      <SpecialtiesModal 
+        isOpen={isSpecModalOpen} 
+        onClose={() => setIsSpecModalOpen(false)} 
+      />
+
       <div className="headerContainer">
         <h2 className="headerTitle">User Management</h2>
         <div className="actionsContainer">
@@ -158,6 +165,13 @@ const Users = () => {
             <FaSearch className="searchIcon" />
             <input type="text" placeholder="Search Users..." className="searchInput" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
+          <button 
+            className="addButton" 
+            onClick={() => setIsSpecModalOpen(true)} 
+            style={{backgroundColor: '#8e44ad', marginRight: '5px'}}
+          >
+            <FaTags style={{marginRight: '5px'}}/> Specialties
+          </button>
           <button className="addButton" onClick={handleAddNewClick}><FaPlus style={{marginRight: '5px'}}/> Add New User</button>
         </div>
       </div>

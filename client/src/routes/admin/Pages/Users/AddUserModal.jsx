@@ -13,7 +13,6 @@ const Toast = Swal.mixin({
 });
 
 const AddUserModal = ({ isOpen, onClose, onSave, existingUsers, currentUser }) => {
-  // --- 1. State for Specialties List ---
   const [specialtiesList, setSpecialtiesList] = useState([]);
 
   const [formData, setFormData] = useState({
@@ -23,28 +22,30 @@ const AddUserModal = ({ isOpen, onClose, onSave, existingUsers, currentUser }) =
     status: 'Active'
   });
 
-  // --- 2. Load Specialties on Mount ---
   useEffect(() => {
-      // Safety check: Default to empty array if null
-      const specs = JSON.parse(localStorage.getItem(DB_SPECIALTIES_KEY) || "[]");
-      setSpecialtiesList(specs);
-  }, []);
+    if (isOpen) {
+        // 1. REFRESH SPECIALTIES LIST EVERY TIME MODAL OPENS
+        const specs = JSON.parse(localStorage.getItem(DB_SPECIALTIES_KEY) || "[]");
+        setSpecialtiesList(specs);
 
-  useEffect(() => {
-    if (isOpen && currentUser) {
-      setFormData({ 
-          ...currentUser, 
-          role: currentUser.role.toLowerCase(), 
-          password: currentUser.password || '', 
-          status: currentUser.status || 'Active'
-      });
-    } else if (isOpen && !currentUser) {
-      setFormData({ 
-          name: '', email: '', password: '123', role: 'patient', 
-          phone: '', address: '', gender: 'male', birth_date: '',
-          specialty: 'General', fees: 200, waitingTime: '20 Mins', bio: '', 
-          status: 'Active' 
-      });
+        // 2. SET FORM DATA
+        if (currentUser) {
+            // EDIT MODE
+            setFormData({ 
+                ...currentUser, 
+                role: currentUser.role.toLowerCase(), 
+                password: currentUser.password || '', 
+                status: currentUser.status || 'Active'
+            });
+        } else {
+            // ADD MODE
+            setFormData({ 
+                name: '', email: '', password: '123', role: 'patient', 
+                phone: '', address: '', gender: 'male', birth_date: '',
+                specialty: '', fees: 200, waitingTime: '20 Mins', bio: '', 
+                status: 'Active' 
+            });
+        }
     }
   }, [isOpen, currentUser]);
 
@@ -89,7 +90,6 @@ const AddUserModal = ({ isOpen, onClose, onSave, existingUsers, currentUser }) =
         <div className="modalBody">
           <form id="userForm" onSubmit={handleSubmit}>
              
-             {/* ... (Account & Personal Details are fine, keeping them concise) ... */}
              <h4 style={{margin:'0 0 10px', color:'#3498DB', borderBottom:'1px solid #eee', paddingBottom:'5px'}}>Account Info</h4>
              <div className="formGroup"><label>Full Name</label><input type="text" name="name" value={formData.name} onChange={handleChange} required /></div>
              <div style={{display:'flex', gap:'10px'}}>
@@ -120,7 +120,7 @@ const AddUserModal = ({ isOpen, onClose, onSave, existingUsers, currentUser }) =
                             </select>
                         </div>
                         
-                        {/* --- 3. UPDATED: SPECIALTY DROPDOWN --- */}
+                        {/* --- SPECIALTY DROPDOWN --- */}
                         <div className="formGroup" style={{flex:1}}>
                             <label>Specialty</label>
                             <select 
@@ -129,15 +129,13 @@ const AddUserModal = ({ isOpen, onClose, onSave, existingUsers, currentUser }) =
                                 onChange={handleChange}
                             >
                                 <option value="">Select Specialty</option>
-                                {/* Check if list exists before mapping */}
-                                {specialtiesList && specialtiesList.map(spec => (
+                                {specialtiesList.map(spec => (
                                     <option key={spec.id} value={spec.name}>
                                         {spec.name}
                                     </option>
                                 ))}
                             </select>
                         </div>
-                        {/* -------------------------------------- */}
                     </div>
 
                     <div style={{display:'flex', gap:'10px'}}>
