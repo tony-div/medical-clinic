@@ -2,6 +2,12 @@ import { db } from '../../config/database.js';
 import { query } from '../query/user.query.js';
 import { code } from '../http.code.js';
 import Joi from 'joi';
+import {
+  sendAppointmentEmail,
+  sendCancelledAppointmentEmail,
+  sendRescheduledAppointmentEmail
+} from "../services/mail.service.js";
+
 
 export const getAppointments = async (req, res) => {
   try{
@@ -64,13 +70,34 @@ export const createAppointment = async (req, res) => {
         error: "Invalid entered data: " + error.message
       });
     }
-    const [doctorRows] = await db.query(query.SELECT_DOCTOR_BY_ID, [doctor_id]);
-    if (doctorRows.length === 0) {
+    const [[doctorRow]] = await db.query(query.SELECT_DOCTOR_BY_ID, [doctor_id]);
+    if (!doctorRow) {
       return res.status(code.NOT_FOUND).json({
         error: "Doctor does not exist"
       });
     }
+
+    const [[doctorUser]] = await db.query(query.SELECT_USER_BY_ID, [doctorRow.user_id]);
+    if (!doctorUser) {
+      return res.status(code.NOT_FOUND).json({
+        error: "Doctor's user profile not found"
+      });
+    }
+
+    const [[patient]] = await db.query(query.SELECT_USER_BY_ID, [loggedUser.id]);
+    if (!patient) {
+      return res.status(code.NOT_FOUND).json({ error: "Patient not found" });
+    }
+
     const [result] = await db.query(query.CREATE_APPOINTMENT, [loggedUser.id,doctor_id,reason,date,starts_at,ends_at,null,"scheduled"]);
+    await sendAppointmentEmail(
+        patient.email,
+        patient.name,
+        doctorUser.name,
+        date,
+        starts_at,
+        doctorUser.address
+    );
     return res.status(code.CREATED_SUCCESSFULLY).json({
       message: "created successfully",
       appointment_id: result.insertId
@@ -150,6 +177,36 @@ export const updateAppointment = async (req, res) => {
       }
     }
     const [result] = await db.query(query.UPDATE_APPOINTMENT, [newAppointment, appointmentId]);
+    if(newAppointment.status){
+        const [[patientUser]] = await db.query(query.SELECT_USER_BY_ID, [oldAppointment.user_id]);
+        const [[doctorRow]] = await db.query(query.SELECT_DOCTOR_BY_ID, [oldAppointment.doctor_id]);
+        if (!doctorRow) {
+          return res.status(code.NOT_FOUND).json({ error: "Doctor does not exist" });
+        }
+        const [[doctorUser]] = await db.query(query.SELECT_USER_BY_ID, [doctorRow.user_id]);
+        if (!doctorUser) {
+          return res.status(code.NOT_FOUND).json({ error: "Doctor's user profile not found" });
+        }
+      if(newAppointment.status === "cancelled"){
+        await sendCancelledAppointmentEmail(
+          patientUser.email,
+          patientUser.name,
+          doctorUser.name,
+          oldAppointment.date,
+          oldAppointment.starts_at
+        );
+      }else if(newAppointment.status === "rescheduled"){
+        await sendRescheduledAppointmentEmail(
+          patientUser.email,
+          patientUser.name,
+          doctorUser.name,
+          oldAppointment.date,
+          oldAppointment.starts_at,
+          newAppointment.date,
+          newAppointment.starts_at
+        );
+      }
+    }
     return res.status(code.SUCCESS).json({
       message: "success",
       updated: newAppointment
