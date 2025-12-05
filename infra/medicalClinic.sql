@@ -95,3 +95,23 @@ CREATE TABLE DoctorSchedule (
     slot_duration int NOT NULL,
     FOREIGN KEY (doctor_id) REFERENCES Doctor(id)
 );
+
+INSERT INTO User (
+    email,
+    password,
+    name,
+    phone_number,
+    address,
+    gender,
+    birth_date,
+    role
+) VALUES (
+    'rootadmin@gmail.com',
+    '$2b$10$.Q4qDiqsLqL9cbMLeX/y0OcLYcJnWlVvSy6KcjfW0a76jKqEFC.9O',
+    'Root Admin',
+    '01000000000',
+    'Alexandria',
+    'female',
+    '1990-01-01',
+    'admin'
+);
