@@ -7,6 +7,16 @@ export const DB_PATIENTS_KEY = 'db_users';
 export const DB_APPOINTMENTS_KEY = 'db_appointments';
 export const DB_SCHEDULES_KEY = 'db_schedules';
 export const DB_ADMINS_KEY = 'db_admins';
+export const DB_SPECIALTIES_KEY = 'db_specialties';
+
+const initialSpecialties = [
+    { id: 1, name: 'Neurology' },
+    { id: 2, name: 'Cardiology' },
+    { id: 3, name: 'Pediatrics' },
+    { id: 4, name: 'Dental' },
+    { id: 5, name: 'Dermatology' },
+    { id: 6, name: 'Psychiatry' }
+];
 
 export function initializeDB() {
     if (!localStorage.getItem(DB_DOCTORS_KEY)) {
@@ -41,5 +51,10 @@ export function initializeDB() {
         ];
         localStorage.setItem(DB_ADMINS_KEY, JSON.stringify(defaultAdmin));
         console.log('✅ Database: Admin initialized');
+    }
+
+    if (!localStorage.getItem(DB_SPECIALTIES_KEY)) {
+        localStorage.setItem(DB_SPECIALTIES_KEY, JSON.stringify(initialSpecialties));
+        console.log('✅ Database: Specialties initialized');
     }
 }
