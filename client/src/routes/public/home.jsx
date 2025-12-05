@@ -41,12 +41,9 @@ export default function Home() {
            </div>
         </div>
         <div className="hero-image-container">
-             {/* Placeholder Illustration */}
-             <img src="https://img.freepik.com/free-vector/doctors-concept-illustration_114360-1515.jpg?w=740" alt="Medical Team" className="hero-img"/>
+             <img src="/assets/home.png" alt="Medical Team" className="hero-img"/>
         </div>
       </section>
-
-      {/* --- FEATURES FLOATING BAR --- */}
       <div className="features-bar">
         <div className="feature-item">
             <div className="icon-box"><FaUserMd /></div>
