@@ -6,18 +6,31 @@ const Dashboard = () => {
   const [stats, setStats] = useState({ patients: 0, doctors: 0, todayAppts: 0 });
 
   useEffect(() => {
-    const patients = JSON.parse(localStorage.getItem(DB_PATIENTS_KEY) || "[]");
-    const doctors = JSON.parse(localStorage.getItem(DB_DOCTORS_KEY) || "[]");
-    const appts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
+    // 1. Move the logic into a reusable function
+    const fetchStats = () => {
+      const patients = JSON.parse(localStorage.getItem(DB_PATIENTS_KEY) || "[]");
+      const doctors = JSON.parse(localStorage.getItem(DB_DOCTORS_KEY) || "[]");
+      const appts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
 
-    const today = new Date().toISOString().split('T')[0];
-    const todaysCount = appts.filter(a => a.date === today).length;
+      const today = new Date().toISOString().split('T')[0];
+      const todaysCount = appts.filter(a => a.date === today).length;
 
-    setStats({
-      patients: patients.length,
-      doctors: doctors.length,
-      todayAppts: todaysCount
-    });
+      // Update state (React will only re-render if these numbers change)
+      setStats({
+        patients: patients.length,
+        doctors: doctors.length,
+        todayAppts: todaysCount
+      });
+    };
+
+    // 2. Run it immediately when page loads
+    fetchStats();
+
+    // 3. Run it again every 1000 milliseconds (1 second) to keep it in sync
+    const intervalId = setInterval(fetchStats, 1000);
+
+    // 4. Cleanup: Stop the timer when the user leaves the Dashboard page
+    return () => clearInterval(intervalId);
   }, []);
 
   return (
@@ -47,6 +60,7 @@ const Dashboard = () => {
   );
 };
 
+// ... keep your Card component and styles exactly as they were ...
 const Card = ({ title, count, icon, borderColor }) => (
   <div style={{ ...styles.card, border: `1px solid ${borderColor}` }}>
     <div>
