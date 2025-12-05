@@ -165,7 +165,7 @@ export const createSchedule = async (req, res) => {
   }
 };
 const updateScheduleSchema = Joi.object({
-  id: Joi.number().integer().required(),
+  id: Joi.number().integer().optional(),
   starts_at: Joi.string().optional(),
   ends_at: Joi.string().optional(),
   slot_duration: Joi.number().integer().optional(),
@@ -174,7 +174,8 @@ const updateScheduleSchema = Joi.object({
 export const updateSchedule = async (req, res) => {
   try {
     const loggedUser = req.user;
-
+    const scheduleId = req.params.scheduleId;
+    
     if (loggedUser.role !== "doctor") {
       return res.status(code.FORBIDDEN).json({
         error: "Doctors may only update their own schedules"
@@ -190,7 +191,6 @@ export const updateSchedule = async (req, res) => {
         error: "Invalid entered data: " + error.message
       });
     }
-    const scheduleId = newSchedule.id;
     const [schedules] = await db.query( query.SELECT_SCHEDULE_BY_ID, [scheduleId]);
     if (schedules.length === 0) {
       return res.status(code.NOT_FOUND).json({ error: "Schedule not found" });
@@ -209,8 +209,8 @@ export const updateSchedule = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res
-      .status(code.SERVER_ERROR)
-      .json({ error: "Internal server error" });
+    .status(code.SERVER_ERROR)
+    .json({ error: "Internal server error" });
   }
 };
 
@@ -222,7 +222,7 @@ export const deleteSchedule = async (req, res) => {
         error: "Only doctors may delete schedules"
       });
     }
-    const schedule_id = Number(req.params.schedule_id);
+    const schedule_id = Number(req.params.scheduleId);
     if (!schedule_id || isNaN(schedule_id)) {
       return res.status(code.BAD_REQUEST).json({
         error: "Invalid schedule_id"

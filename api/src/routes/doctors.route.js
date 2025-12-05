@@ -20,10 +20,10 @@ doctorsRouter.get('/specialty/:specialtyId', getDoctorsBySpecialty);
 
 doctorsRouter.get('/schedule/:doctorId', getDoctorScheduleByDocId);
 
-doctorsRouter.get('/schedule/add', authenticate, createSchedule);
+doctorsRouter.post('/schedule/', authenticate, createSchedule);
 
-doctorsRouter.get('/schedule/update', authenticate, updateSchedule);
+doctorsRouter.patch('/schedule/:scheduleId', authenticate, updateSchedule);
 
-doctorsRouter.get('/schedule/delete', authenticate, deleteSchedule);
+doctorsRouter.delete('/schedule/:scheduleId', authenticate, deleteSchedule);
 
 export default doctorsRouter;
