@@ -18,7 +18,6 @@
     align-items: center;
 }
 
-/* Updated Search Styles for better icon placement */
 .searchWrapper {
     position: relative;
     display: flex;
@@ -34,7 +33,6 @@
 
 .searchInput {
     padding: 10px 16px 10px 36px;
-    /* Left padding makes room for the icon */
     border-radius: 8px;
     border: 1px solid #ddd;
     font-size: 14px;
@@ -45,7 +43,6 @@
 
 .searchInput:focus {
     border-color: #1e4b8f;
-    /* Optional: Adds focus effect implied by transition */
 }
 
 .addButton {
@@ -132,6 +129,7 @@
     text-align: center;
     color: #888;
 }
+
 .paginationContainer {
     display: flex;
     justify-content: flex-end;
@@ -168,7 +166,6 @@
     color: #6b7280;
 }
 
-/* Filter Dropdown */
 .filterSelect {
     padding: 10px 15px;
     border: 1px solid #ddd;
@@ -185,13 +182,11 @@
     border-color: #1e4b8f;
 }
 
-/* Sortable Headers */
 .th.sortable {
     cursor: pointer;
     user-select: none;
     position: relative;
     padding-right: 20px;
-    /* Space for icon */
 }
 
 .th.sortable:hover {
@@ -203,4 +198,89 @@
     margin-left: 8px;
     font-size: 12px;
     vertical-align: middle;
+}
+
+/* ==================== MOBILE RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .headerContainer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .actionsContainer {
+        width: 100%;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .searchWrapper {
+        width: 100%;
+    }
+
+    .searchInput {
+        width: 100%;
+    }
+
+    .addButton {
+        width: 100%;
+        text-align: center;
+    }
+
+    .filterSelect {
+        width: 100%;
+    }
+
+    .tableContainer {
+        overflow-x: auto;
+    }
+
+    .th,
+    .td {
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+
+    .avatar {
+        width: 30px;
+        height: 30px;
+    }
+
+    .actionBtn {
+        padding: 6px 8px;
+    }
+
+    .deleteBtn {
+        margin-left: 0;
+    }
+
+    .paginationContainer {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .headerTitle {
+        font-size: 18px;
+    }
+
+    .th,
+    .td {
+        padding: 10px 8px;
+        font-size: 12px;
+    }
+
+    .userInfo {
+        gap: 8px;
+    }
+
+    .roleTag {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+
+    .pageBtn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
 }
