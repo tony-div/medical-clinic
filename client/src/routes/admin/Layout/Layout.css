@@ -1,18 +1,19 @@
-/* We remove fixed margins from Navbar and put them on the container */
+/* --- DESKTOP STYLES (Default) --- */
 
 .main-container {
     transition: margin-left 0.3s ease;
-    /* Matches sidebar transition time */
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    background-color: #f8f9fa; /* Light grey bg for the whole admin app */
 }
 
-/* Logic to shift content */
+/* Push content when sidebar is open */
 .main-container.expanded {
     margin-left: 260px;
 }
 
+/* Pull content back when sidebar is closed */
 .main-container.collapsed {
     margin-left: 80px;
 }
@@ -22,47 +23,37 @@
     flex-grow: 1;
 }
 
-/* Tablet Responsiveness */
-@media (max-width: 1024px) {
-    .main-container.expanded {
-        margin-left: 80px;
-    }
-}
-
-/* Mobile Responsiveness */
-@media (max-width: 768px) {
-
-    .main-container.expanded,
-    .main-container.collapsed {
-        margin-left: 0;
-    }
-
-    .content-area {
-        padding: 15px;
-    }
-}
-
-/* Sidebar Overlay for Mobile */
+/* HIDE Overlay on Desktop */
 .sidebar-overlay {
     display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1050;
-    opacity: 0;
-    transition: opacity 0.3s ease;
 }
 
-.sidebar-overlay.visible {
-    display: block;
-    opacity: 1;
-}
 
-@media (max-width: 480px) {
-    .content-area {
-        padding: 10px;
+/* --- MOBILE RESPONSIVE STYLES (Max Width 768px) --- */
+@media (max-width: 768px) {
+    
+    /* On mobile, main content is ALWAYS full width (0 margin) */
+    /* The sidebar floats on top, it doesn't push content */
+    .main-container.expanded,
+    .main-container.collapsed {
+        margin-left: 0 !important;
     }
+
+    /* SHOW Overlay on Mobile */
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* The dark dimming effect */
+        z-index: 900; /* Behind sidebar (1000), above content */
+        animation: fadeIn 0.2s ease-out;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
