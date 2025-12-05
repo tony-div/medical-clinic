@@ -1,50 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import Layout from './Layout/Layout';
 import Dashboard from './Pages/Dashboard';
 import Users from './Pages/Users/Users';
 import Appointments from './Pages/Appointments/Appointments';
 
-export default function AdminApp() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  
-  // 1. SMART STATE INITIALIZATION
-  // Priority: 
-  // A. Incoming Navigation Note (e.g. Back button)
-  // B. Local Storage (Page Refresh)
-  // C. Default ('dashboard')
-  const [activePage, setActivePage] = useState(() => {
-      if (location.state?.activePage) return location.state.activePage;
-      return localStorage.getItem('admin_active_tab') || 'dashboard';
-  });
+const AdminPage = () => {
+  // We still keep this state to know which Sidebar button should look "active"
+  const [activePage, setActivePage] = useState('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
-  // 2. PERSISTENCE: Save tab whenever it changes
-  useEffect(() => {
-    localStorage.setItem('admin_active_tab', activePage);
-  }, [activePage]);
-
-  // 3. CLEANUP: Clear navigation state so it doesn't interfere later
-  useEffect(() => {
-    if (location.state?.activePage) {
-        window.history.replaceState({}, document.title);
-    }
-  }, []);
-
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
 
   return (
-    <Layout 
-      activePage={activePage} 
-      setActivePage={setActivePage} 
-      isSidebarOpen={isSidebarOpen} 
+    <Layout
+      activePage={activePage}
+      setActivePage={setActivePage}
+      isSidebarOpen={isSidebarOpen}
       toggleSidebar={toggleSidebar}
     >
-      {activePage === 'dashboard' && <Dashboard />}
-      {activePage === 'users' && <Users />}
-      {activePage === 'appointments' && <Appointments />}
+      {/* 1. Dashboard Section */}
+      <section id="dashboard" style={{ paddingTop: '20px', height: '100vh', overflow: 'auto' }}>
+        <Dashboard />
+      </section>
+
+      <hr style={{ margin: '40px 0', border: '0', borderTop: '1px solid #ddd' }} />
+
+      {/* 2. Users Section */}
+      <section id="users" style={{ paddingTop: '20px', height: '100vh', overflow: 'auto' }}>
+        <Users />
+      </section>
+
+      <hr style={{ margin: '40px 0', border: '0', borderTop: '1px solid #ddd' }} />
+
+      {/* 3. Appointments Section (Placeholder) */}
+      <section id="appointments" style={{ paddingTop: '20px', height: '100vh', overflow: 'auto' }}>
+        <Appointments />
+      </section>
     </Layout>
   );
-}
+};
+
+export default AdminPage;

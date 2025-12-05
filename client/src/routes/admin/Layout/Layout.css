@@ -21,3 +21,17 @@
     padding: 30px;
     flex-grow: 1;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+
+    .main-container.expanded,
+    .main-container.collapsed {
+        margin-left: 0;
+    }
+
+    .content-area {
+        padding: 15px;
+        /* Reduce padding on mobile */
+    }
+}

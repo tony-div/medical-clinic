@@ -1,17 +1,25 @@
 /* 1. Main Navbar Container */
 .admin-navbar {
   height: 64px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
+  background-color: #ffffff; /* Back to white */
+  border-bottom: 1px solid #e0e0e0; /* Subtle grey divider */
   
+  /* Fix position */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
   /* Layout alignment */
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 30px;
+  justify-content: space-between; /* Pushes content to edges */
+  padding: 0 30px; /* Proper spacing on left/right */
   
+  /* Remove any accidental rounded corners or margins */
+  border-radius: 0; 
+  margin: 0;
   width: 100%;
-  box-sizing: border-box;
+  box-sizing: border-box; /* Ensures padding doesn't break width */
 }
 
 /* 2. Left Side */
