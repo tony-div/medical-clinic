@@ -36,7 +36,7 @@ describe("get appointments for a user", () => {
 
     test("return 200 OK", async () => {
         const response = await request(app)
-            .get(`/appointments/${USERS[0].id}`)
+            .get(`/appointments/list/`)
             .set('Authorization', `Bearer ${authToken}`)
 
         expect(response.statusCode).toBe(200);
@@ -97,11 +97,11 @@ describe("user attempts to update a complete appointment", () => {
 
     test("return bad request 400", async () => {
         const response = await request(app)
-            .patch('/appointments/1')
+            .patch('/appointments/details/1')
             .set('Authorization', `Bearer ${authToken}`)
             .send({
                 doctor_id:USERS[1].id,
-                reason:null
+                reason:"new reason"
             })
 
         expect(response.statusCode).toBe(400);

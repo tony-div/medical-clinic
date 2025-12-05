@@ -14,7 +14,7 @@ appointmentsRouter.get('/list', getAppointments);
 
 appointmentsRouter.post('/',createAppointment);
 
-appointmentsRouter.patch('/:appointmentId', updateAppointment);
+appointmentsRouter.patch('/details/:appointmentId', updateAppointment);
 
 appointmentsRouter.get('/shared/:userId', getAppointmentsByUserId);
 
