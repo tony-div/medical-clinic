@@ -165,7 +165,6 @@ export const createSchedule = async (req, res) => {
   }
 };
 const updateScheduleSchema = Joi.object({
-  id: Joi.number().integer().optional(),
   starts_at: Joi.string().optional(),
   ends_at: Joi.string().optional(),
   slot_duration: Joi.number().integer().optional(),
@@ -200,8 +199,7 @@ export const updateSchedule = async (req, res) => {
         error: "You can only update your own schedules"
       });
     }
-    const { id, ...fieldsToUpdate } = newSchedule;
-    const [result] = await db.query(query.UPDATE_SCHEDULE_BY_ID, [fieldsToUpdate, id]);
+    const [result] = await db.query(query.UPDATE_SCHEDULE_BY_ID, [newSchedule, scheduleId]);
     return res.status(code.SUCCESS).json({
       message: "Updated successfully",
       affected: result.affectedRows
