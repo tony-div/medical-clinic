@@ -168,7 +168,7 @@ const updateScheduleSchema = Joi.object({
   starts_at: Joi.string().optional(),
   ends_at: Joi.string().optional(),
   slot_duration: Joi.number().integer().optional(),
-}).unknown(false).min(2);
+}).unknown(false).min(1);
 
 export const updateSchedule = async (req, res) => {
   try {

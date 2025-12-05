@@ -319,7 +319,7 @@ export const getAppointmentById = async (req, res) => {
 
     const appointment = rows[0];
     if ((loggedUser.role === "patient" && appointment.user_id !== loggedUser.id) 
-      || (loggedUser.role === "doctor" && appointment.doc_id !== loggedUser.doc_id))  {
+      || (loggedUser.role === "doctor" && appointment.doctor_id !== loggedUser.doc_id))  {
       return res.status(code.FORBIDDEN).json({
         error: "You are not authorized to view this appointment"
       });

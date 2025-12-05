@@ -189,28 +189,27 @@ export const deleteUser = async (req, res) => {
         error: "You are not authorized to delete this user",
       });
     }
-    let doc;
-    const [rows2] = await db.query(query.SELECT_DOCTOR_BY_USERID, [userId]);
-    if(rows2.length !== 0){
-      docFlag = true;
-    }
-    if(docFlag){
-      let conn;
-      try{
-        conn = await db.getConnection();
-        await conn.beginTransaction();
-        await conn.query(query.DELETE_DOCTOR_BY_USERID, [userId]);
-        await conn.query(query.DELETE_USER_BY_ID, [userId]);
-        await conn.commit();
-        conn.release();
-      }catch(error){
-        await conn.rollback();
-        conn.release();
-        throw error;
-      }
-    }else {
-      await db.query(query.DELETE_USER_BY_ID, [userId]);
-    }
+    // const [rows2] = await db.query(query.SELECT_DOCTOR_BY_USERID, [userId]);
+    // if(rows2.length !== 0){
+    //   docFlag = true;
+    // }
+    // if(docFlag){
+    //   let conn;
+    //   try{
+    //     conn = await db.getConnection();
+    //     await conn.beginTransaction();
+    //     //await conn.query(query.DELETE_DOCTOR_BY_USERID, [userId]);
+    //     await conn.query(query.DELETE_USER_BY_ID, [userId]);
+    //     await conn.commit();
+    //     conn.release();
+    //   }catch(error){
+    //     await conn.rollback();
+    //     conn.release();
+    //     throw error;
+    //   }
+    // }else {}
+
+    await db.query(query.DELETE_USER_BY_ID, [userId]);
     return res.status(code.SUCCESS).json({
       message: "User deleted successfully",
       deleted_user_id: userId,
@@ -437,7 +436,7 @@ export const createDoctor = async (req, res) => {
     `, [
       newUserId,
       specialty_id,
-      null,
+      profile_pic_path || null,
       consultation_fees,
       waiting_time,
       about_doctor,
