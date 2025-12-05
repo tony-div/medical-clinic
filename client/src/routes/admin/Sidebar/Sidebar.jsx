@@ -11,46 +11,14 @@ const Sidebar = ({ activePage, setActivePage, isOpen }) => {
     { id: 'appointments', label: 'Appointments', icon: <MdEvent /> },
   ];
 
-
-  const easeInOutCubic = (t) => {
-    return t < 0.5 
-      ? 4 * t * t * t 
-      : 1 - Math.pow(-2 * t + 2, 3) / 2;
-  };
-
-  const smoothScrollTo = (targetId, duration = 800) => { 
-    const target = document.getElementById(targetId);
-    if (!target) return;
-
-    const navbarHeight = 80; 
-    const targetPosition = target.getBoundingClientRect().top + window.scrollY - navbarHeight;
-    const startPosition = window.scrollY;
-    const distance = targetPosition - startPosition;
-    let startTime = null;
-
-    const animation = (currentTime) => {
-      if (startTime === null) startTime = currentTime;
-      const timeElapsed = currentTime - startTime;
-      
-      const progress = Math.min(timeElapsed / duration, 1);
-      const ease = easeInOutCubic(progress);
-      
-      window.scrollTo(0, startPosition + (distance * ease));
-
-      // Keep looping until time is up
-      if (timeElapsed < duration) {
-        requestAnimationFrame(animation);
-      }
-    };
-
-    requestAnimationFrame(animation);
-  };
-
-
-
   const handleNavigation = (id) => {
-    setActivePage(id); 
-    smoothScrollTo(id, 1200); 
+    setActivePage(id);
+    
+    // Standard, efficient smooth scrolling
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   return (

@@ -1,0 +1,158 @@
+/* --- LAYOUT & ANIMATION --- */
+.dashboard-layout {
+    display: block;
+    background-color: #f8fafc;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+.dashboard-main {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+    padding: 40px;
+    box-sizing: border-box;
+    min-height: 100vh;
+}
+
+.fade-in { animation: fadeIn 0.5s ease-out forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- HEADER --- */
+.dashboard-header {
+    margin-bottom: 30px;
+}
+.dashboard-header h1 {
+    font-size: 1.8rem;
+    color: #1e293b;
+    margin: 0 0 5px 0;
+    font-weight: 700;
+}
+.dashboard-header p { color: #64748b; margin: 0; }
+
+/* --- TABLE CARD --- */
+.table-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+}
+
+.records-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.records-table th {
+    background-color: #f8fafc;
+    padding: 18px 24px;
+    text-align: left;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.records-table td {
+    padding: 20px 24px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+/* Interactive Rows */
+.table-row { transition: background-color 0.2s; }
+.table-row:hover { background-color: #f0f9ff; }
+
+/* --- COLUMNS & CELLS --- */
+.date-cell { display: flex; align-items: center; gap: 12px; }
+
+.icon-box {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+}
+
+.icon-box.date { background-color: #eff6ff; color: #3b82f6; }
+
+.text-strong { font-weight: 600; color: #1e293b; }
+
+/* Doctor Info */
+.doc-info { display: flex; align-items: center; gap: 12px; }
+
+.doc-avatar {
+    width: 36px; height: 36px;
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.doc-name { display: block; font-weight: 600; color: #1e293b; font-size: 0.95rem; }
+.doc-spec { display: block; font-size: 0.8rem; color: #64748b; margin-top: 2px; }
+
+/* File Tag */
+.file-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Action Button */
+.btn-view-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: white;
+    color: #0ea5e9;
+    border: 1px solid #e0f2fe;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-view-file:hover {
+    background-color: #0ea5e9;
+    color: white;
+    border-color: #0ea5e9;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+}
+
+/* --- EMPTY STATE --- */
+.empty-state { padding: 60px 20px; text-align: center; }
+
+.empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    color: #cbd5e1;
+    margin-bottom: 15px;
+}
+
+.empty-state h3 {
+    margin: 0 0 5px 0;
+    color: #1e293b;
+    font-size: 1.2rem;
+}
+
+.empty-state p {
+    color: #94a3b8;
+    font-size: 0.95rem;
+}

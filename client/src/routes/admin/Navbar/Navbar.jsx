@@ -15,6 +15,7 @@ const Navbar = ({ activePage, toggleSidebar }) => {
     localStorage.removeItem("admin_active_tab"); // Clear Remembered Tab (NEW)
     navigate('/'); 
   };
+
   
   return (
     <div className="admin-navbar">

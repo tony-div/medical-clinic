@@ -47,7 +47,7 @@ export default function Home() {
             )}
             
             <Link to="/doctors" className="card dept-card" style={{background:'#3498DB', color:'white'}}>
-                View All →
+                View All 
             </Link>
         </div>
       </section>

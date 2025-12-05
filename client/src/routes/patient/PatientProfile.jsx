@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom'; // 1. Added useLocation
+import { useNavigate, useParams, useLocation } from 'react-router-dom'; 
+// 1. ADD FaCheckCircle to imports
+import { FaUser, FaEnvelope, FaLock, FaPhone, FaMapMarkerAlt, FaBirthdayCake, FaVenusMars, FaArrowLeft, FaPen, FaSave, FaTimes, FaCheckCircle } from 'react-icons/fa';
 import PatientSidebar from '../../components/PatientSidebar';
 import { DB_PATIENTS_KEY } from '../../data/initDB';
-import '../doctor/DoctorProfile.css'; 
+import './PatientProfile.css'; 
 
 export default function PatientProfile() {
     const navigate = useNavigate();
-    const location = useLocation(); // 2. Init Location Hook to read 'state'
-    const { email } = useParams(); // If email exists, we are in Admin View
+    const location = useLocation(); 
+    const { email } = useParams(); 
     
-    // Determine target email: URL param (Admin) OR Session (Patient)
     const sessionEmail = localStorage.getItem("activeUserEmail");
     const targetEmail = email || sessionEmail;
     
@@ -18,22 +19,21 @@ export default function PatientProfile() {
     const [isEditing, setIsEditing] = useState(false);
     const [notFound, setNotFound] = useState(false);
 
+    // 2. NEW STATE for the custom popup
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
     useEffect(() => {
-        // Security check: If accessing as patient (no URL param), must be logged in
         if (!targetEmail) { 
             navigate('/login'); 
             return; 
         }
 
         const allPatients = JSON.parse(localStorage.getItem(DB_PATIENTS_KEY) || "[]");
-        
-        // Find user (Case insensitive check)
         const foundUser = allPatients.find(p => p.email.toLowerCase() === targetEmail.toLowerCase());
 
         if (foundUser) {
             setUserData({
                 ...foundUser,
-                // Ensure fields exist to prevent controlled/uncontrolled errors
                 phone: foundUser.phone || "",
                 address: foundUser.address || ""
             });
@@ -53,6 +53,12 @@ export default function PatientProfile() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        if (name === 'phone') {
+            if (!/^\d*$/.test(value)) return;
+            if (value.length > 11) return;
+        }
+
         setUserData({ ...userData, [name]: value });
         if (name === 'birth_date') calculateAge(value);
     };
@@ -61,7 +67,6 @@ export default function PatientProfile() {
         e.preventDefault();
         const allPatients = JSON.parse(localStorage.getItem(DB_PATIENTS_KEY) || "[]");
         
-        // Validation: Check duplicate email if changed
         if (userData.email !== targetEmail) {
             const emailExists = allPatients.find(p => p.email === userData.email && p.id !== userData.id);
             if (emailExists) {
@@ -70,160 +75,156 @@ export default function PatientProfile() {
             }
         }
 
-        // Update DB
         const updatedPatients = allPatients.map(p => p.id === userData.id ? userData : p);
         localStorage.setItem(DB_PATIENTS_KEY, JSON.stringify(updatedPatients));
 
-        // Update Session if the user changed their OWN email
         if (userData.email !== targetEmail && !email) {
             localStorage.setItem("activeUserEmail", userData.email);
         }
 
         setIsEditing(false);
-        alert("Profile Updated Successfully!");
+        
+        setShowSuccessPopup(true);
     };
 
-    // --- 3. SMART BACK FUNCTION ---
     const handleBack = () => {
-        // Check if we came from Admin Appointments (or Users) with a return tab note
         if (location.state?.returnTab) {
-            // Go to Admin Dashboard and force open the specific tab
             navigate('/admin/dashboard', { state: { activePage: location.state.returnTab } });
         } else {
-            // Default browser back behavior
             navigate(-1); 
         }
     };
 
-    // --- RENDER STATES ---
-    if (notFound) return <div style={{textAlign:'center', marginTop:'50px', color:'#777'}}>User not found in database.</div>;
-    if (!userData) return <div>Loading...</div>;
+    if (notFound) return <div className="error-state">User not found.</div>;
+    if (!userData) return <div className="loading-state">Loading Profile...</div>;
 
     const isAdminView = !!email;
 
     return (
         <div className="dashboard-layout">
-            {/* Hide Sidebar if Admin View */}
             {!isAdminView && <PatientSidebar />}
             
-            <main className="dashboard-main" style={{marginLeft: isAdminView ? '0' : '250px', width: isAdminView ? '100%' : 'calc(100% - 250px)'}}>
+            <main 
+                className="dashboard-main fade-in" 
+                style={{
+                    marginLeft: isAdminView ? '0' : '260px', 
+                    width: isAdminView ? '100%' : 'calc(100% - 260px)'
+                }}
+            >
                 <header className="dashboard-header">
-                    <h1>{isAdminView ? "Patient Details (Admin View)" : "My Profile"}</h1>
+                    <div>
+                        <h1>{isAdminView ? "Patient Details" : "My Profile"}</h1>
+                        <p>{isAdminView ? "View and manage patient information" : "Manage your personal information"}</p>
+                    </div>
                     
-                    {/* Admin Back Button */}
                     {isAdminView && (
-                        <button 
-                            className="back-btn" 
-                            onClick={handleBack} 
-                            style={{marginTop:'10px'}}
-                        >
-                            ← Back
+                        <button className="back-btn" onClick={handleBack}>
+                            <FaArrowLeft /> Back to Dashboard
                         </button>
                     )}
                 </header>
 
-                <div className="booking-card" style={{maxWidth:'700px', margin:'0 auto'}}>
-                    <div className="booking-header" style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                        <span>Personal Details</span>
-                        {/* Only show Edit button if NOT admin view (Admins edit via Users table) */}
-                        {!isEditing && !isAdminView && (
-                            <button className="btn-action" style={{background:'white', color:'#3498DB'}} onClick={() => setIsEditing(true)}>
-                                ✏️ Edit
-                            </button>
-                        )}
+                <div className="profile-container">
+                    <div className="profile-card">
+                        {/* ... (Header Row remains the same) ... */}
+                        <div className="card-header-row">
+                            <div className="user-intro">
+                                <div className="avatar-placeholder">
+                                    {userData.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <h2>{userData.name}</h2>
+                                    <span className="user-role">Patient Account</span>
+                                </div>
+                            </div>
+
+                            {!isEditing && !isAdminView && (
+                                <button className="edit-btn" onClick={() => setIsEditing(true)}>
+                                    <FaPen size={12}/> Edit Profile
+                                </button>
+                            )}
+                        </div>
+
+                        <form className="profile-form" onSubmit={handleSave}>
+                            {/* ... (All form inputs remain exactly the same) ... */}
+                            <h4 className="section-title">Account Information</h4>
+                            <div className="form-grid">
+                                <div className="input-group">
+                                    <label><FaEnvelope className="icon"/> Email Address</label>
+                                    <input name="email" type="email" value={userData.email} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : 'locked'}`}/>
+                                </div>
+                                <div className="input-group">
+                                    <label><FaLock className="icon"/> Password</label>
+                                    <input name="password" type="text" value={userData.password} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : 'locked'}`}/>
+                                </div>
+                            </div>
+
+                            <h4 className="section-title">Personal Details</h4>
+                            <div className="input-group">
+                                <label><FaUser className="icon"/> Full Name</label>
+                                <input name="name" value={userData.name} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : ''}`}/>
+                            </div>
+
+                            <div className="form-grid three-col">
+                                <div className="input-group">
+                                    <label><FaVenusMars className="icon"/> Gender</label>
+                                    <select name="gender" value={userData.gender} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : ''}`}>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                                <div className="input-group">
+                                    <label><FaBirthdayCake className="icon"/> Birth Date</label>
+                                    <input name="birth_date" type="date" value={userData.birth_date} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : ''}`}/>
+                                </div>
+                                <div className="input-group">
+                                    <label>Age</label>
+                                    <input value={`${age} Years`} disabled className="input-field locked center-text" />
+                                </div>
+                            </div>
+
+                            <h4 className="section-title">Contact Information</h4>
+                            <div className="form-grid">
+                                <div className="input-group">
+                                    <label><FaPhone className="icon"/> Phone Number</label>
+                                    <input name="phone" value={userData.phone} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : ''}`} placeholder="01xxxxxxxxx"/>
+                                </div>
+                                <div className="input-group">
+                                    <label><FaMapMarkerAlt className="icon"/> Address</label>
+                                    <input name="address" value={userData.address} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : ''}`} placeholder="City, Street..."/>
+                                </div>
+                            </div>
+
+                            {isEditing && (
+                                <div className="form-actions slide-up">
+                                    <button type="button" className="cancel-btn" onClick={() => {setIsEditing(false); window.location.reload();}}>
+                                        <FaTimes/> Cancel
+                                    </button>
+                                    <button type="submit" className="save-btn">
+                                        <FaSave/> Save Changes
+                                    </button>
+                                </div>
+                            )}
+                        </form>
                     </div>
-
-                    <form className="booking-body" onSubmit={handleSave}>
-                        
-                        {/* Account Info (Read Only style mostly) */}
-                        <div style={{background:'#F4F6F7', padding:'15px', borderRadius:'10px', marginBottom:'20px'}}>
-                            <div className="form-section">
-                                <label>Email Address</label>
-                                <input type="email" value={userData.email} disabled className="date-input"/>
-                            </div>
-                            <div className="form-section">
-                                <label>Password</label>
-                                <input type="text" value={userData.password} disabled className="date-input"/>
-                            </div>
-                        </div>
-
-                        <div className="form-section">
-                            <label>Full Name</label>
-                            <input 
-                                name="name" 
-                                value={userData.name} 
-                                onChange={handleChange} 
-                                disabled={!isEditing || isAdminView} 
-                                className="date-input" 
-                            />
-                        </div>
-
-                        <div className="form-row">
-                            <div className="form-group half">
-                                <label>Gender</label>
-                                <select 
-                                    name="gender" 
-                                    value={userData.gender} 
-                                    onChange={handleChange} 
-                                    disabled={!isEditing || isAdminView} 
-                                    className="date-input"
-                                >
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                </select>
-                            </div>
-                            <div className="form-group half">
-                                <label>Birth Date</label>
-                                <input 
-                                    name="birth_date" 
-                                    type="date" 
-                                    value={userData.birth_date} 
-                                    onChange={handleChange} 
-                                    disabled={!isEditing || isAdminView} 
-                                    className="date-input" 
-                                />
-                            </div>
-                        </div>
-
-                        <div className="form-section">
-                            <label>Age</label>
-                            <input value={`${age} Years Old`} disabled className="date-input" style={{background:'#e9ecef'}} />
-                        </div>
-
-                        <h4 style={{color:'#27AE60', marginTop:'20px'}}>📞 Contact Details</h4>
-                        <div className="form-section">
-                            <label>Phone Number</label>
-                            <input 
-                                name="phone" 
-                                type="text" 
-                                value={userData.phone} 
-                                onChange={handleChange} 
-                                disabled={!isEditing || isAdminView} 
-                                className="date-input" 
-                                placeholder="01xxxxxxxxx"
-                            />
-                        </div>
-                        <div className="form-section">
-                            <label>Address</label>
-                            <textarea 
-                                name="address" 
-                                rows="2" 
-                                value={userData.address} 
-                                onChange={handleChange} 
-                                disabled={!isEditing || isAdminView} 
-                                className="date-input" 
-                                placeholder="123 Street Name, City"
-                            ></textarea>
-                        </div>
-
-                        {isEditing && (
-                            <div style={{display:'flex', gap:'10px', marginTop:'20px'}}>
-                                <button type="button" className="btn secondary" onClick={() => {setIsEditing(false); window.location.reload();}}>Cancel</button>
-                                <button type="submit" className="confirm-btn" style={{marginTop:0}}>Save Changes</button>
-                            </div>
-                        )}
-                    </form>
                 </div>
+
+                {/* 4. NEW: Custom Success Popup */}
+                {showSuccessPopup && (
+                    <div className="popup-overlay fade-in">
+                        <div className="popup-container slide-up">
+                            <div className="popup-icon-container">
+                                <FaCheckCircle className="popup-icon" />
+                            </div>
+                            <h3 className="popup-title">Success!</h3>
+                            <p className="popup-message">Your profile has been updated successfully.</p>
+                            <button className="popup-btn" onClick={() => setShowSuccessPopup(false)}>
+                                Continue
+                            </button>
+                        </div>
+                    </div>
+                )}
+
             </main>
         </div>
     );

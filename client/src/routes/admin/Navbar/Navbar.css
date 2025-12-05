@@ -1,32 +1,29 @@
 /* 1. Main Navbar Container */
 .admin-navbar {
   height: 64px;
-  background-color: #ffffff; /* Back to white */
-  border-bottom: 1px solid #e0e0e0; /* Subtle grey divider */
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
   
-  /* Fix position */
+  /* POSITIONING FIX */
   position: sticky;
   top: 0;
-  z-index: 1000;
-
-  /* Layout alignment */
+  z-index: 100;
+  width: 100%; /* Ensure full width */
+  
+  /* FLEX LAYOUT */
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Pushes content to edges */
-  padding: 0 30px; /* Proper spacing on left/right */
-  
-  /* Remove any accidental rounded corners or margins */
-  border-radius: 0; 
-  margin: 0;
-  width: 100%;
-  box-sizing: border-box; /* Ensures padding doesn't break width */
+  justify-content: space-between; /* This pushes left and right items apart */
+  padding: 0 30px;
+  box-sizing: border-box; 
 }
 
-/* 2. Left Side */
+/* 2. Left Side (Toggle + Breadcrumbs) */
 .admin-navbar-left {
   display: flex;
   align-items: center;
   gap: 20px;
+  flex-grow: 1; /* Allows left side to take space if needed */
 }
 
 .admin-menu-toggle {
@@ -35,35 +32,31 @@
   font-size: 20px;
   cursor: pointer;
   color: #555;
-  display: flex;
-  align-items: center;
   padding: 5px;
   border-radius: 4px;
   transition: background 0.2s;
 }
+.admin-menu-toggle:hover { background-color: #f1f5f9; }
 
-.admin-menu-toggle:hover {
-  background-color: #f1f5f9;
-}
-
-/* 3. Breadcrumbs */
+/* Breadcrumbs */
 .admin-breadcrumbs {
   font-size: 15px;
   display: flex;
   align-items: center;
+  white-space: nowrap;
 }
-
 .crumb-light { color: #888; }
 .crumb-separator { margin: 0 8px; color: #888; }
 .crumb-dark { color: #333; font-weight: 500; }
 
-/* 4. Profile Container (Kept mostly same, just ensured specificity) */
+/* 3. Right Side (Profile) - FORCE RIGHT ALIGNMENT */
 .profile-container {
   position: relative;
   cursor: pointer;
   height: 100%;
   display: flex;
   align-items: center;
+  margin-left: auto; /* SAFETY: Forces this element to the far right */
 }
 
 .profile-btn {
@@ -74,52 +67,33 @@
   border-radius: 30px;
   transition: background-color 0.2s;
 }
-
-.profile-btn:hover {
-  background-color: #f0f4f8;
-}
+.profile-btn:hover { background-color: #f0f4f8; }
 
 .avatar-circle {
-  width: 36px;
-  height: 36px;
+  width: 36px; height: 36px;
   background-color: #e8f0fe;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
 }
+.avatar-icon { font-size: 16px; color: #1e4b8f; }
 
-.avatar-icon {
-  font-size: 16px;
-  color: #1e4b8f;
-}
-
-.profile-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-}
+.profile-name { font-size: 14px; font-weight: 500; color: #333; }
 
 .arrow-icon {
-  color: #666;
-  font-size: 18px;
-  transition: transform 0.2s ease;
+  color: #666; font-size: 18px; transition: transform 0.2s ease;
 }
+.arrow-icon.rotate { transform: rotate(180deg); }
 
-.arrow-icon.rotate {
-  transform: rotate(180deg);
-}
-
-/* Dropdown */
+/* Dropdown Menu */
 .dropdown-menu {
   position: absolute;
-  top: 50px;
+  top: 60px; /* Adjusted slightly */
   right: 0;
-  width: 160px;
+  width: 180px;
   background-color: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   padding: 8px 0;
   z-index: 1001;
   display: flex;
@@ -128,24 +102,11 @@
 
 .dropdown-item {
   padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 15px;
-  color: #4b5563;
-  cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 14px; color: #4b5563; cursor: pointer;
   transition: background-color 0.2s;
 }
+.dropdown-item:hover { background-color: #f9fafb; }
 
-.dropdown-item:hover {
-  background-color: #f9fafb;
-}
-
-.dropdown-item.logout {
-  color: #dc2626;
-  font-weight: 500;
-}
-
-.dropdown-item.logout:hover {
-  background-color: #fef2f2;
-}
+.dropdown-item.logout { color: #dc2626; font-weight: 500; }
+.dropdown-item.logout:hover { background-color: #fef2f2; }

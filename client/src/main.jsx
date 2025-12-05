@@ -48,6 +48,8 @@ const router = createBrowserRouter([
     { path: "/admin/doctor-details/:id", element: <DoctorPrivateProfile /> },
     { path: "/admin/patient-details/:email", element: <PatientProfile /> },
     { path: "/admin/appointment/:id", element: <AdminAppointmentDetails /> }, 
+    {path: "/patient/appointment/:id", element: <AppointmentDetails /> },
+    {path: "/patient/appointments", element: <MyAppointments /> },
 ]);
 
 createRoot(document.getElementById('root')).render(

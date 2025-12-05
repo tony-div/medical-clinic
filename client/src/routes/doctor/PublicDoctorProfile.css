@@ -1,0 +1,262 @@
+/* --- PUBLIC PROFILE CONTAINER --- */
+.page-container {
+    background-color: #f8fafc;
+    min-height: 100vh;
+    padding-top: 80px; /* Space for Nav */
+    font-family: 'Inter', sans-serif;
+}
+
+.profile-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- HEADER SECTION --- */
+.profile-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* 2/3 for Info, 1/3 for Booking */
+    gap: 30px;
+    align-items: start;
+    margin-bottom: 40px;
+}
+
+/* Left Card */
+.left-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.profile-main-info {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #f1f5f9;
+    margin-bottom: 30px;
+}
+
+.profile-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #fff;
+    box-shadow: 0 0 0 4px #e0f2fe;
+}
+
+.profile-text h1 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.profile-specialty {
+    color: #0284c7;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 5px 0 10px 0;
+}
+
+.profile-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #f59e0b;
+    font-weight: 700;
+}
+
+.review-count {
+    color: #64748b;
+    font-weight: 400;
+    font-size: 0.9rem;
+}
+
+/* Profile Details Text */
+.profile-details h3 {
+    font-size: 1.1rem;
+    color: #334155;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-details p {
+    color: #475569;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+/* --- RIGHT CARD (BOOKING) --- */
+.right-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    position: sticky;
+    top: 100px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f1f5f9;
+}
+
+.booking-header {
+    background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.booking-body {
+    padding: 25px;
+}
+
+.booking-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px dashed #e2e8f0;
+    color: #64748b;
+    font-size: 0.95rem;
+}
+.booking-info-row:last-of-type { border-bottom: none; }
+.booking-info-row strong { color: #1e293b; font-weight: 600; }
+
+.booking-schedule {
+    background-color: #f8fafc;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    margin: 20px 0;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    line-height: 1.5;
+}
+
+/* Book Button */
+.book-btn-large {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+}
+
+.book-btn-large:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(22, 163, 74, 0.3);
+}
+
+.book-btn-large:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* --- COMPACT REVIEWS SECTION (Public Profile) --- */
+
+.reviews-section {
+    background: white;
+    border-radius: 20px;
+    padding: 30px; /* Reduced from 40px */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    margin-top: 30px;
+    /* Optional: Limit width if it gets too wide on huge screens */
+    max-width: 100%; 
+    box-sizing: border-box;
+}
+
+.reviews-section h2 {
+    margin: 0 0 20px 0;
+    font-size: 1.4rem; /* Smaller heading */
+    color: #1e293b;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 1. HORIZONTAL GRID LAYOUT */
+.reviews-list {
+    display: grid;
+    /* Cards will be at least 280px wide, fitting as many as possible per row */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* 2. COMPACT CARD STYLE */
+.review-card {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px; /* Tighter padding */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    transition: transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Ensures equal height in row */
+    box-sizing: border-box;
+}
+
+.review-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+    background-color: #fff;
+    border-color: #cbd5e1;
+}
+
+/* 3. REVIEW HEADER (Name & Stars) */
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.reviewer-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #334155;
+}
+
+.review-stars {
+    font-size: 0.8rem; /* Smaller stars */
+    letter-spacing: 2px;
+}
+
+/* 4. REVIEW TEXT */
+.review-text {
+    font-size: 0.9rem; /* Smaller text */
+    color: #64748b;
+    font-style: italic;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Mobile Fallback */
+@media (max-width: 600px) {
+    .reviews-list {
+        grid-template-columns: 1fr; /* Stack vertically on phones */
+    }
+}

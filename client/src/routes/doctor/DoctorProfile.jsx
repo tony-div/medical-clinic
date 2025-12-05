@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Nav from '../../components/Nav.jsx';
 import { DB_DOCTORS_KEY, DB_SCHEDULES_KEY, DB_APPOINTMENTS_KEY } from '../../data/initDB';
-import './DoctorProfile.css';
+import './PublicDoctorProfile.css';
 
 export default function DoctorProfile() {
     const { id } = useParams();

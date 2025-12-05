@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaCalendarAlt, FaUserMd, FaClock, FaExternalLinkAlt, FaBan, FaExclamationTriangle, FaTimes } from 'react-icons/fa';
 import PatientSidebar from '../../components/PatientSidebar';
 import { DB_APPOINTMENTS_KEY } from '../../data/initDB'; 
 import './MyAppointments.css';
@@ -18,6 +19,8 @@ export default function MyAppointments() {
 
         const allAppts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
         const myAppts = allAppts.filter(a => a.patientEmail === currentUserEmail);
+        
+        // Sort: Newest dates first
         myAppts.sort((a, b) => new Date(b.date) - new Date(a.date));
         setAppointments(myAppts);
     }, [currentUserEmail, navigate]);
@@ -42,63 +45,129 @@ export default function MyAppointments() {
     return (
         <div className="dashboard-layout">
             <PatientSidebar />
-            <main className="dashboard-main">
+            
+            <main className="dashboard-main fade-in">
+                {/* HEADER */}
                 <header className="dashboard-header">
-                    <h1>My Appointments</h1>
-                    <div className="tabs-container">
-                        <button className={`tab-btn ${activeTab === 'active' ? 'active' : ''}`} onClick={() => setActiveTab('active')}>Upcoming</button>
-                        <button className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>History</button>
+                    <div>
+                        <h1>My Appointments</h1>
+                        <p>Manage your upcoming visits and view history.</p>
                     </div>
                 </header>
 
-                <div className="appointments-container">
+                {/* TABS */}
+                <div className="tabs-wrapper">
+                    <button 
+                        className={`tab-btn ${activeTab === 'active' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('active')}
+                    >
+                        Upcoming <span className="count-badge">{activeList.length}</span>
+                    </button>
+                    <button 
+                        className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`} 
+                        onClick={() => setActiveTab('history')}
+                    >
+                        History
+                    </button>
+                </div>
+
+                {/* TABLE CARD */}
+                <div className="table-card">
                     <table className="appointments-table">
-                        <thead><tr><th>Date & Time</th><th>Doctor</th><th>Status</th><th>Action</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Doctor</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             {(activeTab === 'active' ? activeList : historyList).length > 0 ? (
                                 (activeTab === 'active' ? activeList : historyList).map(appt => (
-                                    <tr key={appt.id}>
-                                        <td><strong>{appt.date}</strong><br/><span style={{fontSize:'0.85rem', color:'#777'}}>{appt.time}</span></td>
-                                        <td>{appt.doctorName}</td>
-                                        <td><span className={`status-badge ${appt.status.toLowerCase()}`}>{appt.status}</span></td>
+                                    <tr key={appt.id} className="table-row">
                                         <td>
-                                            {appt.status === 'Scheduled' && (
-                                                <div style={{display:'flex', gap:'5px'}}>
-                                                    <button className="btn-action" style={{background:'#3498DB', color:'white'}} onClick={() => navigate(`/patient/appointment/${appt.id}`)}>
-                                                        View Details
-                                                    </button>
-                                                    <button className="btn-action cancel" onClick={() => initiateCancel(appt)}>Cancel</button>
+                                            <div className="date-cell">
+                                                <div className="date-icon-box">
+                                                    <FaCalendarAlt />
                                                 </div>
-                                            )}
-                                            {appt.status === 'Completed' && (
-                                                <button className="btn-action review" style={{background:'#27AE60'}} onClick={() => navigate(`/patient/appointment/${appt.id}`)}>
-                                                    View Details
+                                                <div>
+                                                    <strong>{appt.date}</strong>
+                                                    <span className="time-sub"><FaClock size={10}/> {appt.time}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="doc-cell">
+                                                <FaUserMd className="mini-icon"/> {appt.doctorName}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span className={`status-badge ${appt.status.toLowerCase()}`}>
+                                                {appt.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="action-buttons">
+                                                {/* View Details (Always visible) */}
+                                                <button 
+                                                    className="btn-icon view" 
+                                                    onClick={() => navigate(`/patient/appointment/${appt.id}`)}
+                                                    title="View Details"
+                                                >
+                                                    <FaExternalLinkAlt /> View
                                                 </button>
-                                            )}
-                                            {appt.status === 'Cancelled' && <span className="text-muted">-</span>}
+
+                                                {/* Cancel (Only for Scheduled) */}
+                                                {appt.status === 'Scheduled' && (
+                                                    <button 
+                                                        className="btn-icon cancel" 
+                                                        onClick={() => initiateCancel(appt)}
+                                                        title="Cancel Appointment"
+                                                    >
+                                                        <FaBan /> Cancel
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
                             ) : (
-                                <tr><td colSpan="4" style={{textAlign:'center', padding:'30px', color:'#888'}}>No appointments found.</td></tr>
+                                <tr>
+                                    <td colSpan="4" className="empty-state">
+                                        <div className="empty-content">
+                                            <p>No {activeTab} appointments found.</p>
+                                        </div>
+                                    </td>
+                                </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
-            </main>
 
-            {showCancelModal && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h3>Cancel Appointment?</h3>
-                        <p>Are you sure?</p>
-                        <div className="modal-buttons">
-                            <button className="btn secondary" onClick={() => setShowCancelModal(false)}>No</button>
-                            <button className="btn primary danger" onClick={confirmCancel}>Yes, Cancel</button>
+                {/* CUSTOM WARNING POPUP (Replaces Browser Alert) */}
+                {showCancelModal && (
+                    <div className="popup-overlay fade-in">
+                        <div className="popup-container slide-up warning-mode">
+                            <div className="popup-icon-container">
+                                <FaExclamationTriangle className="popup-icon warning" />
+                            </div>
+                            <h3 className="popup-title">Cancel Appointment?</h3>
+                            <p className="popup-message">
+                                Are you sure you want to cancel your visit with <strong>{selectedAppt?.doctorName}</strong> on {selectedAppt?.date}? This action cannot be undone.
+                            </p>
+                            <div className="popup-actions">
+                                <button className="popup-btn secondary" onClick={() => setShowCancelModal(false)}>
+                                    Keep Appointment
+                                </button>
+                                <button className="popup-btn danger" onClick={confirmCancel}>
+                                    Yes, Cancel It
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </main>
         </div>
     );
 }

@@ -13,23 +13,60 @@ export default function Register() {
     });
 
     const [showPassword, setShowPassword] = useState(false);
+    // NEW: State for live error messages
+    const [errors, setErrors] = useState({ phone: '', passwordMatch: '' });
+
     const maxDate = new Date().toISOString().split('T')[0];
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        // --- 1. LIVE PHONE VALIDATION ---
+        if (name === 'phone') {
+            // Check if value is numeric only
+            if (!/^\d*$/.test(value)) return; // Prevent typing non-digits
+            
+            // Check length (Limit to 11)
+            if (value.length > 11) return; // Stop typing after 11
+
+            // Set Error if length is wrong (e.g. user leaves it at 10 digits)
+            // We check length > 0 so empty field doesn't show error immediately
+            if (value.length > 0 && value.length !== 11) {
+                setErrors(prev => ({ ...prev, phone: 'Phone must be exactly 11 digits' }));
+            } else {
+                setErrors(prev => ({ ...prev, phone: '' }));
+            }
+        }
+
+        // --- 2. LIVE PASSWORD MATCH CHECK ---
+        if (name === 'confirmPassword' || name === 'password') {
+            // We need the latest values to compare
+            const otherPass = name === 'password' ? formData.confirmPassword : formData.password;
+            const currentPass = value;
+            
+            // Check if they match (only if confirm field isn't empty)
+            if (name === 'confirmPassword' && value !== formData.password) {
+                 setErrors(prev => ({ ...prev, passwordMatch: 'Passwords do not match' }));
+            } else if (name === 'password' && formData.confirmPassword && value !== formData.confirmPassword) {
+                 setErrors(prev => ({ ...prev, passwordMatch: 'Passwords do not match' }));
+            } else {
+                 setErrors(prev => ({ ...prev, passwordMatch: '' }));
+            }
+        }
+
         setFormData({ ...formData, [name]: value });
     };
 
     const handleRegister = (e) => {
         e.preventDefault();
         
+        // Final Validation Check before submitting
+        if (formData.phone.length !== 11) {
+            Swal.fire('Error', 'Phone number must be exactly 11 digits.', 'error');
+            return;
+        }
         if (formData.password !== formData.confirmPassword) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Passwords do not match',
-                text: 'Please ensure both passwords are the same.',
-                confirmButtonColor: '#3498DB'
-            });
+            Swal.fire('Error', 'Passwords do not match.', 'error');
             return;
         }
 
@@ -74,7 +111,6 @@ export default function Register() {
     return (
         <div className="auth-container">
             <div className="auth-box register-box">
-                {/* BACK BUTTON */}
                 <button onClick={() => navigate('/')} style={{border:'none', background:'none', cursor:'pointer', float:'left', fontSize:'1.2rem', color:'#7F8C8D'}}>
                     ← Back
                 </button>
@@ -95,7 +131,17 @@ export default function Register() {
 
                     <div className="form-group">
                         <label>Phone Number</label>
-                        <input name="phone" type="tel" placeholder="01xxxxxxxxx" onChange={handleChange} required />
+                        <input 
+                            name="phone" 
+                            type="tel" 
+                            placeholder="01xxxxxxxxx" 
+                            value={formData.phone} // Controlled input needed for masking
+                            onChange={handleChange} 
+                            required 
+                            className={errors.phone ? 'input-error' : ''}
+                        />
+                        {/* Live Error Text */}
+                        {errors.phone && <span className="error-text">{errors.phone}</span>}
                     </div>
 
                     <div className="form-row">
@@ -131,10 +177,27 @@ export default function Register() {
 
                     <div className="form-group">
                         <label>Confirm Password</label>
-                        <input name="confirmPassword" type="password" placeholder="••••••••" onChange={handleChange} required />
+                        <input 
+                            name="confirmPassword" 
+                            type="password" 
+                            placeholder="••••••••" 
+                            onChange={handleChange} 
+                            required 
+                            className={errors.passwordMatch ? 'input-error' : ''}
+                        />
+                        {/* Live Error Text */}
+                        {errors.passwordMatch && <span className="error-text">{errors.passwordMatch}</span>}
                     </div>
 
-                    <button type="submit" className="auth-btn">Register</button>
+                    <button 
+                        type="submit" 
+                        className="auth-btn"
+                        // Disable if there are active errors
+                        disabled={!!errors.phone || !!errors.passwordMatch}
+                        style={{opacity: (errors.phone || errors.passwordMatch) ? 0.5 : 1}}
+                    >
+                        Register
+                    </button>
                 </form>
 
                 <div className="auth-footer">

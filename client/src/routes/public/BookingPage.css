@@ -255,27 +255,40 @@
     cursor: pointer;
 }
 
+/* --- UPDATED CONFIRM BUTTON --- */
 .confirm-btn {
     width: 100%;
-    padding: 18px;
-    background-color: #27AE60; 
+    padding: 14px; /* Reduced from 18px */
+    
+    /* Professional Blue Gradient (Matches your theme) */
+    background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+    
     color: white;
     border: none;
-    border-radius: 50px;
-    font-size: 1.3rem;
-    font-weight: 800;
+    border-radius: 12px; /* Softer radius instead of full pill */
+    
+    font-size: 1.1rem; /* Reduced from 1.3rem */
+    font-weight: 700;
+    
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     margin-top: 30px;
-    box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3);
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    text-transform: none; /* Removed uppercase for cleaner look */
+    letter-spacing: 0.5px;
 }
 
 .confirm-btn:hover {
-    background-color: #219150;
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(39, 174, 96, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    /* Slightly lighter gradient on hover */
+    background: linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%);
+}
+
+.confirm-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(37, 99, 235, 0.3);
 }
 
 @keyframes fadeIn {

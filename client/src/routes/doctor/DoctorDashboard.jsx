@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaUserInjured, FaCheckCircle, FaSearch, FaClock, FaFileAlt, FaStethoscope, FaCalendarCheck } from 'react-icons/fa';
 import DoctorSidebar from '../../components/DoctorSidebar';
 import { DB_APPOINTMENTS_KEY } from '../../data/initDB';
-import '../patient/PatientDashboard.css';
+import './DoctorDashboard.css'; // New dedicated CSS file
 
 export default function DoctorDashboard() {
     const navigate = useNavigate();
     const currentUserEmail = localStorage.getItem("activeUserEmail");
     
     const [stats, setStats] = useState({ pendingToday: 0, totalCompleted: 0 });
-    
     const [todayAppts, setTodayAppts] = useState([]);
     const [filteredAppts, setFilteredAppts] = useState([]);
-    
     const [doctorName, setDoctorName] = useState("Doctor");
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -22,15 +21,16 @@ export default function DoctorDashboard() {
             return;
         }
         
-        if (currentUserEmail) {
-            const rawName = currentUserEmail.split('@')[0];
-            const prettyName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-            setDoctorName(prettyName);
-        }
+        // Set Doctor Name
+        const rawName = currentUserEmail.split('@')[0];
+        const prettyName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+        setDoctorName(prettyName);
 
+        // Fetch Data
         const allAppts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
         const nameKey = currentUserEmail.split('@')[0].toLowerCase();
 
+        // Filter for this doctor
         const myAppts = allAppts.filter(a => 
             (a.doctor && a.doctor.toLowerCase().includes(nameKey)) || 
             (a.doctorName && a.doctorName.toLowerCase().includes(nameKey))
@@ -38,14 +38,17 @@ export default function DoctorDashboard() {
 
         const today = new Date().toISOString().split('T')[0];
 
+        // Stats Logic
         const todaysList = myAppts.filter(a => a.date === today && a.status === 'Scheduled');
-        
         const totalTreatedCount = myAppts.filter(a => a.status === 'Completed').length;
 
         setStats({
             pendingToday: todaysList.length,
             totalCompleted: totalTreatedCount
         });
+
+        // Sort by time
+        todaysList.sort((a, b) => a.time.localeCompare(b.time));
 
         setTodayAppts(todaysList);
         setFilteredAppts(todaysList);
@@ -63,97 +66,129 @@ export default function DoctorDashboard() {
     return (
         <div className="dashboard-layout">
             <DoctorSidebar />
-            <main className="dashboard-main">
+            
+            <main className="dashboard-main fade-in">
+                {/* HEADER */}
                 <header className="dashboard-header">
-                    <h1>Welcome, Dr. {doctorName} 🩺</h1>
-                    <p>Overview of your daily activity.</p>
+                    <div>
+                        <h1>Welcome, Dr. {doctorName}</h1>
+                        <p>Here is your daily activity overview.</p>
+                    </div>
+                    <div className="date-badge">
+                        <FaCalendarCheck /> {new Date().toLocaleDateString()}
+                    </div>
                 </header>
 
+                {/* WIDGETS */}
                 <div className="dashboard-widgets">
-                    <div className="widget-card highlight-card">
-                        <h3>Pending Today</h3>
-                        <h1 style={{fontSize:'3rem', color:'#3498DB', margin:'10px 0'}}>
-                            {stats.pendingToday}
-                        </h1>
-                        <p>Patients waiting for you today.</p>
+                    <div className="widget-card hover-lift pending-card">
+                        <div className="card-header">
+                            <h3><FaClock className="icon-blue"/> Pending Today</h3>
+                        </div>
+                        <div className="stat-content">
+                            <span className="stat-val">{stats.pendingToday}</span>
+                            <span className="stat-label">Patients Waiting</span>
+                        </div>
                     </div>
 
-                    <div className="widget-card action-card">
-                        <h3>Total Treated</h3>
-                        <h1 style={{fontSize:'3rem', color:'#27AE60', margin:'10px 0'}}>
-                            {stats.totalCompleted}
-                        </h1>
-                        <p>Total appointments completed.</p>
+                    <div className="widget-card hover-lift success-card">
+                        <div className="card-header">
+                            <h3><FaCheckCircle className="icon-green"/> Total Treated</h3>
+                        </div>
+                        <div className="stat-content">
+                            <span className="stat-val">{stats.totalCompleted}</span>
+                            <span className="stat-label">Lifetime Patients</span>
+                        </div>
                     </div>
                 </div>
 
-                <div className="history-section">
-                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'15px'}}>
-                        <h3>Today's Schedule ({new Date().toISOString().split('T')[0]})</h3>
-                        
-                        <input 
-                            type="text" 
-                            placeholder="🔍 Search patient or reason..." 
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{
-                                padding: '8px 15px',
-                                borderRadius: '20px',
-                                border: '1px solid #ccc',
-                                width: '250px'
-                            }}
-                        />
+                {/* TABLE SECTION */}
+                <div className="table-section">
+                    <div className="section-header">
+                        <h3>Today's Schedule</h3>
+                        <div className="search-box">
+                            <FaSearch className="search-icon"/>
+                            <input 
+                                type="text" 
+                                placeholder="Search patient..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
                     </div>
 
-                    {filteredAppts.length > 0 ? (
-                        <table className="history-table">
+                    <div className="table-card">
+                        <table className="doctor-table">
                             <thead>
                                 <tr>
                                     <th>Time</th>
-                                    <th>Patient</th>
-                                    <th>Reason of Visit</th>
-                                    <th>Uploaded Tests</th> 
+                                    <th>Patient Details</th>
+                                    <th>Reason for Visit</th>
+                                    <th>Tests</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredAppts.map(appt => (
-                                    <tr key={appt.id}>
-                                        <td style={{fontWeight:'bold', color:'#3498DB'}}>{appt.time}</td>
-                                        <td>
-                                            <strong>{appt.patientName || "Unknown"}</strong><br/>
-                                            <span style={{fontSize:'0.8rem', color:'#777'}}>{appt.patientEmail}</span>
-                                        </td>
-                                        <td style={{fontStyle:'italic'}}>
-                                            "{appt.reason || "General Checkup"}"
-                                        </td>
-                                        <td>
-                                            {appt.uploadedFiles ? (
-                                                <a href={appt.uploadedFiles} target="_blank" rel="noreferrer" style={{color:'#3498DB'}}>
-                                                    📄 View File
-                                                </a>
-                                            ) : (
-                                                <span style={{color:'#999'}}>- None -</span>
-                                            )}
-                                        </td>
-                                        <td>
-                                            <button 
-                                                className="btn-action" 
-                                                style={{background:'#3498DB', color:'white'}}
-                                                onClick={() => navigate(`/doctor/diagnosis/${appt.id}`)}
-                                            >
-                                                Start Visit
-                                            </button>
+                                {filteredAppts.length > 0 ? (
+                                    filteredAppts.map(appt => (
+                                        <tr key={appt.id} className="table-row">
+                                            {/* Time */}
+                                            <td>
+                                                <div className="time-badge">
+                                                    {appt.time}
+                                                </div>
+                                            </td>
+                                            
+                                            {/* Patient */}
+                                            <td>
+                                                <div className="patient-info">
+                                                    <div className="avatar-small">
+                                                        <FaUserInjured />
+                                                    </div>
+                                                    <div>
+                                                        <strong>{appt.patientName || "Unknown"}</strong>
+                                                        <span className="sub-text">{appt.patientEmail}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            {/* Reason */}
+                                            <td>
+                                                <span className="reason-text">"{appt.reason || "General Checkup"}"</span>
+                                            </td>
+
+                                            {/* Files */}
+                                            <td>
+                                                {appt.uploadedFiles ? (
+                                                    <a href={appt.uploadedFiles} target="_blank" rel="noreferrer" className="file-link">
+                                                        <FaFileAlt /> View File
+                                                    </a>
+                                                ) : (
+                                                    <span className="no-file">-</span>
+                                                )}
+                                            </td>
+
+                                            {/* Action */}
+                                            <td>
+                                                <button 
+                                                    className="start-visit-btn"
+                                                    onClick={() => navigate(`/doctor/diagnosis/${appt.id}`)}
+                                                >
+                                                    <FaStethoscope /> Start Visit
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="empty-state">
+                                            <p>No appointments found for today.</p>
                                         </td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
-                    ) : (
-                        <div style={{textAlign:'center', padding:'40px', color:'#777', background:'white', borderRadius:'15px'}}>
-                            <p>No pending appointments found for today matching your search.</p>
-                        </div>
-                    )}
+                    </div>
                 </div>
             </main>
         </div>

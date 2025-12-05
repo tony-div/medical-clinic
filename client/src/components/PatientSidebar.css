@@ -1,64 +1,122 @@
+/* PatientSidebar.css */
+
 .sidebar {
-    width: 250px;
-    background-color: #2C3E50; 
-    color: white;
-    display: flex;
-    flex-direction: column;
-    position: fixed; 
+    width: 260px;
+    background: #ffffff;
+    border-right: 1px solid #f1f5f9;
+    
+    /* FIXED POSITIONING: Pins it to the screen */
+    position: fixed;
     top: 0;
     left: 0;
-    height: 100vh; 
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    bottom: 0; /* Forces full height */
+    height: 100vh;
+    
+    display: flex;
+    flex-direction: column;
+    z-index: 1000; /* Stays on top */
+    font-family: 'Inter', sans-serif;
+}
+
+/* Header */
+.sidebar-header {
+    padding: 30px 20px;
+    flex-shrink: 0;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    font-size: 1.8rem;
+    color: #0ea5e9;
 }
 
 .sidebar-header h2 {
-    text-align: center;
-    margin-bottom: 40px;
-    color: #3498DB;
+    margin: 0;
+    font-size: 1.4rem;
+    color: #1e293b;
+    font-weight: 700;
 }
 
+/* Menu (Scrollable inside the bar) */
 .sidebar-menu {
     list-style: none;
-    padding: 0;
+    padding: 0 15px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    
+    flex-grow: 1;
+    overflow-y: auto; /* Internal scroll if menu is long */
 }
 
-.sidebar-menu li {
-    margin-bottom: 15px;
+/* Hide scrollbar for cleanliness */
+.sidebar-menu::-webkit-scrollbar {
+    width: 0px;
 }
 
-.sidebar-menu a {
+/* Links */
+.menu-item {
     text-decoration: none;
-    color: #BDC3C7;
-    font-size: 1.1rem;
-    display: block;
-    padding: 10px 15px;
-    border-radius: 8px;
-    transition: all 0.3s;
+    color: #64748b;
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
 }
 
-.sidebar-menu a:hover, .sidebar-menu a.active {
-    background-color: #3498DB;
+.menu-item:hover {
+    background-color: #f8fafc;
+    color: #0f172a;
+    transform: translateX(3px);
+}
+
+.menu-item.active {
+    background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
     color: white;
-    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
+.menu-item.active .sidebar-icon {
+    color: white;
+}
+
+.sidebar-icon {
+    font-size: 1.1rem;
+    color: #94a3b8;
+}
+
+/* Footer */
 .sidebar-footer {
-    margin-top: auto; 
+    padding: 20px;
+    border-top: 1px solid #f1f5f9;
+    background: white;
 }
 
 .logout-btn {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     text-decoration: none;
-    color: #E74C3C; 
-    text-align: center;
-    padding: 10px;
-    border: 1px solid #E74C3C;
-    border-radius: 8px;
-    transition: all 0.3s;
+    color: #ef4444;
+    background-color: #fef2f2;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.2s;
 }
 
 .logout-btn:hover {
-    background-color: #E74C3C;
-    color: white;
+    background-color: #fee2e2;
+    color: #b91c1c;
 }

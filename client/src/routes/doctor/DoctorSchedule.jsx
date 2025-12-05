@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaClock, FaCheckCircle, FaSave, FaCalendarAlt } from 'react-icons/fa';
 import DoctorSidebar from '../../components/DoctorSidebar';
 import { DB_SCHEDULES_KEY } from '../../data/initDB'; 
 import { doctorsData } from '../../data/doctors'; 
@@ -11,7 +12,7 @@ export default function DoctorSchedule() {
     
     const [doctorId, setDoctorId] = useState(null);
     const [schedule, setSchedule] = useState([]);
-    const [saved, setSaved] = useState(false);
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
     useEffect(() => {
         if (!currentUserEmail) { navigate('/login'); return; }
@@ -51,14 +52,12 @@ export default function DoctorSchedule() {
         const newSchedule = [...schedule];
         newSchedule[index].isActive = !newSchedule[index].isActive;
         setSchedule(newSchedule);
-        setSaved(false);
     };
 
     const handleTimeChange = (index, field, value) => {
         const newSchedule = [...schedule];
         newSchedule[index][field] = value;
         setSchedule(newSchedule);
-        setSaved(false);
     };
 
     const saveSchedule = () => {
@@ -80,54 +79,100 @@ export default function DoctorSchedule() {
         }
 
         localStorage.setItem(DB_SCHEDULES_KEY, JSON.stringify(allSchedules));
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
+        setShowSuccessPopup(true);
+        setTimeout(() => setShowSuccessPopup(false), 2000); // Auto hide after 2s
     };
 
     return (
         <div className="dashboard-layout">
             <DoctorSidebar />
-            <main className="dashboard-main">
+            
+            <main className="dashboard-main fade-in">
+                {/* HEADER */}
                 <header className="dashboard-header">
-                    <h1>Manage Schedule</h1>
-                    <p>Update your availability for patients.</p>
+                    <div>
+                        <h1>Manage Schedule</h1>
+                        <p>Set your weekly availability for patient bookings.</p>
+                    </div>
                 </header>
 
                 <div className="schedule-container">
-                    {schedule.map((daySlot, index) => (
-                        <div key={daySlot.day} className={`day-row ${daySlot.isActive ? 'active' : 'inactive'}`}>
-                            <div className="day-label">
-                                <input 
-                                    type="checkbox" 
-                                    checked={daySlot.isActive} 
-                                    onChange={() => handleToggleDay(index)}
-                                />
-                                <span onClick={() => handleToggleDay(index)}>{daySlot.day}</span>
-                            </div>
-                            {daySlot.isActive ? (
-                                <div className="time-inputs">
-                                    <input 
-                                        type="time" 
-                                        value={daySlot.start}
-                                        onChange={(e) => handleTimeChange(index, 'start', e.target.value)}
-                                    />
-                                    <span>to</span>
-                                    <input 
-                                        type="time" 
-                                        value={daySlot.end}
-                                        onChange={(e) => handleTimeChange(index, 'end', e.target.value)}
-                                    />
+                    
+                    {/* SCHEDULE TABLE HEADER */}
+                    <div className="schedule-header-row">
+                        <div className="col-day">Day</div>
+                        <div className="col-status">Status</div>
+                        <div className="col-time">Working Hours</div>
+                    </div>
+
+                    {/* DAYS LIST */}
+                    <div className="days-list">
+                        {schedule.map((daySlot, index) => (
+                            <div key={daySlot.day} className={`day-row ${daySlot.isActive ? 'active' : 'inactive'}`}>
+                                
+                                {/* Day Name */}
+                                <div className="col-day">
+                                    <div className="day-name">{daySlot.day}</div>
                                 </div>
-                            ) : (
-                                <div className="time-inputs disabled">Unavailable</div>
-                            )}
-                        </div>
-                    ))}
-                    <div className="save-section">
-                        <button className="btn-save" onClick={saveSchedule}>Save Changes</button>
-                        {saved && <span className="success-msg">✅ Live Updated!</span>}
+
+                                {/* Toggle Switch */}
+                                <div className="col-status">
+                                    <label className="switch">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={daySlot.isActive} 
+                                            onChange={() => handleToggleDay(index)}
+                                        />
+                                        <span className="slider round"></span>
+                                    </label>
+                                    <span className={`status-label ${daySlot.isActive ? 'text-green' : 'text-gray'}`}>
+                                        {daySlot.isActive ? "Available" : "Off"}
+                                    </span>
+                                </div>
+
+                                {/* Time Inputs */}
+                                <div className="col-time">
+                                    {daySlot.isActive ? (
+                                        <div className="time-group">
+                                            <div className="time-input-wrapper">
+                                                <input 
+                                                    type="time" 
+                                                    value={daySlot.start}
+                                                    onChange={(e) => handleTimeChange(index, 'start', e.target.value)}
+                                                />
+                                            </div>
+                                            <span className="separator">to</span>
+                                            <div className="time-input-wrapper">
+                                                <input 
+                                                    type="time" 
+                                                    value={daySlot.end}
+                                                    onChange={(e) => handleTimeChange(index, 'end', e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <span className="unavailable-text">No Slots Available</span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* ACTIONS */}
+                    <div className="schedule-footer">
+                        <button className="btn-primary-action save-btn" onClick={saveSchedule}>
+                            <FaSave /> Save Changes
+                        </button>
                     </div>
                 </div>
+
+                {/* SUCCESS TOAST */}
+                {showSuccessPopup && (
+                    <div className="toast-notification slide-up">
+                        <FaCheckCircle /> Schedule Updated Successfully!
+                    </div>
+                )}
+
             </main>
         </div>
     );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { FaArrowLeft, FaUserMd, FaClock, FaCalendarAlt, FaStethoscope, FaPrescriptionBottleAlt, FaNotesMedical, FaFileAlt, FaStar, FaTimes, FaCheckCircle, FaBan } from 'react-icons/fa';
 import PatientSidebar from '../../components/PatientSidebar';
 import { DB_APPOINTMENTS_KEY, DB_DOCTORS_KEY } from '../../data/initDB';
 import './AppointmentDetails.css';
@@ -12,6 +13,7 @@ export default function AppointmentDetails() {
     
     const [appointment, setAppointment] = useState(null);
     const [showReviewModal, setShowReviewModal] = useState(false);
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false); // New Success Popup State
     const [rating, setRating] = useState(5);
     const [reviewText, setReviewText] = useState("");
 
@@ -24,7 +26,8 @@ export default function AppointmentDetails() {
         if (found) {
             setAppointment(found);
         } else {
-            Swal.fire('Error', 'Appointment not found', 'error').then(() => navigate('/patient/appointments'));
+            // Using Navigate directly instead of alert for better UX
+            navigate('/patient/appointments');
         }
     }, [id, currentUserEmail, navigate]);
 
@@ -32,7 +35,11 @@ export default function AppointmentDetails() {
         if (!reviewText.trim()) return Swal.fire('Oops', 'Please write a comment.', 'warning');
 
         const allDoctors = JSON.parse(localStorage.getItem(DB_DOCTORS_KEY) || "[]");
-        const docIndex = allDoctors.findIndex(d => d.name === appointment.doctorName || d.name === appointment.doctor);
+        // Robust check for doctor name match
+        const docIndex = allDoctors.findIndex(d => 
+            (d.name && appointment.doctorName && d.name.toLowerCase() === appointment.doctorName.toLowerCase()) || 
+            (d.name && appointment.doctor && d.name.toLowerCase() === appointment.doctor.toLowerCase())
+        );
         
         if (docIndex !== -1) {
             const currentDoctor = allDoctors[docIndex];
@@ -54,24 +61,31 @@ export default function AppointmentDetails() {
 
             localStorage.setItem(DB_DOCTORS_KEY, JSON.stringify(allDoctors));
             
-            Swal.fire({ icon: 'success', title: 'Review Submitted!', text: 'Thank you for your feedback.', timer: 2000, showConfirmButton: false });
+            // Show Custom Success Popup
             setShowReviewModal(false);
+            setShowSuccessPopup(true);
         } else {
             Swal.fire('Error', 'Could not find doctor profile to update.', 'error');
         }
     };
 
-    if (!appointment) return <div>Loading...</div>;
+    if (!appointment) return <div className="loading-state">Loading details...</div>;
 
     if (appointment.status === 'Cancelled') {
         return (
             <div className="dashboard-layout">
                 <PatientSidebar />
-                <main className="dashboard-main">
-                    <button className="back-btn" onClick={() => navigate(-1)}>← Back</button>
-                    <div className="details-container" style={{textAlign:'center', marginTop:'50px'}}>
-                        <h1 style={{color:'#C0392B'}}>🚫 Appointment Cancelled</h1>
-                        <p>This appointment was cancelled. Details are unavailable.</p>
+                <main className="dashboard-main fade-in">
+                    <button className="back-btn" onClick={() => navigate(-1)}>
+                        <FaArrowLeft /> Back
+                    </button>
+                    <div className="cancelled-state">
+                        <FaBan className="cancelled-icon" />
+                        <h1>Appointment Cancelled</h1>
+                        <p>This appointment was cancelled on {appointment.date}.</p>
+                        <button className="primary-btn" onClick={() => navigate('/doctors')} style={{marginTop: '20px'}}>
+                            Book New Appointment
+                        </button>
                     </div>
                 </main>
             </div>
@@ -81,90 +95,165 @@ export default function AppointmentDetails() {
     return (
         <div className="dashboard-layout">
             <PatientSidebar />
-            <main className="dashboard-main">
-                <div className="details-container">
-                    {/* --- BACK BUTTON --- */}
-                    <button className="back-btn" onClick={() => navigate(-1)}>
-                        ← Back
-                    </button>
-
-                    <header className="details-header">
+            
+            <main className="dashboard-main fade-in">
+                {/* HEADER */}
+                <header className="dashboard-header">
+                    <div>
                         <h1>Medical Report</h1>
-                        <span className={`status-badge ${appointment.status.toLowerCase()}`}>{appointment.status}</span>
-                    </header>
+                        <p>View diagnosis details and treatment plans.</p>
+                    </div>
+                    <button className="back-btn" onClick={() => navigate(-1)}>
+                        <FaArrowLeft /> Back to List
+                    </button>
+                </header>
 
-                    <div className="details-grid">
-                        <div className="info-card">
-                            <h3>👨‍⚕️ Doctor Info</h3>
-                            <div className="doc-profile">
-                                <img src={appointment.image} alt="Doc" className="doc-img-small" />
-                                <div>
-                                    <h4>{appointment.doctorName || appointment.doctor}</h4>
-                                    <p>{appointment.specialty}</p>
-                                </div>
+                <div className="details-grid">
+                    {/* LEFT COLUMN: INFO CARD */}
+                    <div className="info-card">
+                        <div className="card-header">
+                            <h3><FaUserMd className="icon-blue"/> Doctor Info</h3>
+                        </div>
+                        
+                        <div className="doc-profile-large">
+                            <div className="img-wrapper-large">
+                                <img src={appointment.image || "https://via.placeholder.com/150"} alt="Doc" />
                             </div>
-                            <hr />
-                            <div className="visit-info">
-                                <p><strong>Date:</strong> {appointment.date}</p>
-                                <p><strong>Time:</strong> {appointment.time}</p>
-                                <p><strong>Reason:</strong> "{appointment.reason}"</p>
-                                
-                                <div style={{marginTop:'15px'}}>
-                                    <strong>📂 Your Uploaded Tests:</strong>
-                                    {appointment.uploadedFiles ? (
-                                        <div style={{marginTop:'5px'}}>
-                                            <a href={appointment.uploadedFiles} target="_blank" rel="noreferrer" className="file-link">📄 View Attached File</a>
-                                        </div>
-                                    ) : (
-                                        <p style={{color:'#999', fontSize:'0.9rem'}}>No files uploaded.</p>
-                                    )}
-                                </div>
+                            <div>
+                                <h4>{appointment.doctorName || appointment.doctor}</h4>
+                                <span className="doc-specialty">{appointment.specialty}</span>
                             </div>
+                        </div>
 
-                            {appointment.status === 'Completed' && (
-                                <button className="btn-action review" style={{width:'100%', marginTop:'20px', padding:'12px'}} onClick={() => setShowReviewModal(true)}>
-                                    ★ Rate & Review Doctor
-                                </button>
+                        <div className="divider"></div>
+
+                        <div className="visit-details">
+                            <div className="detail-row">
+                                <FaCalendarAlt className="icon-gray"/> 
+                                <span><strong>Date:</strong> {appointment.date}</span>
+                            </div>
+                            <div className="detail-row">
+                                <FaClock className="icon-gray"/> 
+                                <span><strong>Time:</strong> {appointment.time}</span>
+                            </div>
+                            <div className="detail-row">
+                                <FaNotesMedical className="icon-gray"/> 
+                                <span><strong>Reason:</strong> {appointment.reason}</span>
+                            </div>
+                        </div>
+
+                        <div className="file-section">
+                            <strong>Your Uploaded Files:</strong>
+                            {appointment.uploadedFiles ? (
+                                <a href={appointment.uploadedFiles} target="_blank" rel="noreferrer" className="file-download-btn">
+                                    <FaFileAlt /> View Attachment
+                                </a>
+                            ) : (
+                                <span className="no-file">No files uploaded.</span>
                             )}
                         </div>
 
+                        {appointment.status === 'Completed' && (
+                            <button className="review-btn" onClick={() => setShowReviewModal(true)}>
+                                <FaStar /> Rate & Review Doctor
+                            </button>
+                        )}
+                    </div>
+
+                    {/* RIGHT COLUMN: REPORT CARD */}
+                    <div className="report-card-container">
+                        <div className="status-banner">
+                            <span className="label">Status:</span>
+                            <span className={`status-badge ${appointment.status.toLowerCase()}`}>
+                                {appointment.status}
+                            </span>
+                        </div>
+
                         {appointment.status === "Completed" ? (
-                            <div className="report-card">
-                                <h3>📋 Diagnosis</h3>
-                                <p className="diagnosis-text">{appointment.diagnosis || "No diagnosis recorded."}</p>
-                                <h3>💊 Prescription</h3>
-                                <div className="rx-box">{appointment.prescription || "No prescription given."}</div>
-                                <h3>📝 Treatment Plan</h3>
-                                <p>{appointment.treatmentPlan || "No additional notes."}</p>
+                            <div className="medical-content">
+                                <div className="report-section">
+                                    <h3><FaStethoscope className="icon-purple"/> Diagnosis</h3>
+                                    <p className="diagnosis-text">{appointment.diagnosis || "No diagnosis recorded."}</p>
+                                </div>
+                                
+                                <div className="report-section">
+                                    <h3><FaPrescriptionBottleAlt className="icon-green"/> Prescription</h3>
+                                    <div className="rx-box">
+                                        {appointment.prescription || "No prescription given."}
+                                    </div>
+                                </div>
+
+                                <div className="report-section">
+                                    <h3><FaNotesMedical className="icon-orange"/> Treatment Plan</h3>
+                                    <p className="plan-text">{appointment.treatmentPlan || "No additional notes."}</p>
+                                </div>
                             </div>
                         ) : (
-                            <div className="report-card empty">
-                                <h3>⏳ Visit Pending</h3>
-                                <p>The doctor has not entered a diagnosis yet.</p>
+                            <div className="pending-state">
+                                <div className="pending-icon-box">
+                                    <FaClock />
+                                </div>
+                                <h3>Visit Pending</h3>
+                                <p>The doctor has not entered a diagnosis yet. Check back after your visit.</p>
                             </div>
                         )}
                     </div>
                 </div>
-            </main>
 
-            {/* REVIEW MODAL */}
-            {showReviewModal && (
-                <div className="modal-overlay">
-                    <div className="modal-content review-modal">
-                        <h3>Rate {appointment.doctorName}</h3>
-                        <div className="star-rating">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <span key={star} className={star <= rating ? "star filled" : "star"} onClick={() => setRating(star)}>★</span>
-                            ))}
-                        </div>
-                        <textarea rows="3" placeholder="Write a review..." value={reviewText} onChange={(e) => setReviewText(e.target.value)} />
-                        <div className="modal-buttons">
-                            <button className="btn secondary" onClick={() => setShowReviewModal(false)}>Close</button>
-                            <button className="btn primary" onClick={submitReview}>Submit Review</button>
+                {/* REVIEW MODAL POPUP */}
+                {showReviewModal && (
+                    <div className="popup-overlay fade-in">
+                        <div className="popup-container slide-up">
+                            <h3 className="popup-title">Rate Your Experience</h3>
+                            <p className="popup-message">How was your visit with {appointment.doctorName}?</p>
+                            
+                            <div className="star-rating-container">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <FaStar 
+                                        key={star} 
+                                        className={star <= rating ? "star-icon filled" : "star-icon"} 
+                                        onClick={() => setRating(star)}
+                                    />
+                                ))}
+                            </div>
+
+                            <textarea 
+                                className="review-textarea"
+                                rows="3" 
+                                placeholder="Write your review here..." 
+                                value={reviewText} 
+                                onChange={(e) => setReviewText(e.target.value)} 
+                            />
+
+                            <div className="popup-actions">
+                                <button className="popup-btn secondary" onClick={() => setShowReviewModal(false)}>
+                                    Cancel
+                                </button>
+                                <button className="popup-btn primary" onClick={submitReview}>
+                                    Submit Review
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+
+                {/* SUCCESS POPUP */}
+                {showSuccessPopup && (
+                    <div className="popup-overlay fade-in">
+                        <div className="popup-container slide-up">
+                            <div className="popup-icon-container">
+                                <FaCheckCircle className="popup-icon success" />
+                            </div>
+                            <h3 className="popup-title">Review Submitted!</h3>
+                            <p className="popup-message">Thank you for your feedback.</p>
+                            <button className="popup-btn primary" onClick={() => setShowSuccessPopup(false)}>
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+            </main>
         </div>
     );
 }
