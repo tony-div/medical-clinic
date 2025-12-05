@@ -33,6 +33,8 @@ export const query = {
     UPDATE_SCHEDULE_BY_ID: `UPDATE DoctorSchedule  SET ? WHERE id = ?`,
     DELETE_SCHEDULE_BY_ID: `DELETE FROM DoctorSchedule WHERE id = ?`,
     SELECT_APPOINTMENTS_SHARED: `  SELECT * FROM Appointment WHERE user_id=? AND doctor_id=?`,
+    GET_SPECIALTY_BY_ID: `SELECT * FROM Specialty WHERE id = ?`,
+    CREATE_SPECIALTY: `INSERT INTO Specialty (name) VALUES (?)`,
 
 
 

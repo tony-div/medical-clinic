@@ -251,6 +251,7 @@ export const loginUser = async (req, res) => {
     const user = userRows[0];
 
     const passwordMatch = await bcrypt.compare(password, user.password);
+    //const passwordMatch = password === user.password;
     if (!passwordMatch) {
       return res.status(code.FORBIDDEN).json({ error: "Invalid email or password" });
     }
@@ -311,6 +312,7 @@ export const doctorSchema = Joi.object({
   birth_date: Joi.date().iso().allow(null),
   specialty_id: Joi.number().required(),
   consultation_fees: Joi.number().required(),
+  profile_pic_path: Joi.string().allow(null,"").optional(),
   waiting_time: Joi.number().required(),
   about_doctor: Joi.string().max(255).allow("", null),
   education_and_experience: Joi.string().max(255).allow("", null)
@@ -405,6 +407,13 @@ export const createDoctor = async (req, res) => {
     const [existing] = await db.query(query.SELECT_USER_BY_EMAIL, [email]);
     if (existing.length > 0) {
       return res.status(code.CONFLICT).json({ error: "Email already in use" });
+    }
+    const [specialty] = await db.query( query.GET_SPECIALTY_BY_ID, [specialty_id]);
+
+    if (specialty.length === 0) {
+      return res.status(code.BAD_REQUEST).json({
+        error: "Invalid specialty_id: specialty does not exist"
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
