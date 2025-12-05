@@ -9,6 +9,6 @@ const reviewsRouter = express.Router();
 
 reviewsRouter.get('/:doctorId', getReviewsByDoctorId);
 
-reviewsRouter.post('/:doctorId', authenticate, createReview);
+reviewsRouter.post('/', authenticate, createReview);
 
 export default reviewsRouter;
