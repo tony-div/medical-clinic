@@ -3,19 +3,20 @@
   height: 64px;
   background-color: #ffffff;
   border-bottom: 1px solid #e0e0e0;
-  
-  /* POSITIONING FIX */
+
   position: sticky;
   top: 0;
-  z-index: 100;
-  width: 100%; /* Ensure full width */
-  
-  /* FLEX LAYOUT */
+  z-index: 1000;
+
   display: flex;
   align-items: center;
-  justify-content: space-between; /* This pushes left and right items apart */
+  justify-content: space-between;
   padding: 0 30px;
-  box-sizing: border-box; 
+
+  border-radius: 0;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* 2. Left Side (Toggle + Breadcrumbs) */
@@ -45,11 +46,22 @@
   align-items: center;
   white-space: nowrap;
 }
-.crumb-light { color: #888; }
-.crumb-separator { margin: 0 8px; color: #888; }
-.crumb-dark { color: #333; font-weight: 500; }
 
-/* 3. Right Side (Profile) - FORCE RIGHT ALIGNMENT */
+.crumb-light {
+  color: #888;
+}
+
+.crumb-separator {
+  margin: 0 8px;
+  color: #888;
+}
+
+.crumb-dark {
+  color: #333;
+  font-weight: 500;
+}
+
+/* 4. Profile Container */
 .profile-container {
   position: relative;
   cursor: pointer;
@@ -108,5 +120,69 @@
 }
 .dropdown-item:hover { background-color: #f9fafb; }
 
-.dropdown-item.logout { color: #dc2626; font-weight: 500; }
-.dropdown-item.logout:hover { background-color: #fef2f2; }
+.dropdown-item.logout {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.dropdown-item.logout:hover {
+  background-color: #fef2f2;
+}
+
+/* ==================== MOBILE RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .admin-navbar {
+    padding: 0 15px;
+    height: 56px;
+  }
+
+  .admin-navbar-left {
+    gap: 12px;
+  }
+
+  .admin-breadcrumbs {
+    font-size: 13px;
+  }
+
+  .profile-name {
+    display: none;
+  }
+
+  .profile-btn {
+    padding: 4px 8px;
+    gap: 8px;
+  }
+
+  .avatar-circle {
+    width: 32px;
+    height: 32px;
+  }
+
+  .avatar-icon {
+    font-size: 14px;
+  }
+
+  .dropdown-menu {
+    right: -10px;
+    width: 140px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-navbar {
+    padding: 0 10px;
+  }
+
+  .admin-menu-toggle {
+    font-size: 18px;
+    padding: 4px;
+  }
+
+  .crumb-light {
+    display: none;
+  }
+
+  .crumb-separator {
+    display: none;
+  }
+}

@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { MdPeople, MdMedicalServices, MdEventAvailable } from 'react-icons/md';
-import { DB_PATIENTS_KEY, DB_DOCTORS_KEY, DB_APPOINTMENTS_KEY } from '../../../data/initDB'; // Adjust path
+import { DB_PATIENTS_KEY, DB_DOCTORS_KEY, DB_APPOINTMENTS_KEY } from '../../../data/initDB';
 
 const Dashboard = () => {
-  // Use State for Real Data
   const [stats, setStats] = useState({ patients: 0, doctors: 0, todayAppts: 0 });
 
   useEffect(() => {
@@ -15,9 +14,9 @@ const Dashboard = () => {
     const todaysCount = appts.filter(a => a.date === today).length;
 
     setStats({
-        patients: patients.length,
-        doctors: doctors.length,
-        todayAppts: todaysCount
+      patients: patients.length,
+      doctors: doctors.length,
+      todayAppts: todaysCount
     });
   }, []);
 
@@ -25,22 +24,22 @@ const Dashboard = () => {
     <div>
       <h2 style={{ marginBottom: '24px', color: '#333' }}>Dashboard</h2>
       <div style={styles.cardContainer}>
-        <Card 
-          title="Total Users" 
-          count={stats.patients} // Real
-          icon={<MdPeople />} 
+        <Card
+          title="Total Users"
+          count={stats.patients}
+          icon={<MdPeople />}
           borderColor="#1e4b8f"
         />
-        <Card 
-          title="Total Doctors" 
-          count={stats.doctors} // Real
-          icon={<MdMedicalServices />} 
+        <Card
+          title="Total Doctors"
+          count={stats.doctors}
+          icon={<MdMedicalServices />}
           borderColor="#1e4b8f"
         />
-        <Card 
-          title="Today's Appointments" 
-          count={stats.todayAppts} // Real
-          icon={<MdEventAvailable />} 
+        <Card
+          title="Today's Appointments"
+          count={stats.todayAppts}
+          icon={<MdEventAvailable />}
           borderColor="#1e4b8f"
         />
       </div>
@@ -48,7 +47,6 @@ const Dashboard = () => {
   );
 };
 
-// ... (Rest of Card component and styles remain exactly as your teammate wrote)
 const Card = ({ title, count, icon, borderColor }) => (
   <div style={{ ...styles.card, border: `1px solid ${borderColor}` }}>
     <div>
@@ -62,11 +60,27 @@ const Card = ({ title, count, icon, borderColor }) => (
 );
 
 const styles = {
-  cardContainer: { display: 'flex', gap: '24px', flexWrap: 'wrap' },
-  card: { flex: 1, minWidth: '250px', backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'transform 0.2s' },
-  cardTitle: { color: '#666', margin: 0, fontSize: '15px', fontWeight: '500' },
-  cardCount: { margin: '8px 0 0 0', fontSize: '32px', color: '#333' },
-  iconBox: { width: '56px', height: '56px', borderRadius: '12px', backgroundColor: '#1e4b8f', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+  cardContainer: {
+    display: 'flex',
+    gap: '24px',
+    flexWrap: 'wrap'
+  },
+  card: {
+    flex: '1 1 280px',
+    minWidth: '200px',
+    maxWidth: '100%',
+    backgroundColor: '#fff',
+    padding: '20px',
+    borderRadius: '12px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    transition: 'transform 0.2s'
+  },
+  cardTitle: { color: '#666', margin: 0, fontSize: '14px', fontWeight: '500' },
+  cardCount: { margin: '8px 0 0 0', fontSize: '28px', color: '#333' },
+  iconBox: { width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#1e4b8f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
 };
 
 export default Dashboard;
