@@ -1,4 +1,4 @@
-import api from "./api";
+import api from "./api.js";
 
 export const getAppointments = async () => {
     return api.get("/appointments");
@@ -20,7 +20,6 @@ export const getAppointmentById = async (appointmentId) => {
     return api.get(`/appointments/${appointmentId}`);
 };
 
-import api from "./api.js";
 
 export const getDiagnosisByAppointmentId = async (appointmentId) => {
     return api.get(`/diagnosis/${appointmentId}`);
@@ -29,8 +28,6 @@ export const getDiagnosisByAppointmentId = async (appointmentId) => {
 export const createDiagnosis = async (appointmentId, data) => {
     return api.post(`/diagnosis/${appointmentId}`, data);
 };
-
-import api from "./api.js";
 
 export const getDoctors = () => {
     return api.get('/doctors');
@@ -60,7 +57,6 @@ export const deleteSchedule = async (scheduleId) => {
     return api.delete(`/doctors/schedule/${scheduleId}`);
 };
 
-import api from "./api";
 
 export const createMedicalTest = async (data) => {
     return api.post("/medical-tests", data);
@@ -81,7 +77,6 @@ export const uploadMedicalTestFile = async (testId, file) => {
     });
 };
 
-import api from "./api";
 
 export const getReviewsByDoctorId = async (doctorId) => {
     return api.get(`/reviews/${doctorId}`);
@@ -96,7 +91,6 @@ export const getRating = async (ratingId) => {
     return api.get(`/reviews/${ratingId}`);
 };
 
-import api from "./api";
 
 export const getSpecialties = async () => {
     return api.get("/specialties");
@@ -110,13 +104,12 @@ export const getSpecialtyById = async (specialtyId) => {
     return api.get(`/specialties/${specialtyId}`);
 };
 
-import api from "./api";
 
 export const getTimeSlots = async (doctorId) => {
     return api.get(`/time-slots/${doctorId}`);
 };
 
-import api from "./api";
+
 
 // usersRouter.get('/:userId', authenticate, getUserById);
 // usersRouter.patch('/:userId', authenticate, updateUser);

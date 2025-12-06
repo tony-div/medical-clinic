@@ -4,27 +4,31 @@ import Swal from 'sweetalert2'; // Import SweetAlert
 import { DB_APPOINTMENTS_KEY, DB_SCHEDULES_KEY, DB_DOCTORS_KEY, DB_PATIENTS_KEY} from '../../data/initDB'; 
 import Nav from '../../components/Nav'; 
 import './BookingPage.css';
+import { getTimeSlots } from '../../services/time-slots';
 
 export default function BookingPage() {
     const { doctorId } = useParams();
     const navigate = useNavigate();
     
     const [doctor, setDoctor] = useState(null);
-
+    const [timeslots, setTimeSlots] = useState(null);
     useEffect(() => {
-        const allDoctors = JSON.parse(localStorage.getItem(DB_DOCTORS_KEY) || "[]");
-        const foundDoc = allDoctors.find(d => d.id === Number(doctorId));
-        
-        if (foundDoc) {
-            setDoctor(foundDoc);
-        } else {
-            Swal.fire('Error', 'Doctor not found.', 'error').then(() => navigate('/doctors'));
+        const fetchData = async () => {
+            const docRes = await getDoctorById(id);
+            const doctorData = docRes.data.doctor?.[0] || docRes.data.data?.[0] || null;
+            if (doctorData) {
+                setDoctor(doctorData);
+            } else {
+                Swal.fire('Error', 'Doctor not found.', 'error').then(() => navigate('/doctors'));
+            }
+            const timRes = await getTimeSlots(doctorId);
+            
+
         }
+        fetchData();
     }, [doctorId, navigate]);
 
-    const currentUserEmail = localStorage.getItem("activeUserEmail");
-    const allPatients = JSON.parse(localStorage.getItem(DB_PATIENTS_KEY) || "[]");
-    const currentUser = allPatients.find(p => p.email === currentUserEmail);
+    const currentUser = localStorage.getItem("user");
 
     const [reason, setReason] = useState("");
     const [selectedFile, setSelectedFile] = useState(null);

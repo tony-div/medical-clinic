@@ -31,16 +31,15 @@ export default function Login() {
     try {
       const res = await login(email, password);
       const { token, user } = res.data;
-      
+    
       // 1. SAVE SESSION DATA
       localStorage.setItem("token", token);
       localStorage.setItem("activeUserEmail", user.email);
       localStorage.setItem("userRole", user.role);
-
+      localStorage.setItem("user", user);
       // 2. CRITICAL FIX: Save the full User Object (with ID)
       // This allows PatientProfile to know WHO is logged in (ID, Name, etc.)
       localStorage.setItem("currentUser", JSON.stringify(user));
-
       Swal.fire({
         icon: 'success',
         title: 'Welcome back!',
@@ -52,12 +51,10 @@ export default function Login() {
           navigate(location.state.from);
           return;
         }
-
         if (user.role === 'admin') navigate('/admin/dashboard');
         else if (user.role === 'doctor') navigate('/doctor/dashboard');
         else navigate('/patient/dashboard');
       });
-
     } catch (error) {
       Toast.fire({
         icon: 'error',
@@ -65,7 +62,6 @@ export default function Login() {
       });
     }
   };
-
   return (
     <div className="auth-container">
       <div className="auth-box">

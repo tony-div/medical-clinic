@@ -92,7 +92,7 @@ export const getDoctorById = async (req, res) => {
     `
   
   try{
-  const [rows, fields] = await db.query(query, [doctorId]);
+  const [rows] = await db.query(query, [doctorId]);
 
   res.status(200).json({
     message: 'ok',
