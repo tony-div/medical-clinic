@@ -2,35 +2,64 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaFileMedical, FaCalendarAlt, FaUserMd, FaExternalLinkAlt, FaFileAlt } from 'react-icons/fa';
 import PatientSidebar from '../../components/PatientSidebar';
-import { DB_APPOINTMENTS_KEY } from '../../data/initDB';
 import './MedicalRecords.css';
+
+import { getAppointmentsByUserId } from '../../services/appointment';
+import { getDoctors } from '../../services/doctors';
 
 export default function MedicalRecords() {
     const navigate = useNavigate();
-    const currentUserEmail = localStorage.getItem("activeUserEmail");
+    const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    const userId = storedUser.id;
     const [records, setRecords] = useState([]);
+    const API_BASE_URL = 'http://localhost:5000';
 
     useEffect(() => {
-        if (!currentUserEmail) { navigate('/login'); return; }
+        if (!userId) { navigate('/login'); return; }
 
-        const allAppts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
-        
-        // Filter: Must be current user AND have a file uploaded
-        const myRecords = allAppts.filter(a => 
-            a.patientEmail === currentUserEmail && 
-            a.uploadedFiles 
-        );
+        const fetchData = async () => {
+            try {
+                const [apptRes, docRes] = await Promise.all([
+                    getAppointmentsByUserId(userId),
+                    getDoctors()
+                ]);
 
-        myRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setRecords(myRecords);
-    }, [currentUserEmail, navigate]);
+                const apiAppts = Array.isArray(apptRes.data) ? apptRes.data : (apptRes.data.appointments || apptRes.data.data || []);
+                const apiDocs = Array.isArray(docRes.data) ? docRes.data : (docRes.data.doctors || docRes.data.data || []);
+
+                const myRecords = apiAppts
+                    // Filter for records with files
+                    .filter(a => a.uploadedFiles || a.file_path || a.medical_test_path)
+                    .map(appt => {
+                        const doc = apiDocs.find(d => d.id === appt.doctor_id || d.id === appt.doctorId);
+                        let fileUrl = appt.uploadedFiles || appt.file_path || "";
+                        if (fileUrl && !fileUrl.startsWith('http')) fileUrl = `${API_BASE_URL}${fileUrl}`;
+
+                        return {
+                            id: appt.id,
+                            date: appt.date ? appt.date.toString().split('T')[0] : "",
+                            type: appt.test_description || "Medical Document",
+                            uploadedFiles: fileUrl,
+                            doctorName: doc ? doc.name : "Unknown Doctor",
+                            specialty: doc ? doc.specialty : "General"
+                        };
+                    });
+
+                myRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+                setRecords(myRecords);
+
+            } catch (error) {
+                console.error("Error loading medical records:", error);
+            }
+        };
+
+        fetchData();
+    }, [userId, navigate]);
 
     return (
         <div className="dashboard-layout">
             <PatientSidebar />
-            
             <main className="dashboard-main fade-in">
-                {/* HEADER */}
                 <header className="dashboard-header">
                     <div>
                         <h1>Medical Records</h1>
@@ -38,7 +67,6 @@ export default function MedicalRecords() {
                     </div>
                 </header>
 
-                {/* RECORDS TABLE CARD */}
                 <div className="table-card">
                     <table className="records-table">
                         <thead>
@@ -53,44 +81,26 @@ export default function MedicalRecords() {
                             {records.length > 0 ? (
                                 records.map(record => (
                                     <tr key={record.id} className="table-row">
-                                        {/* DATE COLUMN */}
                                         <td>
                                             <div className="date-cell">
-                                                <div className="icon-box date">
-                                                    <FaCalendarAlt />
-                                                </div>
+                                                <div className="icon-box date"><FaCalendarAlt /></div>
                                                 <span className="text-strong">{record.date}</span>
                                             </div>
                                         </td>
-
-                                        {/* DOCTOR COLUMN */}
                                         <td>
                                             <div className="doc-info">
-                                                <div className="doc-avatar">
-                                                    <FaUserMd />
-                                                </div>
+                                                <div className="doc-avatar"><FaUserMd /></div>
                                                 <div>
                                                     <span className="doc-name">{record.doctorName}</span>
                                                     <span className="doc-spec">{record.specialty}</span>
                                                 </div>
                                             </div>
                                         </td>
-
-                                        {/* FILE TYPE COLUMN (Simulated based on context) */}
                                         <td>
-                                            <div className="file-tag">
-                                                <FaFileAlt /> Medical Document
-                                            </div>
+                                            <div className="file-tag"><FaFileAlt /> {record.type}</div>
                                         </td>
-
-                                        {/* ACTION COLUMN */}
                                         <td>
-                                            <a 
-                                                href={record.uploadedFiles} 
-                                                target="_blank" 
-                                                rel="noreferrer"
-                                                className="btn-view-file"
-                                            >
+                                            <a href={record.uploadedFiles} target="_blank" rel="noreferrer" className="btn-view-file">
                                                 <FaExternalLinkAlt /> Open File
                                             </a>
                                         </td>

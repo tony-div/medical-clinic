@@ -4,94 +4,99 @@ import { FaCalendarCheck, FaPlusCircle, FaUserMd, FaClock, FaFileMedicalAlt, FaE
 import PatientSidebar from '../../components/PatientSidebar';
 import './PatientDashboard.css';
 
-// 1. Import Services instead of DB keys
-import { getAppointments } from '../../services/appointment';
+import { getAppointmentsByUserId } from '../../services/appointment';
 import { getDoctors } from '../../services/doctors';
 
 export default function PatientDashboard() {
     const navigate = useNavigate();
-    const currentUserEmail = localStorage.getItem("activeUserEmail");
     
-    // Try to get name from local storage if saved during login, else default
-    const [userName, setUserName] = useState(localStorage.getItem("userName") || "Patient");
-    
+    // Get Session
+    const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    const userId = storedUser.id;
+    const userName = storedUser.name || "Patient";
+
     const [upcomingAppt, setUpcomingAppt] = useState(null);
     const [recentHistory, setRecentHistory] = useState([]);
     const [stats, setStats] = useState({ total: 0, completed: 0 });
 
     useEffect(() => {
-        if (!currentUserEmail) { navigate('/login'); return; }
+        if (!userId) { navigate('/login'); return; }
 
         const fetchData = async () => {
             try {
-                // 2. Fetch Appointments and Doctors in parallel
+                console.log("Fetching data for User ID:", userId);
+
                 const [appointmentsRes, doctorsRes] = await Promise.all([
-                    getAppointments(),
+                    getAppointmentsByUserId(userId),
                     getDoctors()
                 ]);
 
-                const apiAppointments = appointmentsRes.data || [];
-                const apiDoctors = doctorsRes.data || [];
+                // --- DEBUG LOGS ---
+                console.log("🔥 RAW APPOINTMENTS RESPONSE:", appointmentsRes);
+                console.log("🔥 RAW DOCTORS RESPONSE:", doctorsRes);
 
-                // 3. Filter for THIS patient (if API returns all)
-                // Note: Ideally the API filters by token, but we double check here
-                const myAppts = apiAppointments.filter(a => 
-                    a.patientEmail === currentUserEmail || 
-                    a.user_email === currentUserEmail // Check both cases depending on API response
-                );
+                // Safe Unwrap Logic
+                const apiAppointments = Array.isArray(appointmentsRes.data) 
+                    ? appointmentsRes.data 
+                    : (appointmentsRes.data?.appointments || appointmentsRes.data?.data || []);
 
-                // 4. Map API data to UI format (Match Doctor IDs to Names)
-                const formattedAppts = myAppts.map(appt => {
-                    // Find the doctor object for this appointment
+                const apiDoctors = Array.isArray(doctorsRes.data) 
+                    ? doctorsRes.data 
+                    : (doctorsRes.data?.doctors || doctorsRes.data?.data || []);
+
+                console.log("✅ Unwrapped Appointments:", apiAppointments);
+
+                // Map Data
+                const formattedAppts = apiAppointments.map(appt => {
                     const doc = apiDoctors.find(d => d.id === appt.doctor_id || d.id === appt.doctorId);
                     
                     return {
                         ...appt,
-                        // Map Backend fields -> Frontend UI fields
-                        doctorName: doc ? doc.name : (appt.doctorName || "Unknown Doctor"),
-                        specialty: doc ? doc.specialty : (appt.specialty || "General"),
-                        image: doc ? doc.image : (appt.image || "/assets/default-doc.png"),
-                        date: appt.date || appt.appointment_date, // Handle different naming conventions
-                        time: appt.time || appt.starts_at,
-                        status: appt.status || 'Scheduled'
+                        id: appt.id,
+                        // Handle date strictly
+                        date: appt.date ? new Date(appt.date).toISOString().split('T')[0] : "N/A",
+                        time: appt.time || appt.starts_at || "00:00",
+                        status: (appt.status || 'Scheduled').charAt(0).toUpperCase() + (appt.status || 'Scheduled').slice(1), // Capitalize
+                        diagnosis: appt.diagnosis,
+                        doctorName: doc ? doc.name : "Unknown Doctor",
+                        specialty: doc ? doc.specialty : "General",
+                        image: doc ? doc.image : "/assets/default-doc.png"
                     };
                 });
                 
-                // 5. Sort by date
+                // Sort
                 formattedAppts.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-                // Find next scheduled
-                const next = formattedAppts.find(a => a.status === 'Scheduled' || a.status === 'scheduled');
-                setUpcomingAppt(next);
+                // Find Upcoming (Must be Scheduled AND in the future/today)
+                // Note: Since we are debugging, let's just show ANY 'Scheduled' as upcoming
+                const next = formattedAppts.find(a => a.status === 'Scheduled');
+                setUpcomingAppt(next || null);
 
-                // History (Newest first)
+                // History (Everything else)
                 const history = formattedAppts
-                    .filter(a => a.status !== 'Scheduled' && a.status !== 'scheduled')
-                    .sort((a, b) => new Date(b.date) - new Date(a.date)); 
+                    .filter(a => a.status !== 'Scheduled')
+                    .sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
                 
                 setRecentHistory(history);
 
-                // Stats
                 setStats({
                     total: formattedAppts.length,
-                    completed: formattedAppts.filter(a => a.status === 'Completed' || a.status === 'complete').length
+                    completed: formattedAppts.filter(a => a.status === 'Completed').length
                 });
 
             } catch (error) {
-                console.error("Error fetching dashboard data:", error);
+                console.error("⚠️ Error fetching dashboard data:", error);
             }
         };
 
         fetchData();
 
-    }, [currentUserEmail, navigate]);
+    }, [userId, navigate]);
 
-    // Helper for status badge color
     const getStatusClass = (status) => {
         if (!status) return 'status-default';
         switch(status.toLowerCase()) {
-            case 'completed': 
-            case 'complete': return 'status-completed';
+            case 'completed': return 'status-completed';
             case 'cancelled': return 'status-cancelled';
             default: return 'status-default';
         }
@@ -102,7 +107,6 @@ export default function PatientDashboard() {
             <PatientSidebar />
             <main className="dashboard-main fade-in">
                 
-                {/* HEADER SECTION */}
                 <header className="dashboard-header">
                     <div>
                         <h1>Welcome back, <span className="highlight-text">{userName}</span></h1>
@@ -115,15 +119,11 @@ export default function PatientDashboard() {
                     </div>
                 </header>
 
-                {/* WIDGETS GRID */}
                 <div className="dashboard-widgets">
-                    
-                    {/* 1. UPCOMING APPOINTMENT CARD */}
                     <div className="widget-card appointment-card hover-lift">
                         <div className="card-header">
                             <h3><FaCalendarCheck className="icon-blue"/> Next Appointment</h3>
                         </div>
-                        
                         {upcomingAppt ? (
                             <div className="appt-content">
                                 <div className="doctor-info">
@@ -154,7 +154,6 @@ export default function PatientDashboard() {
                         )}
                     </div>
 
-                    {/* 2. ACTIVITY STATS */}
                     <div className="widget-card stats-card hover-lift">
                         <div className="card-header">
                             <h3><FaFileMedicalAlt className="icon-purple"/> Activity Summary</h3>
@@ -176,7 +175,6 @@ export default function PatientDashboard() {
                     </div>
                 </div>
 
-                {/* RECENT HISTORY TABLE */}
                 <div className="history-section slide-up">
                     <h3>Recent History</h3>
                     <div className="table-wrapper">
@@ -202,7 +200,6 @@ export default function PatientDashboard() {
                                                 </span>
                                             </td>
                                             <td className="diagnosis-text">{item.diagnosis || "-"}</td>
-                                            
                                             <td>
                                                 <button 
                                                     className="view-btn"

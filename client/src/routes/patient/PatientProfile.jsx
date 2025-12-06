@@ -35,12 +35,8 @@ export default function PatientProfile() {
                 // A. Normal Patient Flow: Use ID from Session
                 if (currentUserId && !email) {
                     const response = await getUser(currentUserId);
-                    profileData = response.data;
+                    profileData = response.data.user || response.data;
                 }
-                
-                // B. Admin Flow: We need to find by email (if API doesn't support getByEmail, this part might need adjustment on backend)
-                // For now, let's assume Admin functionality is handled separately or reuse the same logic if you have the ID.
-                // If you are testing as Patient, Block A will run.
 
                 if (profileData) {
                     setUserData({
