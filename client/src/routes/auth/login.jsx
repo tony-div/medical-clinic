@@ -4,6 +4,19 @@ import Swal from 'sweetalert2';
 import { login } from "../../services/auth.js";
 import './login.css';
 
+// Configure Toast
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,9 +31,15 @@ export default function Login() {
     try {
       const res = await login(email, password);
       const { token, user } = res.data;
+      
+      // 1. SAVE SESSION DATA
       localStorage.setItem("token", token);
       localStorage.setItem("activeUserEmail", user.email);
       localStorage.setItem("userRole", user.role);
+
+      // 2. CRITICAL FIX: Save the full User Object (with ID)
+      // This allows PatientProfile to know WHO is logged in (ID, Name, etc.)
+      localStorage.setItem("currentUser", JSON.stringify(user));
 
       Swal.fire({
         icon: 'success',
@@ -40,11 +59,9 @@ export default function Login() {
       });
 
     } catch (error) {
-      Swal.fire({
+      Toast.fire({
         icon: 'error',
-        title: 'Login Failed',
-        text: error?.response?.data?.error || 'Invalid email or password.',
-        confirmButtonColor: '#d33'
+        title: error?.response?.data?.error || 'Invalid email or password.'
       });
     }
   };

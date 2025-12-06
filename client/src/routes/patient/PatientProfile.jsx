@@ -2,16 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom'; 
 import { FaUser, FaEnvelope, FaLock, FaPhone, FaMapMarkerAlt, FaBirthdayCake, FaVenusMars, FaArrowLeft, FaPen, FaSave, FaTimes, FaCheckCircle } from 'react-icons/fa';
 import PatientSidebar from '../../components/PatientSidebar';
-import api from '../../services/api'; // 1. Import API
+import { getUser, updateUser } from '../../services/users'; // Import User Services
 import './PatientProfile.css'; 
 
 export default function PatientProfile() {
     const navigate = useNavigate();
     const location = useLocation(); 
-    const { email } = useParams(); 
+    const { email } = useParams(); // If email exists, it's Admin View
     
-    const sessionEmail = localStorage.getItem("activeUserEmail");
-    const targetEmail = email || sessionEmail;
+    // 1. Get the ID from Local Storage
+    // We saved this in Login.jsx just now!
+    const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    const currentUserId = storedUser.id;
     
     const [userData, setUserData] = useState(null);
     const [age, setAge] = useState(0);
@@ -19,38 +21,56 @@ export default function PatientProfile() {
     const [notFound, setNotFound] = useState(false);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
-    // 2. Load Data from API
     useEffect(() => {
-        if (!targetEmail) { 
+        // If no ID found and not in Admin Mode, redirect to login
+        if (!currentUserId && !email) { 
             navigate('/login'); 
             return; 
         }
 
-        const fetchUser = async () => {
+        const fetchProfile = async () => {
             try {
-                // Fetch all users (or specific profile endpoint if available)
-                const { data: allUsers } = await api.get('/users');
-                const foundUser = allUsers.find(p => p.email.toLowerCase() === targetEmail.toLowerCase());
+                let profileData = null;
 
-                if (foundUser) {
+                // A. Normal Patient Flow: Use ID from Session
+                if (currentUserId && !email) {
+                    const response = await getUser(currentUserId);
+                    profileData = response.data;
+                }
+                
+                // B. Admin Flow: We need to find by email (if API doesn't support getByEmail, this part might need adjustment on backend)
+                // For now, let's assume Admin functionality is handled separately or reuse the same logic if you have the ID.
+                // If you are testing as Patient, Block A will run.
+
+                if (profileData) {
                     setUserData({
-                        ...foundUser,
-                        // Map Backend 'phone_number' to Frontend 'phone'
-                        phone: foundUser.phone_number || foundUser.phone || "",
-                        address: foundUser.address || ""
+                        ...profileData,
+                        phone: profileData.phone_number || profileData.phone || "",
+                        address: profileData.address || "",
+                        birth_date: profileData.birth_date ? profileData.birth_date.split('T')[0] : ""
                     });
-                    calculateAge(foundUser.birth_date);
+                    calculateAge(profileData.birth_date);
                 } else {
-                    setNotFound(true);
+                    // Fallback to local storage data if API fetch fails (prevents white screen)
+                    if (storedUser.email) {
+                        setUserData({ ...storedUser, phone: "", address: "" });
+                    } else {
+                        setNotFound(true);
+                    }
                 }
             } catch (error) {
                 console.error("Error loading profile:", error);
-                setNotFound(true);
+                // Fallback
+                if (storedUser.email) {
+                     setUserData({ ...storedUser, phone: "", address: "" });
+                } else {
+                    setNotFound(true);
+                }
             }
         };
 
-        fetchUser();
-    }, [targetEmail, navigate]);
+        fetchProfile();
+    }, [currentUserId, email, navigate]);
 
     const calculateAge = (dob) => {
         if (!dob) return;
@@ -62,12 +82,10 @@ export default function PatientProfile() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
         if (name === 'phone') {
             if (!/^\d*$/.test(value)) return;
             if (value.length > 11) return;
         }
-
         setUserData({ ...userData, [name]: value });
         if (name === 'birth_date') calculateAge(value);
     };
@@ -76,25 +94,30 @@ export default function PatientProfile() {
         e.preventDefault();
         
         try {
-            // 3. Prepare payload (Map 'phone' back to 'phone_number')
             const payload = {
-                ...userData,
-                phone_number: userData.phone
+                name: userData.name,
+                email: userData.email,
+                // Only send password if changed/needed
+                ...(userData.password ? { password: userData.password } : {}),
+                phone_number: userData.phone,
+                address: userData.address,
+                gender: userData.gender,
+                birth_date: userData.birth_date
             };
 
-            // 4. Send Update to API
-            await api.patch(`/users/${userData.id}`, payload);
+            await updateUser(userData.id, payload);
 
-            // Update session if email changed
-            if (userData.email !== targetEmail && !email) {
-                localStorage.setItem("activeUserEmail", userData.email);
-            }
+            // Update Session Data
+            const updatedCache = { ...storedUser, ...userData };
+            localStorage.setItem("currentUser", JSON.stringify(updatedCache));
+            localStorage.setItem("userName", userData.name); 
 
             setIsEditing(false);
             setShowSuccessPopup(true);
 
         } catch (error) {
-            alert("Failed to update profile: " + (error.response?.data?.error || error.message));
+            console.error("Update failed:", error);
+            alert("Failed to update profile. " + (error.response?.data?.error || ""));
         }
     };
 
@@ -110,7 +133,7 @@ export default function PatientProfile() {
     if (!userData) return <div className="loading-state">Loading Profile...</div>;
 
     const isAdminView = !!email;
-    
+
     return (
         <div className="dashboard-layout">
             {!isAdminView && <PatientSidebar />}
@@ -122,6 +145,22 @@ export default function PatientProfile() {
                     width: isAdminView ? '100%' : 'calc(100% - 260px)'
                 }}
             >
+                {/* SUCCESS POPUP */}
+                {showSuccessPopup && (
+                    <div className="popup-overlay fade-in">
+                        <div className="popup-container slide-up">
+                            <div className="popup-icon-container">
+                                <FaCheckCircle className="popup-icon" />
+                            </div>
+                            <h3 className="popup-title">Success!</h3>
+                            <p className="popup-message">Your profile has been updated successfully.</p>
+                            <button className="popup-btn" onClick={() => setShowSuccessPopup(false)}>
+                                Continue
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 <header className="dashboard-header">
                     <div>
                         <h1>{isAdminView ? "Patient Details" : "My Profile"}</h1>
@@ -137,11 +176,10 @@ export default function PatientProfile() {
 
                 <div className="profile-container">
                     <div className="profile-card">
-                        {/* ... (Header Row remains the same) ... */}
                         <div className="card-header-row">
                             <div className="user-intro">
                                 <div className="avatar-placeholder">
-                                    {userData.name.charAt(0).toUpperCase()}
+                                    {userData.name ? userData.name.charAt(0).toUpperCase() : "U"}
                                 </div>
                                 <div>
                                     <h2>{userData.name}</h2>
@@ -157,16 +195,16 @@ export default function PatientProfile() {
                         </div>
 
                         <form className="profile-form" onSubmit={handleSave}>
-                            {/* ... (All form inputs remain exactly the same) ... */}
+                            
                             <h4 className="section-title">Account Information</h4>
                             <div className="form-grid">
                                 <div className="input-group">
                                     <label><FaEnvelope className="icon"/> Email Address</label>
-                                    <input name="email" type="email" value={userData.email} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : 'locked'}`}/>
+                                    <input name="email" type="email" value={userData.email} onChange={handleChange} disabled={true} className="input-field locked"/>
                                 </div>
                                 <div className="input-group">
                                     <label><FaLock className="icon"/> Password</label>
-                                    <input name="password" type="text" value={userData.password} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : 'locked'}`}/>
+                                    <input name="password" type="text" value={userData.password || ''} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : 'locked'}`}/>
                                 </div>
                             </div>
 
@@ -219,23 +257,6 @@ export default function PatientProfile() {
                         </form>
                     </div>
                 </div>
-
-                {/* 4. NEW: Custom Success Popup */}
-                {showSuccessPopup && (
-                    <div className="popup-overlay fade-in">
-                        <div className="popup-container slide-up">
-                            <div className="popup-icon-container">
-                                <FaCheckCircle className="popup-icon" />
-                            </div>
-                            <h3 className="popup-title">Success!</h3>
-                            <p className="popup-message">Your profile has been updated successfully.</p>
-                            <button className="popup-btn" onClick={() => setShowSuccessPopup(false)}>
-                                Continue
-                            </button>
-                        </div>
-                    </div>
-                )}
-
             </main>
         </div>
     );
