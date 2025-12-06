@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { DB_PATIENTS_KEY } from '../../data/initDB'; 
+import { DB_PATIENTS_KEY } from '../../data/initDB';
 import './register.css';
+import api from "../../services/api";
 
 export default function Register() {
     const navigate = useNavigate();
-    
+
     const [formData, setFormData] = useState({
         name: '', email: '', phone: '', password: '', confirmPassword: '',
         gender: 'male', birth_date: ''
@@ -25,7 +26,7 @@ export default function Register() {
         if (name === 'phone') {
             // Check if value is numeric only
             if (!/^\d*$/.test(value)) return; // Prevent typing non-digits
-            
+
             // Check length (Limit to 11)
             if (value.length > 11) return; // Stop typing after 11
 
@@ -43,23 +44,23 @@ export default function Register() {
             // We need the latest values to compare
             const otherPass = name === 'password' ? formData.confirmPassword : formData.password;
             const currentPass = value;
-            
+
             // Check if they match (only if confirm field isn't empty)
             if (name === 'confirmPassword' && value !== formData.password) {
-                 setErrors(prev => ({ ...prev, passwordMatch: 'Passwords do not match' }));
+                setErrors(prev => ({ ...prev, passwordMatch: 'Passwords do not match' }));
             } else if (name === 'password' && formData.confirmPassword && value !== formData.confirmPassword) {
-                 setErrors(prev => ({ ...prev, passwordMatch: 'Passwords do not match' }));
+                setErrors(prev => ({ ...prev, passwordMatch: 'Passwords do not match' }));
             } else {
-                 setErrors(prev => ({ ...prev, passwordMatch: '' }));
+                setErrors(prev => ({ ...prev, passwordMatch: '' }));
             }
         }
 
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleRegister = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
-        
+
         // Final Validation Check before submitting
         if (formData.phone.length !== 11) {
             Swal.fire('Error', 'Phone number must be exactly 11 digits.', 'error');
@@ -70,54 +71,47 @@ export default function Register() {
             return;
         }
 
-        const allPatients = JSON.parse(localStorage.getItem(DB_PATIENTS_KEY) || "[]");
-        const existingUser = allPatients.find(p => p.email === formData.email);
-        
-        if (existingUser) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Email already used',
-                text: 'A user with this email already exists. Please login instead.',
-                confirmButtonColor: '#3498DB'
+        try {
+            const res = await api.post("/users", {
+                name: formData.name,
+                email: formData.email,
+                phone_number: formData.phone,
+                password: formData.password,
+                gender: formData.gender,
+                birth_date: formData.birth_date,
+                address: ""
             });
-            return;
+
+            Swal.fire({
+                icon: "success",
+                title: "Account Created!",
+                text: "You can now login to your portal.",
+                confirmButtonColor: "#27AE60"
+            }).then(() => navigate("/login"));
+
+        } catch (err) {
+            const message = err.response?.data?.error || "Registration failed.";
+
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: message,
+                confirmButtonColor: "#E74C3C",
+            });
         }
+    }
 
-        const newUser = {
-            id: Date.now(),
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            password: formData.password, 
-            gender: formData.gender,
-            birth_date: formData.birth_date,
-            bloodType: "Unknown", 
-            recentHistory: []
-        };
-
-        allPatients.push(newUser);
-        localStorage.setItem(DB_PATIENTS_KEY, JSON.stringify(allPatients));
-
-        Swal.fire({
-            icon: 'success',
-            title: 'Account Created!',
-            text: 'You can now login to your portal.',
-            confirmButtonColor: '#27AE60'
-        }).then(() => {
-            navigate('/login');
-        });
-    };
 
     return (
         <div className="auth-container">
             <div className="auth-box register-box">
-                <button onClick={() => navigate('/')} style={{border:'none', background:'none', cursor:'pointer', float:'left', fontSize:'1.2rem', color:'#7F8C8D'}}>
+                <button onClick={() => navigate('/')} style={{ border: 'none', background: 'none', cursor: 'pointer', float: 'left', fontSize: '1.2rem', color: '#7F8C8D' }}>
                     ← Back
                 </button>
 
                 <h2>Create Account</h2>
                 <p>Join us to book appointments and view your history.</p>
-                
+
                 <form onSubmit={handleRegister}>
                     <div className="form-group">
                         <label>Full Name</label>
@@ -131,13 +125,13 @@ export default function Register() {
 
                     <div className="form-group">
                         <label>Phone Number</label>
-                        <input 
-                            name="phone" 
-                            type="tel" 
-                            placeholder="01xxxxxxxxx" 
+                        <input
+                            name="phone"
+                            type="tel"
+                            placeholder="01xxxxxxxxx"
                             value={formData.phone} // Controlled input needed for masking
-                            onChange={handleChange} 
-                            required 
+                            onChange={handleChange}
+                            required
                             className={errors.phone ? 'input-error' : ''}
                         />
                         {/* Live Error Text */}
@@ -162,12 +156,12 @@ export default function Register() {
                     <div className="form-group">
                         <label>Password</label>
                         <div className="password-wrapper">
-                            <input 
-                                name="password" 
-                                type={showPassword ? "text" : "password"} 
-                                placeholder="••••••••" 
-                                onChange={handleChange} 
-                                required 
+                            <input
+                                name="password"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="••••••••"
+                                onChange={handleChange}
+                                required
                             />
                             <button type="button" className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
                                 {showPassword ? "🙈" : "👁️"}
@@ -177,24 +171,24 @@ export default function Register() {
 
                     <div className="form-group">
                         <label>Confirm Password</label>
-                        <input 
-                            name="confirmPassword" 
-                            type="password" 
-                            placeholder="••••••••" 
-                            onChange={handleChange} 
-                            required 
+                        <input
+                            name="confirmPassword"
+                            type="password"
+                            placeholder="••••••••"
+                            onChange={handleChange}
+                            required
                             className={errors.passwordMatch ? 'input-error' : ''}
                         />
                         {/* Live Error Text */}
                         {errors.passwordMatch && <span className="error-text">{errors.passwordMatch}</span>}
                     </div>
 
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         className="auth-btn"
                         // Disable if there are active errors
                         disabled={!!errors.phone || !!errors.passwordMatch}
-                        style={{opacity: (errors.phone || errors.passwordMatch) ? 0.5 : 1}}
+                        style={{ opacity: (errors.phone || errors.passwordMatch) ? 0.5 : 1 }}
                     >
                         Register
                     </button>

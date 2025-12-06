@@ -29,7 +29,7 @@ CREATE TABLE DoctorRating (
 CREATE TABLE Doctor (
     id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     user_id int NOT NULL,
-    specialty_id int NOT NULL,
+    specialty_id int,
     profile_pic_path varchar(500),
     rating_id int,
     consultation_fees int,
@@ -37,9 +37,9 @@ CREATE TABLE Doctor (
     about_doctor varchar(255),
     education_and_experience varchar(255),
     status enum('active', 'inactive'),
-    FOREIGN KEY (user_id) REFERENCES User(id),
-    FOREIGN KEY (rating_id) REFERENCES DoctorRating(id),
-    FOREIGN KEY (specialty_id) REFERENCES Specialty(id)
+    FOREIGN KEY (user_id) REFERENCES User(id) on delete cascade,
+    FOREIGN KEY (rating_id) REFERENCES DoctorRating(id) on delete set null,
+    FOREIGN KEY (specialty_id) REFERENCES Specialty(id) on delete set null
 	);
 
 CREATE TABLE Diagnosis (
@@ -51,8 +51,8 @@ CREATE TABLE Diagnosis (
     
 CREATE TABLE Appointment (
 	id int AUTO_INCREMENT PRIMARY KEY,
-    user_id int NOT NULL,
-    doctor_id int NOT NULL,
+    user_id int,
+    doctor_id int,
     reason varchar(255),
     date date NOT NULL,
     starts_at time NOT NULL,
@@ -60,9 +60,9 @@ CREATE TABLE Appointment (
     diagnosis_id integer,
     status enum('scheduled' , 'complete', 'cancelled', 'rescheduled') DEFAULT 'scheduled',
     created_at datetime DEFAULT current_timestamp(),
-    FOREIGN KEY (user_id) REFERENCES User(id),
-    FOREIGN KEY (doctor_id) REFERENCES Doctor(id),
-    FOREIGN KEY (diagnosis_id) REFERENCES Diagnosis(id)
+    FOREIGN KEY (user_id) REFERENCES User(id) on delete set null,
+    FOREIGN KEY (doctor_id) REFERENCES Doctor(id) on delete set null,
+    FOREIGN KEY (diagnosis_id) REFERENCES Diagnosis(id) on delete set null
 );
     
 CREATE TABLE MedicalTest (
@@ -72,18 +72,19 @@ CREATE TABLE MedicalTest (
     description varchar(255),
     test_date date,
     uploaded_at datetime DEFAULT current_timestamp(),
-    FOREIGN KEY (appointment_id) REFERENCES Appointment(id)
-    );
+    FOREIGN KEY (appointment_id) REFERENCES Appointment(id) on delete cascade
+);
     
     
 CREATE TABLE DoctorReview(
 	id int AUTO_INCREMENT PRIMARY KEY,
     doctor_id int NOT NULL,
-    user_id int NOT NULL,
+    user_id int,
     rating tinyint NOT NULL CHECK (rating >= 0 AND rating <=5),
     comment varchar(255),
-    FOREIGN KEY (doctor_id) REFERENCES Doctor(id),
-    FOREIGN KEY (user_id) REFERENCES User(id)
+    date datetime DEFAULT current_timestamp(),
+    FOREIGN KEY (doctor_id) REFERENCES Doctor(id) on delete cascade,
+    FOREIGN KEY (user_id) REFERENCES User(id) on delete set null
     );
     
 CREATE TABLE DoctorSchedule (
@@ -93,7 +94,7 @@ CREATE TABLE DoctorSchedule (
     starts_at time NOT NULL,
     ends_at time NOT NULL,
     slot_duration int NOT NULL,
-    FOREIGN KEY (doctor_id) REFERENCES Doctor(id)
+    FOREIGN KEY (doctor_id) REFERENCES Doctor(id) on delete cascade
 );
 
 INSERT INTO User (
@@ -107,10 +108,10 @@ INSERT INTO User (
     role
 ) VALUES (
     'rootadmin@gmail.com',
-    '$2b$10$.Q4qDiqsLqL9cbMLeX/y0OcLYcJnWlVvSy6KcjfW0a76jKqEFC.9O',
+    '$2b$10$tOn0X2ltv/aDH6qMzQ./iedwCJZwndL8axHTtns6HJ8epLRbpPk2.',
     'Root Admin',
     '01000000000',
-    'Alexandria',
+    'Cairo',
     'female',
     '1990-01-01',
     'admin'

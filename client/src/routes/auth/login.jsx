@@ -1,57 +1,51 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { DB_PATIENTS_KEY, DB_DOCTORS_KEY, DB_ADMINS_KEY } from '../../data/initDB'; 
+import { login } from "../../services/auth.js";
 import './login.css';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); 
-  
-  const navigate = useNavigate();
-  const location = useLocation(); 
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = (e) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    const dbPatients = JSON.parse(localStorage.getItem(DB_PATIENTS_KEY) || "[]");
-    const dbDoctors  = JSON.parse(localStorage.getItem(DB_DOCTORS_KEY) || "[]");
-    const dbAdmins   = JSON.parse(localStorage.getItem(DB_ADMINS_KEY) || "[]");
+    try {
+      const res = await login(email, password);
+      const { token, user } = res.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("activeUserEmail", user.email);
+      localStorage.setItem("userRole", user.role);
 
-    const realPatients = dbPatients.map(p => ({ ...p, role: 'patient' }));
-    const realDoctors  = dbDoctors.map(d => ({ ...d, role: 'doctor' })); 
-    const realAdmins   = dbAdmins.map(a => ({ ...a, role: 'admin' }));
+      Swal.fire({
+        icon: 'success',
+        title: 'Welcome back!',
+        text: `Logged in as ${user.name}`,
+        timer: 1500,
+        showConfirmButton: false
+      }).then(() => {
+        if (location.state?.from && user.role === "patient") {
+          navigate(location.state.from);
+          return;
+        }
 
-    const allUsers = [...realAdmins, ...realDoctors, ...realPatients];
+        if (user.role === 'admin') navigate('/admin/dashboard');
+        else if (user.role === 'doctor') navigate('/doctor/dashboard');
+        else navigate('/patient/dashboard');
+      });
 
-    const foundUser = allUsers.find(user => user.email === email && user.password === password);
-
-    if (foundUser) {
-        localStorage.setItem("activeUserEmail", foundUser.email);
-        
-        Swal.fire({
-            icon: 'success',
-            title: 'Welcome back!',
-            text: `Logged in as ${foundUser.name}`,
-            timer: 1500,
-            showConfirmButton: false
-        }).then(() => {
-            if (location.state?.from && foundUser.role === 'patient') {
-                navigate(location.state.from);
-                return; 
-            }
-            if (foundUser.role === 'admin') navigate('/admin/dashboard');
-            else if (foundUser.role === 'doctor') navigate('/doctor/dashboard');
-            else navigate('/patient/dashboard');
-        });
-    } else {
-        Swal.fire({
-            icon: 'error',
-            title: 'Login Failed',
-            text: 'Invalid email or password. Please try again.',
-            confirmButtonColor: '#d33'
-        });
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: error?.response?.data?.error || 'Invalid email or password.',
+        confirmButtonColor: '#d33'
+      });
     }
   };
 
@@ -61,7 +55,7 @@ export default function Login() {
         <button onClick={() => navigate('/')} style={{border:'none', background:'none', cursor:'pointer', float:'left', fontSize:'1.2rem'}}>←</button>
         <h2>Login</h2>
         <p>Please enter your credentials to access the portal.</p>
-        
+
         <form onSubmit={handleLogin}>
           <div className="form-group">
             <label>Email</label>

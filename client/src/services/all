@@ -1,0 +1,104 @@
+import api from "./api.js";
+export const getAppointments = () => {
+    return api.get("/appointments");
+};
+
+export const createAppointment = (data) => {
+    return api.post("/appointments", data);
+};
+
+export const updateAppointment = (appointmentId, data) => {
+    return api.patch(`/appointments/${appointmentId}`, data);
+};
+
+export const getAppointmentsByUserId = (userId) => {
+    return api.get(`/appointments/user/${userId}`);
+};
+
+export const getAppointmentById = (appointmentId) => {
+    return api.get(`/appointments/${appointmentId}`);
+};
+export const login = async (email, password) => {
+    return api.post("/users/login", { email, password });
+};
+
+export const registerPatient = async (data) => {
+    return api.post("/users/",data);
+};
+
+export const getDiagnosisByAppointmentId = async (appointmentId) => {
+    return api.get(`/diagnosis/${appointmentId}`);
+};
+
+export const createDiagnosis = async (appointmentId, data) => {
+    return api.post(`/diagnosis/${appointmentId}`, data);
+};
+
+export const getDoctors = () => {
+    return api.get('/doctors');
+};
+
+export const getDoctorById = (doctorId) => {
+    return api.get(`/doctors/profile/${doctorId}`);
+};
+
+export const getDoctorsBySpecialty = (specialtyId) => {
+    return api.get(`/doctors/specialty/${specialtyId}`);
+};
+
+export const getDoctorScheduleByDocId = (doctorId) => {
+    return api.get(`/doctors/schedule/${doctorId}`);
+};
+
+export const createSchedule = (data) => {
+    return api.post('/doctors/schedule', data);
+};
+
+export const updateSchedule = (scheduleId, data) => {
+    return api.patch(`/doctors/schedule/${scheduleId}`, data);
+};
+
+export const deleteSchedule = (scheduleId) => {
+    return api.delete(`/doctors/schedule/${scheduleId}`);
+};
+
+export const createMedicalTest = (data) => {
+    return api.post("/medical-tests", data);
+};
+
+export const getMedicalTestById = (testId) => {
+    return api.get(`/medical-tests/${testId}`);
+};
+
+export const uploadMedicalTestFile = (testId, file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return api.post(`/medical-tests/${testId}/file`, formData, {
+        headers: {
+            "Content-Type": "multipart/form-data"
+        }
+    });
+};
+export const getReviewsByDoctorId = (doctorId) => {
+    return api.get(`/reviews/${doctorId}`);
+};
+
+export const createReview = (data) => {
+    return api.post("/reviews", data);
+};
+export const getSpecialties = () => {
+    return api.get("/specialties");
+};
+
+export const createSpecialty = (data) => {
+    return api.post("/specialties", data);
+};
+
+export const getSpecialtyById = (specialtyId) => {
+    return api.get(`/specialties/${specialtyId}`);
+};
+
+export const getTimeSlots = (doctorId) => {
+    return api.get(`/time-slots/${doctorId}`);
+};

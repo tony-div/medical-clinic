@@ -6,10 +6,14 @@ import Joi from 'joi';
 export const getReviewsByDoctorId = async (req, res) => {
   const doctorId = req.params.doctorId;
   const sqlQuery = `
-  SELECT User.name AS user ,rating, comment, date
-  FROM DoctorReview
-  JOIN User ON user_id = User.id
-  WHERE doctor_id = ?`
+    SELECT 
+      COALESCE(User.name, 'Deleted User') AS user,
+      rating,
+      comment,
+      date
+    FROM DoctorReview
+    LEFT JOIN User ON DoctorReview.user_id = User.id
+    WHERE doctor_id = ?;`
 
   try{
     const [rows, fields] = await db.query(sqlQuery, [doctorId]);
@@ -43,7 +47,7 @@ export const getReviewsByDoctorId = async (req, res) => {
 const reviewSchema = Joi.object({
   doctor_id: Joi.number().integer().required(),
   rating: Joi.number().integer().min(0).max(5).required(),
-  comment: Joi.string().allow(null, "").max(500)
+  comment: Joi.string().allow(null, "").max(255)
 });
 
 export const createReview = async (req, res) => {
