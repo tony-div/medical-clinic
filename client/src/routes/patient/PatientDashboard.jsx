@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from 'react'; 
 import { useNavigate, Link } from 'react-router-dom'; 
-import { FaExternalLinkAlt, FaCalendarCheck, FaPlusCircle, FaUserMd, FaClock, FaNotesMedical } from 'react-icons/fa';
+import { FaCalendarCheck, FaPlusCircle, FaUserMd, FaClock, FaFileMedicalAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import PatientSidebar from '../../components/PatientSidebar';
-import { DB_APPOINTMENTS_KEY, DB_PATIENTS_KEY } from '../../data/initDB';
 import './PatientDashboard.css';
+
+// 1. Import Services instead of DB keys
+import { getAppointments } from '../../services/appointment';
+import { getDoctors } from '../../services/doctors';
 
 export default function PatientDashboard() {
     const navigate = useNavigate();
     const currentUserEmail = localStorage.getItem("activeUserEmail");
     
-    const [userName, setUserName] = useState("Patient");
+    // Try to get name from local storage if saved during login, else default
+    const [userName, setUserName] = useState(localStorage.getItem("userName") || "Patient");
+    
     const [upcomingAppt, setUpcomingAppt] = useState(null);
     const [recentHistory, setRecentHistory] = useState([]);
     const [stats, setStats] = useState({ total: 0, completed: 0 });
@@ -17,32 +22,80 @@ export default function PatientDashboard() {
     useEffect(() => {
         if (!currentUserEmail) { navigate('/login'); return; }
 
-        // 1. Get User Name
-        const allPatients = JSON.parse(localStorage.getItem(DB_PATIENTS_KEY) || "[]");
-        const foundUser = allPatients.find(p => p.email === currentUserEmail);
-        if (foundUser) setUserName(foundUser.name);
+        const fetchData = async () => {
+            try {
+                // 2. Fetch Appointments and Doctors in parallel
+                const [appointmentsRes, doctorsRes] = await Promise.all([
+                    getAppointments(),
+                    getDoctors()
+                ]);
 
-        // 2. Get Appointments
-        const allAppts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
-        const myAppts = allAppts.filter(a => a.patientEmail === currentUserEmail);
-        
-        // Sort for upcoming
-        myAppts.sort((a, b) => new Date(a.date) - new Date(b.date));
-        const next = myAppts.find(a => a.status === 'Scheduled');
-        setUpcomingAppt(next);
+                const apiAppointments = appointmentsRes.data || [];
+                const apiDoctors = doctorsRes.data || [];
 
-        // Sort for History (Newest first)
-        const history = myAppts
-            .filter(a => a.status !== 'Scheduled')
-            .sort((a, b) => new Date(b.date) - new Date(a.date)); 
-        
-        setRecentHistory(history);
-        setStats({
-            total: myAppts.length,
-            completed: myAppts.filter(a => a.status === 'Completed').length
-        });
+                // 3. Filter for THIS patient (if API returns all)
+                // Note: Ideally the API filters by token, but we double check here
+                const myAppts = apiAppointments.filter(a => 
+                    a.patientEmail === currentUserEmail || 
+                    a.user_email === currentUserEmail // Check both cases depending on API response
+                );
+
+                // 4. Map API data to UI format (Match Doctor IDs to Names)
+                const formattedAppts = myAppts.map(appt => {
+                    // Find the doctor object for this appointment
+                    const doc = apiDoctors.find(d => d.id === appt.doctor_id || d.id === appt.doctorId);
+                    
+                    return {
+                        ...appt,
+                        // Map Backend fields -> Frontend UI fields
+                        doctorName: doc ? doc.name : (appt.doctorName || "Unknown Doctor"),
+                        specialty: doc ? doc.specialty : (appt.specialty || "General"),
+                        image: doc ? doc.image : (appt.image || "/assets/default-doc.png"),
+                        date: appt.date || appt.appointment_date, // Handle different naming conventions
+                        time: appt.time || appt.starts_at,
+                        status: appt.status || 'Scheduled'
+                    };
+                });
+                
+                // 5. Sort by date
+                formattedAppts.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                // Find next scheduled
+                const next = formattedAppts.find(a => a.status === 'Scheduled' || a.status === 'scheduled');
+                setUpcomingAppt(next);
+
+                // History (Newest first)
+                const history = formattedAppts
+                    .filter(a => a.status !== 'Scheduled' && a.status !== 'scheduled')
+                    .sort((a, b) => new Date(b.date) - new Date(a.date)); 
+                
+                setRecentHistory(history);
+
+                // Stats
+                setStats({
+                    total: formattedAppts.length,
+                    completed: formattedAppts.filter(a => a.status === 'Completed' || a.status === 'complete').length
+                });
+
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            }
+        };
+
+        fetchData();
 
     }, [currentUserEmail, navigate]);
+
+    // Helper for status badge color
+    const getStatusClass = (status) => {
+        if (!status) return 'status-default';
+        switch(status.toLowerCase()) {
+            case 'completed': 
+            case 'complete': return 'status-completed';
+            case 'cancelled': return 'status-cancelled';
+            default: return 'status-default';
+        }
+    };
 
     return (
         <div className="dashboard-layout">
@@ -51,9 +104,9 @@ export default function PatientDashboard() {
                 
                 {/* HEADER SECTION */}
                 <header className="dashboard-header">
-                    <div className="header-text">
+                    <div>
                         <h1>Welcome back, <span className="highlight-text">{userName}</span></h1>
-                        <p>Track your appointments and health history.</p>
+                        <p>Here is your daily health overview.</p>
                     </div>
                     <div className="header-actions">
                         <Link to="/doctors" className="primary-btn hover-scale">
@@ -75,7 +128,7 @@ export default function PatientDashboard() {
                             <div className="appt-content">
                                 <div className="doctor-info">
                                     <div className="img-wrapper">
-                                        <img src={upcomingAppt.image || "https://via.placeholder.com/150"} alt="Doc" />
+                                        <img src={upcomingAppt.image} alt="Doc" />
                                     </div>
                                     <div>
                                         <h4>{upcomingAppt.doctorName}</h4>
@@ -104,7 +157,7 @@ export default function PatientDashboard() {
                     {/* 2. ACTIVITY STATS */}
                     <div className="widget-card stats-card hover-lift">
                         <div className="card-header">
-                            <h3><FaNotesMedical className="icon-purple"/> Activity Summary</h3>
+                            <h3><FaFileMedicalAlt className="icon-purple"/> Activity Summary</h3>
                         </div>
                         <div className="stats-row">
                             <div className="stat-item">
@@ -125,11 +178,7 @@ export default function PatientDashboard() {
 
                 {/* RECENT HISTORY TABLE */}
                 <div className="history-section slide-up">
-                    <div className="section-header">
-                        <h3>Recent History</h3>
-                        <Link to="/patient/appointments" className="view-all">View All</Link>
-                    </div>
-                    
+                    <h3>Recent History</h3>
                     <div className="table-wrapper">
                         <table className="history-table">
                             <thead>
@@ -137,41 +186,36 @@ export default function PatientDashboard() {
                                     <th>Date</th>
                                     <th>Doctor</th>
                                     <th>Status</th>
-                                    <th>Details</th>
+                                    <th>Diagnosis</th>
+                                    <th>Action</th> 
                                 </tr>
                             </thead>
                             <tbody>
                                 {recentHistory.length > 0 ? (
                                     recentHistory.slice(0, 3).map((item) => (
                                         <tr key={item.id} className="table-row">
+                                            <td className="date-cell"><FaClock className="mini-icon"/> {item.date}</td>
+                                            <td className="doc-cell"><FaUserMd className="mini-icon"/> {item.doctorName}</td>
                                             <td>
-                                                <div className="date-cell">
-                                                    <FaClock className="mini-icon"/> {item.date}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className="doc-cell">
-                                                    <FaUserMd className="mini-icon"/> {item.doctorName}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span className={`status-badge ${item.status.toLowerCase()}`}>
+                                                <span className={`status-badge ${getStatusClass(item.status)}`}>
                                                     {item.status}
                                                 </span>
                                             </td>
-                                            <td className="action-cell">
-                                                <Link 
-                                                    to={`/patient/appointment/${item.id}`} 
-                                                    className="view-details-btn"
+                                            <td className="diagnosis-text">{item.diagnosis || "-"}</td>
+                                            
+                                            <td>
+                                                <button 
+                                                    className="view-btn"
+                                                    onClick={() => navigate(`/patient/appointment/${item.id}`)}
                                                 >
-                                                    View <FaExternalLinkAlt size={12}/>
-                                                </Link>
+                                                    View <FaExternalLinkAlt style={{fontSize:'10px'}}/>
+                                                </button>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="4" className="empty-table">No history found.</td>
+                                        <td colSpan="5" className="empty-table">No recent history found.</td>
                                     </tr>
                                 )}
                             </tbody>

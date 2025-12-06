@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom'; 
-// 1. ADD FaCheckCircle to imports
 import { FaUser, FaEnvelope, FaLock, FaPhone, FaMapMarkerAlt, FaBirthdayCake, FaVenusMars, FaArrowLeft, FaPen, FaSave, FaTimes, FaCheckCircle } from 'react-icons/fa';
 import PatientSidebar from '../../components/PatientSidebar';
-import { DB_PATIENTS_KEY } from '../../data/initDB';
+import api from '../../services/api'; // 1. Import API
 import './PatientProfile.css'; 
 
 export default function PatientProfile() {
@@ -18,29 +17,39 @@ export default function PatientProfile() {
     const [age, setAge] = useState(0);
     const [isEditing, setIsEditing] = useState(false);
     const [notFound, setNotFound] = useState(false);
-
-    // 2. NEW STATE for the custom popup
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
+    // 2. Load Data from API
     useEffect(() => {
         if (!targetEmail) { 
             navigate('/login'); 
             return; 
         }
 
-        const allPatients = JSON.parse(localStorage.getItem(DB_PATIENTS_KEY) || "[]");
-        const foundUser = allPatients.find(p => p.email.toLowerCase() === targetEmail.toLowerCase());
+        const fetchUser = async () => {
+            try {
+                // Fetch all users (or specific profile endpoint if available)
+                const { data: allUsers } = await api.get('/users');
+                const foundUser = allUsers.find(p => p.email.toLowerCase() === targetEmail.toLowerCase());
 
-        if (foundUser) {
-            setUserData({
-                ...foundUser,
-                phone: foundUser.phone || "",
-                address: foundUser.address || ""
-            });
-            calculateAge(foundUser.birth_date);
-        } else {
-            setNotFound(true);
-        }
+                if (foundUser) {
+                    setUserData({
+                        ...foundUser,
+                        // Map Backend 'phone_number' to Frontend 'phone'
+                        phone: foundUser.phone_number || foundUser.phone || "",
+                        address: foundUser.address || ""
+                    });
+                    calculateAge(foundUser.birth_date);
+                } else {
+                    setNotFound(true);
+                }
+            } catch (error) {
+                console.error("Error loading profile:", error);
+                setNotFound(true);
+            }
+        };
+
+        fetchUser();
     }, [targetEmail, navigate]);
 
     const calculateAge = (dob) => {
@@ -63,28 +72,30 @@ export default function PatientProfile() {
         if (name === 'birth_date') calculateAge(value);
     };
 
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e.preventDefault();
-        const allPatients = JSON.parse(localStorage.getItem(DB_PATIENTS_KEY) || "[]");
         
-        if (userData.email !== targetEmail) {
-            const emailExists = allPatients.find(p => p.email === userData.email && p.id !== userData.id);
-            if (emailExists) {
-                alert("This email is already in use by another patient.");
-                return;
+        try {
+            // 3. Prepare payload (Map 'phone' back to 'phone_number')
+            const payload = {
+                ...userData,
+                phone_number: userData.phone
+            };
+
+            // 4. Send Update to API
+            await api.patch(`/users/${userData.id}`, payload);
+
+            // Update session if email changed
+            if (userData.email !== targetEmail && !email) {
+                localStorage.setItem("activeUserEmail", userData.email);
             }
+
+            setIsEditing(false);
+            setShowSuccessPopup(true);
+
+        } catch (error) {
+            alert("Failed to update profile: " + (error.response?.data?.error || error.message));
         }
-
-        const updatedPatients = allPatients.map(p => p.id === userData.id ? userData : p);
-        localStorage.setItem(DB_PATIENTS_KEY, JSON.stringify(updatedPatients));
-
-        if (userData.email !== targetEmail && !email) {
-            localStorage.setItem("activeUserEmail", userData.email);
-        }
-
-        setIsEditing(false);
-        
-        setShowSuccessPopup(true);
     };
 
     const handleBack = () => {
@@ -99,7 +110,7 @@ export default function PatientProfile() {
     if (!userData) return <div className="loading-state">Loading Profile...</div>;
 
     const isAdminView = !!email;
-
+    
     return (
         <div className="dashboard-layout">
             {!isAdminView && <PatientSidebar />}
