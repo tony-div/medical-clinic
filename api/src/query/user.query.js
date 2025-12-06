@@ -35,6 +35,7 @@ export const query = {
     SELECT_APPOINTMENTS_SHARED: `  SELECT * FROM Appointment WHERE user_id=? AND doctor_id=?`,
     GET_SPECIALTY_BY_ID: `SELECT * FROM Specialty WHERE id = ?`,
     CREATE_SPECIALTY: `INSERT INTO Specialty (name) VALUES (?)`,
+    GET_RATING_BY_ID: `SELECT * FROM DoctorRating WHERE id = ?`,
 
 
 

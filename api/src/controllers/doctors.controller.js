@@ -5,27 +5,42 @@ import Joi from 'joi';
 
 export const getDoctors = async (req, res) => {
   const query = `
-    SELECT D.id, User.name AS name, Specialty.name AS specialty, D.profile_pic_path, DoctorRating.avg_rating, D.consultation_fees
-    FROM DOCTOR AS D
-    JOIN User ON D.user_id = User.id 
-    JOIN Specialty ON D.specialty_id = Specialty.id
-    JOIN DoctorRating ON D.rating_id = DoctorRating.id
-    `
-  try{
-    const [rows, fields] = await db.query(query);
+  SELECT
+      D.id AS id,
+      U.name AS name,
+      S.name AS specialty_name,
+      D.profile_pic_path,
+      D.consultation_fees,
+      D.waiting_time,
+      D.about_doctor,
+      D.education_and_experience,
+      D.status,
+      D.rating_id,
+
+      DR.avg_rating,
+      DR.reviews_count
+
+  FROM Doctor AS D
+  JOIN User AS U ON D.user_id = U.id
+  LEFT JOIN Specialty AS S ON D.specialty_id = S.id
+  LEFT JOIN DoctorRating AS DR ON D.rating_id = DR.id;
+
+  `;
+
+  try {
+    const [rows] = await db.query(query);
 
     res.status(200).json({
       message: 'ok',
       data: rows
-    })
+    });
 
-  } catch(error){
-    console.error('error',error);
+  } catch (error) {
+    console.error('error', error);
     res.status(500).json({
       message: 'Internal server error',
-      'error':error.message
-    })
-
+      error: error.message
+    });
   }
 };
 

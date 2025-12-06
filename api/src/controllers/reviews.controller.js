@@ -1,5 +1,5 @@
 import { db } from '../../config/database.js';
-//import { query } from '../query/user.query.js';
+import { query } from '../query/user.query.js';
 import { code } from '../http.code.js';
 import Joi from 'joi';
 
@@ -51,13 +51,19 @@ const reviewSchema = Joi.object({
 });
 
 export const createReview = async (req, res) => {
+  let conn;
   try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
     const requester = req.user;
+
     if (requester.role !== "patient") {
       return res.status(code.FORBIDDEN).json({
         error: "Only patients can create reviews"
       });
     }
+
     const { error } = reviewSchema.validate(req.body);
     if (error) {
       return res.status(code.BAD_REQUEST).json({
@@ -66,38 +72,63 @@ export const createReview = async (req, res) => {
     }
 
     const { doctor_id, rating, comment } = req.body;
-    const [doctorRows] = await db.query(
-      "SELECT id FROM Doctor WHERE id = ?",
+    const [doctorRows] = await conn.query(
+      "SELECT id, rating_id FROM Doctor WHERE id = ?",
       [doctor_id]
     );
-
     if (doctorRows.length === 0) {
       return res.status(code.NOT_FOUND).json({ error: "Doctor not found" });
     }
 
-    const [existingReview] = await db.query(
+    const [existingReview] = await conn.query(
       "SELECT id FROM DoctorReview WHERE doctor_id = ? AND user_id = ?",
       [doctor_id, requester.id]
     );
-
     if (existingReview.length > 0) {
       return res.status(code.BAD_REQUEST).json({
         error: "You have already reviewed this doctor"
       });
     }
 
-    const sqlQuery = `
-      INSERT INTO DoctorReview (doctor_id, user_id, rating, comment)
-      VALUES (?, ?, ?, ?)
-    `;
+    const ratingId = doctorRows[0].rating_id;
 
-    const [result] = await db.query(sqlQuery, [
-      doctor_id,
-      requester.id,
-      rating,
-      comment || null
-    ]);
-    
+    if (ratingId === null) {
+      const [newRating] = await conn.query(
+        "INSERT INTO DoctorRating (avg_rating, reviews_count) VALUES (?, ?)",
+        [rating, 1]
+      );
+
+      await conn.query(
+        "UPDATE Doctor SET rating_id = ? WHERE id = ?",
+        [newRating.insertId, doctor_id]
+      );
+
+    } else {
+      const [oldRating] = await conn.query(
+        "SELECT avg_rating, reviews_count FROM DoctorRating WHERE id = ?",
+        [ratingId]
+      );
+
+      const oldAvg = parseFloat(oldRating[0].avg_rating);
+      const oldCount = oldRating[0].reviews_count;
+
+      const newCount = oldCount + 1;
+      const newAvg = ((oldAvg * oldCount) + rating) / newCount;
+
+      await conn.query(
+        "UPDATE DoctorRating SET avg_rating = ?, reviews_count = ? WHERE id = ?",
+        [newAvg.toFixed(1), newCount, ratingId]
+      );
+    }
+
+    const [result] = await conn.query(
+      `INSERT INTO DoctorReview (doctor_id, user_id, rating, comment)
+        VALUES (?, ?, ?, ?)`,
+      [doctor_id, requester.id, rating, comment || null]
+    );
+
+    await conn.commit();
+
     return res.status(code.CREATED_SUCCESSFULLY).json({
       message: "Review created successfully",
       review: {
@@ -110,7 +141,27 @@ export const createReview = async (req, res) => {
     });
 
   } catch (err) {
+    if (conn) await conn.rollback();
     console.error("Error creating review:", err);
+
+    return res.status(code.SERVER_ERROR).json({
+      error: "Internal server error"
+    });
+  } finally {
+    if (conn) conn.release();
+  }
+};
+
+export const getRatingById = async (req, res) => {
+  try{
+    const ratingId = req.params.ratingId;
+    const [rating] = await db.query(query.GET_RATING_BY_ID, [ratingId]);
+    if(rating.length === 0){
+      return res.status(code.BAD_REQUEST).json({error:"id not found"});
+    }
+    return res.status(code.SUCCESS).json({message:"retrieved successfully", rating: rating[0]});
+  }catch(error){
+    console.error("Error creating review:", error);
     return res.status(code.SERVER_ERROR).json({
       error: "Internal server error"
     });

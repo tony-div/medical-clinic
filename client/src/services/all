@@ -1,30 +1,26 @@
-import api from "./api.js";
-export const getAppointments = () => {
+import api from "./api";
+
+export const getAppointments = async () => {
     return api.get("/appointments");
 };
 
-export const createAppointment = (data) => {
+export const createAppointment = async (data) => {
     return api.post("/appointments", data);
 };
 
-export const updateAppointment = (appointmentId, data) => {
+export const updateAppointment = async (appointmentId, data) => {
     return api.patch(`/appointments/${appointmentId}`, data);
 };
 
-export const getAppointmentsByUserId = (userId) => {
+export const getAppointmentsByUserId = async (userId) => {
     return api.get(`/appointments/user/${userId}`);
 };
 
-export const getAppointmentById = (appointmentId) => {
+export const getAppointmentById = async (appointmentId) => {
     return api.get(`/appointments/${appointmentId}`);
 };
-export const login = async (email, password) => {
-    return api.post("/users/login", { email, password });
-};
 
-export const registerPatient = async (data) => {
-    return api.post("/users/",data);
-};
+import api from "./api.js";
 
 export const getDiagnosisByAppointmentId = async (appointmentId) => {
     return api.get(`/diagnosis/${appointmentId}`);
@@ -34,43 +30,47 @@ export const createDiagnosis = async (appointmentId, data) => {
     return api.post(`/diagnosis/${appointmentId}`, data);
 };
 
+import api from "./api.js";
+
 export const getDoctors = () => {
     return api.get('/doctors');
 };
 
-export const getDoctorById = (doctorId) => {
+export const getDoctorById = async (doctorId) => {
     return api.get(`/doctors/profile/${doctorId}`);
 };
 
-export const getDoctorsBySpecialty = (specialtyId) => {
+export const getDoctorsBySpecialty = async (specialtyId) => {
     return api.get(`/doctors/specialty/${specialtyId}`);
 };
 
-export const getDoctorScheduleByDocId = (doctorId) => {
+export const getDoctorScheduleByDocId = async (doctorId) => {
     return api.get(`/doctors/schedule/${doctorId}`);
 };
 
-export const createSchedule = (data) => {
+export const createSchedule = async (data) => {
     return api.post('/doctors/schedule', data);
 };
 
-export const updateSchedule = (scheduleId, data) => {
+export const updateSchedule = async (scheduleId, data) => {
     return api.patch(`/doctors/schedule/${scheduleId}`, data);
 };
 
-export const deleteSchedule = (scheduleId) => {
+export const deleteSchedule = async (scheduleId) => {
     return api.delete(`/doctors/schedule/${scheduleId}`);
 };
 
-export const createMedicalTest = (data) => {
+import api from "./api";
+
+export const createMedicalTest = async (data) => {
     return api.post("/medical-tests", data);
 };
 
-export const getMedicalTestById = (testId) => {
+export const getMedicalTestById = async (testId) => {
     return api.get(`/medical-tests/${testId}`);
 };
 
-export const uploadMedicalTestFile = (testId, file) => {
+export const uploadMedicalTestFile = async (testId, file) => {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -80,25 +80,57 @@ export const uploadMedicalTestFile = (testId, file) => {
         }
     });
 };
-export const getReviewsByDoctorId = (doctorId) => {
+
+import api from "./api";
+
+export const getReviewsByDoctorId = async (doctorId) => {
     return api.get(`/reviews/${doctorId}`);
 };
 
-export const createReview = (data) => {
+export const createReview = async (data) => {
     return api.post("/reviews", data);
 };
-export const getSpecialties = () => {
+
+//reviewsRouter.get('/rating/:ratingId', getRatingById);
+export const getRating = async (ratingId) => {
+    return api.get(`/reviews/${ratingId}`);
+};
+
+import api from "./api";
+
+export const getSpecialties = async () => {
     return api.get("/specialties");
 };
 
-export const createSpecialty = (data) => {
+export const createSpecialty = async (data) => {
     return api.post("/specialties", data);
 };
 
-export const getSpecialtyById = (specialtyId) => {
+export const getSpecialtyById = async (specialtyId) => {
     return api.get(`/specialties/${specialtyId}`);
 };
 
-export const getTimeSlots = (doctorId) => {
+import api from "./api";
+
+export const getTimeSlots = async (doctorId) => {
     return api.get(`/time-slots/${doctorId}`);
 };
+
+import api from "./api";
+
+// usersRouter.get('/:userId', authenticate, getUserById);
+// usersRouter.patch('/:userId', authenticate, updateUser);
+// usersRouter.delete('/:userId', authenticate, deleteUser);
+
+export const getUser = async (userId) => {
+    return api.get(`/users/${userId}`);
+};
+
+export const updateUser = async (userId) => {
+    return api.patch(`/users/${userId}`);
+}
+
+export const deleteUser = async (userId) => {
+    return api.delete(`/users/${userId}`);
+};
+

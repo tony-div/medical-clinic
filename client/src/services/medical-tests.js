@@ -1,14 +1,14 @@
 import api from "./api";
 
-export const createMedicalTest = (data) => {
+export const createMedicalTest = async (data) => {
     return api.post("/medical-tests", data);
 };
 
-export const getMedicalTestById = (testId) => {
+export const getMedicalTestById = async (testId) => {
     return api.get(`/medical-tests/${testId}`);
 };
 
-export const uploadMedicalTestFile = (testId, file) => {
+export const uploadMedicalTestFile = async (testId, file) => {
     const formData = new FormData();
     formData.append("file", file);
 

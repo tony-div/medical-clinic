@@ -1,13 +1,13 @@
 import api from "./api";
 
-export const getSpecialties = () => {
+export const getSpecialties = async () => {
     return api.get("/specialties");
 };
 
-export const createSpecialty = (data) => {
+export const createSpecialty = async (data) => {
     return api.post("/specialties", data);
 };
 
-export const getSpecialtyById = (specialtyId) => {
+export const getSpecialtyById = async (specialtyId) => {
     return api.get(`/specialties/${specialtyId}`);
 };
