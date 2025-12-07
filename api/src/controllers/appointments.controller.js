@@ -17,21 +17,21 @@ export const getAppointments = async (req, res) => {
       const [result] = await db.query(query.SELECT_APPOINTMENT_BY_DOCID, [loggedUser.doc_id]);
       return res.status(code.SUCCESS).json({
         message: "retrieved successfully",
-        Appointments: result
+        appointments: result
       });
     }
     if(loggedUser.role === "patient"){
       const [result] = await db.query(query.SELECT_APPOINTMENT_BY_USERID, [loggedUser.id]);
       return res.status(code.SUCCESS).json({
         message: "retrieved successfully",
-        Appointments: result
+        appointments: result
       });
     }
     if(loggedUser.role === "admin"){
       const [result] = await db.query(query.GET_ALL_APPOINTMENTS)
       return res.status(code.SUCCESS).json({
         message: "retrieved successfully",
-        Appointments: result
+        appointments: result
       });
     }
     return res.status(code.FORBIDDEN).json({

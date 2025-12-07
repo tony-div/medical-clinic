@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaCalendarAlt, FaUserMd, FaClock, FaExternalLinkAlt, FaBan, FaExclamationTriangle } from 'react-icons/fa';
 import PatientSidebar from '../../components/PatientSidebar';
 import './MyAppointments.css';
-
-import { getAppointmentsByUserId, updateAppointment } from '../../services/appointment';
+import { getAppointments } from '../../services/appointment';
 import { getDoctors } from '../../services/doctors';
 
 export default function MyAppointments() {
@@ -26,7 +25,7 @@ export default function MyAppointments() {
             try {
                 // Fetch User's Appts & Doctors
                 const [apptRes, docRes] = await Promise.all([
-                    getAppointmentsByUserId(userId),
+                    getAppointments(),
                     getDoctors()
                 ]);
 

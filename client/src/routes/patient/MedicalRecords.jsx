@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaFileMedical, FaCalendarAlt, FaUserMd, FaExternalLinkAlt, FaFileAlt } from 'react-icons/fa';
 import PatientSidebar from '../../components/PatientSidebar';
 import './MedicalRecords.css';
-
-import { getAppointmentsByUserId } from '../../services/appointment';
+import { getAppointments } from '../../services/appointment';
 import { getDoctors } from '../../services/doctors';
 
 export default function MedicalRecords() {
@@ -12,32 +11,49 @@ export default function MedicalRecords() {
     const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
     const userId = storedUser.id;
     const [records, setRecords] = useState([]);
-    const API_BASE_URL = 'http://localhost:5000';
+    
+    // Check if you have VITE_API_URL defined, otherwise default to localhost:5000
+    const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
 
     useEffect(() => {
         if (!userId) { navigate('/login'); return; }
 
         const fetchData = async () => {
             try {
+                // FIX 3: Call getAppointments() with no ID (uses token)
                 const [apptRes, docRes] = await Promise.all([
-                    getAppointmentsByUserId(userId),
+                    getAppointments(),
                     getDoctors()
                 ]);
 
-                const apiAppts = Array.isArray(apptRes.data) ? apptRes.data : (apptRes.data.appointments || apptRes.data.data || []);
-                const apiDocs = Array.isArray(docRes.data) ? docRes.data : (docRes.data.doctors || docRes.data.data || []);
+                const apiAppts = Array.isArray(apptRes.data) 
+                    ? apptRes.data 
+                    : (apptRes.data.appointments || apptRes.data.data || []);
+                
+                const apiDocs = Array.isArray(docRes.data) 
+                    ? docRes.data 
+                    : (docRes.data.doctors || docRes.data.data || []);
+
+                console.log("Raw Appointments for Records:", apiAppts); // Debugging Log
 
                 const myRecords = apiAppts
-                    // Filter for records with files
+                    // Filter: Only show appointments that actually HAVE files attached
+                    // Note: This relies on your backend sending these fields.
+                    // If your list is empty, your backend might not be joining the MedicalTest table.
                     .filter(a => a.uploadedFiles || a.file_path || a.medical_test_path)
                     .map(appt => {
                         const doc = apiDocs.find(d => d.id === appt.doctor_id || d.id === appt.doctorId);
-                        let fileUrl = appt.uploadedFiles || appt.file_path || "";
-                        if (fileUrl && !fileUrl.startsWith('http')) fileUrl = `${API_BASE_URL}${fileUrl}`;
+                        
+                        // normalize the file URL
+                        let fileUrl = appt.uploadedFiles || appt.file_path || appt.medical_test_path || "";
+                        if (fileUrl && !fileUrl.startsWith('http')) {
+                            fileUrl = `${API_BASE_URL}${fileUrl}`;
+                        }
 
                         return {
                             id: appt.id,
-                            date: appt.date ? appt.date.toString().split('T')[0] : "",
+                            // Safety check for date
+                            date: appt.date ? new Date(appt.date).toISOString().split('T')[0] : "N/A",
                             type: appt.test_description || "Medical Document",
                             uploadedFiles: fileUrl,
                             doctorName: doc ? doc.name : "Unknown Doctor",
@@ -55,7 +71,6 @@ export default function MedicalRecords() {
 
         fetchData();
     }, [userId, navigate]);
-
     return (
         <div className="dashboard-layout">
             <PatientSidebar />

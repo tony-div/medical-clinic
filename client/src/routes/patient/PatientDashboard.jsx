@@ -3,9 +3,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import { FaCalendarCheck, FaPlusCircle, FaUserMd, FaClock, FaFileMedicalAlt, FaExternalLinkAlt } from 'react-icons/fa';
 import PatientSidebar from '../../components/PatientSidebar';
 import './PatientDashboard.css';
-
-import { getAppointmentsByUserId } from '../../services/appointment';
+import { getAppointments } from '../../services/appointment';
 import { getDoctors } from '../../services/doctors';
+
 
 export default function PatientDashboard() {
     const navigate = useNavigate();
@@ -20,29 +20,48 @@ export default function PatientDashboard() {
     const [stats, setStats] = useState({ total: 0, completed: 0 });
 
     useEffect(() => {
-        if (!userId) { navigate('/login'); return; }
+    if (!userId) { 
+        console.warn("⛔ No User ID found in localStorage. Redirecting.");
+        navigate('/login'); 
+        return; 
+    }
 
-        const fetchData = async () => {
-            try {
-                console.log("Fetching data for User ID:", userId);
+    const fetchData = async () => {
+        try {
+            console.log("🔍 STEP 1: Current User ID is:", userId);
 
-                const [appointmentsRes, doctorsRes] = await Promise.all([
-                    getAppointmentsByUserId(userId),
-                    getDoctors()
-                ]);
+            // Fetch Appointments
+            const [appointmentsRes, doctorsRes] = await Promise.all([
+   getAppointments(), // <--- No ID needed! It uses your token.
+   getDoctors()
+]);
+            console.log("🔍 STEP 2: Raw API Response:", appointmentsRes);
+            
+            // Check exactly what the backend sent back
+            const rawData = appointmentsRes.data;
+            console.log("🔍 STEP 3: Response .data property:", rawData);
+            
+            // UNWRAPPING LOGIC WITH DEBUGGING
+            let apiAppointments = [];
+            
+            if (Array.isArray(rawData)) {
+                console.log("✅ Data is an Array immediately.");
+                apiAppointments = rawData;
+            } else if (rawData.appointments && Array.isArray(rawData.appointments)) {
+                 console.log("✅ Data found inside .appointments key");
+                apiAppointments = rawData.appointments;
+            } else if (rawData.data && Array.isArray(rawData.data)) {
+                 console.log("✅ Data found inside .data key");
+                apiAppointments = rawData.data;
+            } else {
+                console.error("❌ Could not find array in response. Keys found:", Object.keys(rawData));
+            }
 
-                // --- DEBUG LOGS ---
-                console.log("🔥 RAW APPOINTMENTS RESPONSE:", appointmentsRes);
-                console.log("🔥 RAW DOCTORS RESPONSE:", doctorsRes);
+            console.log("🔍 STEP 4: Final array to be mapped:", apiAppointments);
 
-                // Safe Unwrap Logic
-                const apiAppointments = Array.isArray(appointmentsRes.data) 
-                    ? appointmentsRes.data 
-                    : (appointmentsRes.data?.appointments || appointmentsRes.data?.data || []);
-
-                const apiDoctors = Array.isArray(doctorsRes.data) 
-                    ? doctorsRes.data 
-                    : (doctorsRes.data?.doctors || doctorsRes.data?.data || []);
+            const apiDoctors = Array.isArray(doctorsRes.data) 
+                ? doctorsRes.data 
+                : (doctorsRes.data?.doctors || doctorsRes.data?.data || []);
 
                 console.log("✅ Unwrapped Appointments:", apiAppointments);
 
@@ -84,9 +103,9 @@ export default function PatientDashboard() {
                     completed: formattedAppts.filter(a => a.status === 'Completed').length
                 });
 
-            } catch (error) {
-                console.error("⚠️ Error fetching dashboard data:", error);
-            }
+           } catch (error) {
+            console.error("⚠️ Error fetching dashboard data:", error);
+        }
         };
 
         fetchData();
