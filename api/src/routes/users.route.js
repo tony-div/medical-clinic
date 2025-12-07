@@ -11,7 +11,6 @@ import {
   createAdmin,
   createDoctor,
   loginUser,
-  getAllUsers,
 } from '../controllers/users.controller.js';
 
 const usersRouter = express.Router();
@@ -23,7 +22,6 @@ usersRouter.post("/doctor", authenticate, createDoctor);
 usersRouter.post('/login', loginUser);
 
 // [ADDED] - Route to get all users for admin panel
-usersRouter.get('/', authenticate, getAllUsers);
 usersRouter.get('/:userId', authenticate, getUserById);
 usersRouter.patch('/:userId', authenticate, updateUser);
 usersRouter.delete('/:userId', authenticate, deleteUser);
