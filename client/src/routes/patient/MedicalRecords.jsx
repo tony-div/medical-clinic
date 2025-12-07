@@ -56,7 +56,11 @@ export default function MedicalRecords() {
 
                 // 3. Filter & Map (Now 'file_path' exists!)
                 const myRecords = appointmentsWithTests
-                    .filter(a => a.file_path || a.medical_test_path) 
+                    .filter(a => {
+    const path = a.uploadedFiles || a.file_path || a.medical_test_path;
+    // Only allow if path exists AND is not "N/A" AND is not empty
+    return path && path !== "N/A" && path.trim() !== "";
+})
                     .map(appt => {
                         const doc = apiDocs.find(d => d.id === appt.doctor_id || d.id === appt.doctorId);
                         
