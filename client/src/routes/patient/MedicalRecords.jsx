@@ -5,6 +5,7 @@ import PatientSidebar from '../../components/PatientSidebar';
 import './MedicalRecords.css';
 import { getAppointments } from '../../services/appointment';
 import { getDoctors } from '../../services/doctors';
+import { getMedicalTestByAppointmentId } from '../../services/medical-tests';
 
 export default function MedicalRecords() {
     const navigate = useNavigate();
@@ -12,7 +13,6 @@ export default function MedicalRecords() {
     const userId = storedUser.id;
     const [records, setRecords] = useState([]);
     
-    // Check if you have VITE_API_URL defined, otherwise default to localhost:5000
     const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
 
     useEffect(() => {
@@ -20,7 +20,7 @@ export default function MedicalRecords() {
 
         const fetchData = async () => {
             try {
-                // FIX 3: Call getAppointments() with no ID (uses token)
+                // 1. Fetch Appointments & Doctors
                 const [apptRes, docRes] = await Promise.all([
                     getAppointments(),
                     getDoctors()
@@ -34,25 +34,39 @@ export default function MedicalRecords() {
                     ? docRes.data 
                     : (docRes.data.doctors || docRes.data.data || []);
 
-                console.log("Raw Appointments for Records:", apiAppts); // Debugging Log
+                // We use Promise.all to fetch them all in parallel
+                const appointmentsWithTests = await Promise.all(apiAppts.map(async (appt) => {
+                    try {
+                        const testRes = await getMedicalTestByAppointmentId(appt.id);
+                        const tests = testRes.data.medicalTest;
+                        
+                        // If a test is found, attach it to the appointment object
+                        if (Array.isArray(tests) && tests.length > 0) {
+                            return {
+                                ...appt,
+                                file_path: tests[0].file_path,
+                                test_description: tests[0].description
+                            };
+                        }
+                    } catch (err) {
+                        // If 404 (No test found), just return the appointment as is
+                    }
+                    return appt;
+                }));
 
-                const myRecords = apiAppts
-                    // Filter: Only show appointments that actually HAVE files attached
-                    // Note: This relies on your backend sending these fields.
-                    // If your list is empty, your backend might not be joining the MedicalTest table.
-                    .filter(a => a.uploadedFiles || a.file_path || a.medical_test_path)
+                // 3. Filter & Map (Now 'file_path' exists!)
+                const myRecords = appointmentsWithTests
+                    .filter(a => a.file_path || a.medical_test_path) 
                     .map(appt => {
                         const doc = apiDocs.find(d => d.id === appt.doctor_id || d.id === appt.doctorId);
                         
-                        // normalize the file URL
-                        let fileUrl = appt.uploadedFiles || appt.file_path || appt.medical_test_path || "";
+                        let fileUrl = appt.file_path || appt.medical_test_path || "";
                         if (fileUrl && !fileUrl.startsWith('http')) {
                             fileUrl = `${API_BASE_URL}${fileUrl}`;
                         }
 
                         return {
                             id: appt.id,
-                            // Safety check for date
                             date: appt.date ? new Date(appt.date).toISOString().split('T')[0] : "N/A",
                             type: appt.test_description || "Medical Document",
                             uploadedFiles: fileUrl,
@@ -71,6 +85,7 @@ export default function MedicalRecords() {
 
         fetchData();
     }, [userId, navigate]);
+
     return (
         <div className="dashboard-layout">
             <PatientSidebar />
