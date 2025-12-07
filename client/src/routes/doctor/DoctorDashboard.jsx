@@ -2,59 +2,114 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUserInjured, FaCheckCircle, FaSearch, FaClock, FaFileAlt, FaStethoscope, FaCalendarCheck } from 'react-icons/fa';
 import DoctorSidebar from '../../components/DoctorSidebar';
-import { DB_APPOINTMENTS_KEY } from '../../data/initDB';
-import './DoctorDashboard.css'; // New dedicated CSS file
+import './DoctorDashboard.css';
+
+// ✅ Services
+import { getAppointments } from '../../services/appointment';
+import { getUser } from '../../services/users';
+import { getMedicalTestByAppointmentId } from '../../services/medical-tests';
 
 export default function DoctorDashboard() {
     const navigate = useNavigate();
-    const currentUser = localStorage.getItem("currentUser");
+    
+    // ✅ 1. Get Logged In Doctor
+    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    const [doctorName, setDoctorName] = useState(currentUser.name || "Doctor");
     
     const [stats, setStats] = useState({ pendingToday: 0, totalCompleted: 0 });
     const [todayAppts, setTodayAppts] = useState([]);
     const [filteredAppts, setFilteredAppts] = useState([]);
-    const [doctorName, setDoctorName] = useState("Doctor");
     const [searchTerm, setSearchTerm] = useState("");
+    
+    // Base URL for file links
+    const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
 
     useEffect(() => {
-        if (!currentUser) {
+        if (!currentUser.id || currentUser.role !== 'doctor') {
             navigate('/login');
             return;
         }
-        
-        // Set Doctor Name
-        const rawName = currentUser.split('@')[0];
-        const prettyName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-        setDoctorName(prettyName);
 
-        // Fetch Data
-        const allAppts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
-        const nameKey = currentUser.split('@')[0].toLowerCase();
+        const fetchData = async () => {
+            try {
+                // ✅ 2. Fetch Doctor's Appointments
+                const res = await getAppointments();
+                // Safe unwrap (Backend might return { appointments: [...] } or { Appointments: [...] } or just [...])
+                const allAppts = Array.isArray(res.data) 
+                    ? res.data 
+                    : (res.data.appointments || res.data.Appointments || []);
 
-        // Filter for this doctor
-        const myAppts = allAppts.filter(a => 
-            (a.doctor && a.doctor.toLowerCase().includes(nameKey)) || 
-            (a.doctorName && a.doctorName.toLowerCase().includes(nameKey))
-        );
+                // Stats: Total Completed (Lifetime)
+                const totalCompleted = allAppts.filter(a => 
+                    (a.status || "").toLowerCase() === 'complete' || (a.status || "").toLowerCase() === 'completed'
+                ).length;
 
-        const today = new Date().toISOString().split('T')[0];
+                // Filter for TODAY only
+                const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD (Local)
+                
+                const todaysList = allAppts.filter(a => {
+                    const apptDate = new Date(a.date).toLocaleDateString('en-CA');
+                    const isToday = apptDate === todayStr;
+                    const isScheduled = (a.status || "").toLowerCase() === 'scheduled';
+                    return isToday && isScheduled;
+                });
 
-        // Stats Logic
-        const todaysList = myAppts.filter(a => a.date === today && a.status === 'Scheduled');
-        const totalTreatedCount = myAppts.filter(a => a.status === 'Completed').length;
+                // ✅ 3. Hydrate Today's List (Get Patient Name & Tests)
+                const hydratedList = await Promise.all(todaysList.map(async (appt) => {
+                    // A. Fetch Patient Details
+                    let patientName = "Unknown";
+                    let patientEmail = "";
+                    if (appt.user_id) {
+                        try {
+                            const userRes = await getUser(appt.user_id);
+                            const u = userRes.data.user || userRes.data;
+                            patientName = u.name;
+                            patientEmail = u.email;
+                        } catch (e) { console.error("Could not fetch patient", appt.user_id); }
+                    }
 
-        setStats({
-            pendingToday: todaysList.length,
-            totalCompleted: totalTreatedCount
-        });
+                    // B. Fetch Medical Test (if any)
+                    let fileUrl = null;
+                    try {
+                        const testRes = await getMedicalTestByAppointmentId(appt.id);
+                        const tests = testRes.data.medicalTest;
+                        if (Array.isArray(tests) && tests.length > 0) {
+                            fileUrl = tests[0].file_path;
+                            if (fileUrl && !fileUrl.startsWith('http')) {
+                                fileUrl = `${API_BASE_URL}${fileUrl}`;
+                            }
+                        }
+                    } catch (e) { /* No test found is okay */ }
 
-        // Sort by time
-        todaysList.sort((a, b) => a.time.localeCompare(b.time));
+                    return {
+                        ...appt,
+                        patientName,
+                        patientEmail,
+                        uploadedFiles: fileUrl,
+                        // Fix Time Format (HH:MM:SS -> HH:MM)
+                        time: appt.starts_at ? appt.starts_at.substring(0, 5) : "00:00"
+                    };
+                }));
 
-        setTodayAppts(todaysList);
-        setFilteredAppts(todaysList);
+                // Sort by time
+                hydratedList.sort((a, b) => a.time.localeCompare(b.time));
 
-    }, [currentUser, navigate]);
+                setTodayAppts(hydratedList);
+                setFilteredAppts(hydratedList);
+                setStats({
+                    pendingToday: hydratedList.length,
+                    totalCompleted
+                });
 
+            } catch (error) {
+                console.error("Error loading doctor dashboard:", error);
+            }
+        };
+
+        fetchData();
+    }, [currentUser.id, navigate]);
+
+    // Search Logic
     useEffect(() => {
         const results = todayAppts.filter(appt => 
             (appt.patientName && appt.patientName.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -71,7 +126,7 @@ export default function DoctorDashboard() {
                 {/* HEADER */}
                 <header className="dashboard-header">
                     <div>
-                        <h1>Welcome, Dr. {doctorName}</h1>
+                        <h1>Welcome, {doctorName}</h1>
                         <p>Here is your daily activity overview.</p>
                     </div>
                     <div className="date-badge">
@@ -146,7 +201,7 @@ export default function DoctorDashboard() {
                                                         <FaUserInjured />
                                                     </div>
                                                     <div>
-                                                        <strong>{appt.patientName || "Unknown"}</strong>
+                                                        <strong>{appt.patientName}</strong>
                                                         <span className="sub-text">{appt.patientEmail}</span>
                                                     </div>
                                                 </div>
@@ -182,7 +237,7 @@ export default function DoctorDashboard() {
                                 ) : (
                                     <tr>
                                         <td colSpan="5" className="empty-state">
-                                            <p>No appointments found for today.</p>
+                                            <p>No appointments scheduled for today.</p>
                                         </td>
                                     </tr>
                                 )}

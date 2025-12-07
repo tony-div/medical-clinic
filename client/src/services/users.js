@@ -4,7 +4,6 @@ export const getUser = async (userId) => {
     return api.get(`/users/${userId}`);
 };
 
-// [ADDED] - Fetch all users for admin panel
 export const getAllUsers = async () => {
     return api.get("/users");
 };

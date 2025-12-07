@@ -1,0 +1,51 @@
+.btn-primary-action {
+    width: 100%;
+    margin-top: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Green Gradient for Success */
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+.btn-primary-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+    background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+}
+
+.btn-primary-action:active {
+    transform: translateY(0);
+}
+
+.btn-icon-large {
+    font-size: 1.3rem;
+}
+
+/* Make the textarea inputs look nicer too */
+textarea.bio-box, input.bio-box {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    color: #334155;
+    transition: border-color 0.2s;
+    background-color: #f8fafc;
+}
+
+textarea.bio-box:focus, input.bio-box:focus {
+    outline: none;
+    border-color: #10b981;
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}

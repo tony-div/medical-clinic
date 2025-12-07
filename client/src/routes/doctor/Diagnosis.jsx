@@ -1,55 +1,114 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2'; // Kept for edge case redirects, but main success uses custom popup
+import Swal from 'sweetalert2'; 
 import { FaArrowLeft, FaUserInjured, FaStethoscope, FaPrescriptionBottleAlt, FaNotesMedical, FaCheckCircle, FaFileAlt } from 'react-icons/fa';
 import DoctorSidebar from '../../components/DoctorSidebar';
-import { DB_APPOINTMENTS_KEY } from '../../data/initDB';
-import './DoctorProfile.css'; // Reusing global styles
+import './DoctorProfile.css'; 
+import './Diagnosis.css'; 
+
+// ✅ IMPORT SERVICES
+import { getAppointmentById } from '../../services/appointment';
+import { createDiagnosis, getDiagnosisByAppointmentId } from '../../services/diagnosis';
+import { getUser } from '../../services/users';
 
 export default function Diagnosis() {
-    const { appointmentId } = useParams();
+    // ✅ MATCHES YOUR ROUTE: /doctor/diagnosis/:appointmentId
+    const { appointmentId } = useParams(); 
     const navigate = useNavigate();
+    
     const [appt, setAppt] = useState(null);
-    const [formData, setFormData] = useState({ diagnosis: "", prescription: "", treatmentPlan: "" });
+    const [patient, setPatient] = useState(null);
+    const [formData, setFormData] = useState({ description: "", prescription: "", treatment_plan: "" });
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
 
     useEffect(() => {
-        const allAppts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
-        const current = allAppts.find(a => a.id === Number(appointmentId));
-        if (current) {
-            setAppt(current);
-            // Pre-fill if completed
-            if(current.status === 'Completed') {
-                setFormData({
-                    diagnosis: current.diagnosis || "",
-                    prescription: current.prescription || "",
-                    treatmentPlan: current.treatmentPlan || ""
-                });
+        const fetchData = async () => {
+            try {
+                // 1. Get Appointment
+                const apptRes = await getAppointmentById(appointmentId); 
+                const current = apptRes.data?.appointment || apptRes.data;
+
+                if (!current) throw new Error("Appointment not found");
+
+                // 2. Get Patient Details
+                let patientData = { name: "Unknown", email: "", phone: "" };
+                if (current.user_id) {
+                    try {
+                        const userRes = await getUser(current.user_id);
+                        const u = userRes.data.user || userRes.data;
+                        patientData = { ...u, phone: u.phone_number };
+                    } catch (e) { console.error("Patient fetch failed", e); }
+                }
+
+                setAppt({ ...current, ...patientData });
+                setPatient(patientData);
+
+                // 3. Pre-fill Diagnosis if Completed
+                if (current.status === 'Complete' || current.status === 'complete' || current.status === 'Completed') {
+                    try {
+                        const diagRes = await getDiagnosisByAppointmentId(appointmentId);
+                        const diag = diagRes.data?.diagnosis || diagRes.data;
+                        if (diag) {
+                            setFormData({
+                                description: diag.description || "",
+                                prescription: diag.prescription || "",
+                                treatment_plan: diag.treatment_plan || ""
+                            });
+                        }
+                    } catch (e) { /* No diagnosis found yet */ }
+                }
+
+                setLoading(false);
+
+            } catch (error) {
+                console.error("Load Error:", error);
+                Swal.fire("Error", "Could not load visit details.", "error")
+                    .then(() => navigate('/doctor/dashboard'));
             }
-        } else {
-            navigate('/doctor/appointments');
-        }
+        };
+
+        fetchData();
     }, [appointmentId, navigate]);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        const allAppts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
-        const updatedAppts = allAppts.map(a => {
-            if (a.id === Number(appointmentId)) {
-                return { ...a, status: "Completed", ...formData };
-            }
-            return a;
-        });
-
-        localStorage.setItem(DB_APPOINTMENTS_KEY, JSON.stringify(updatedAppts));
         
-        // Show Custom Popup
-        setShowSuccessPopup(true);
+        if (!formData.description.trim()) {
+            Swal.fire("Required", "Please enter a diagnosis description.", "warning");
+            return;
+        }
+
+        try {
+            // ✅ API CALL: Create Diagnosis & Complete Appointment
+            await createDiagnosis(appointmentId, {
+                description: formData.description,
+                prescription: formData.prescription,
+                treatment_plan: formData.treatment_plan
+            });
+
+            // Show Custom Popup
+            setShowSuccessPopup(true);
+
+        } catch (error) {
+            console.error("Save Error:", error);
+            Swal.fire("Error", error.response?.data?.error || "Failed to save diagnosis.", "error");
+        }
     };
 
-    if (!appt) return <div className="loading-state">Loading...</div>;
+    if (loading) return <div className="loading-state">Loading...</div>;
     
-    const isReadOnly = appt.status === 'Completed' || appt.status === 'Cancelled';
+    // Normalize status for check
+    const status = (appt.status || "").toLowerCase();
+    const isReadOnly = status === 'completed' || status === 'complete' || status === 'cancelled';
+
+    // Handle File URL
+    let fileUrl = appt.file_path || appt.uploadedFiles;
+    if (fileUrl && !fileUrl.startsWith('http')) {
+        fileUrl = `${API_BASE_URL}${fileUrl}`;
+    }
 
     return (
         <div className="dashboard-layout">
@@ -61,8 +120,8 @@ export default function Diagnosis() {
                     <div>
                         <h1>{isReadOnly ? "Appointment Details" : "Diagnosis & Treatment"}</h1>
                         <p>
-                            Patient: <strong>{appt.patientName}</strong> | Status: 
-                            <span className={`status-badge-large ${appt.status.toLowerCase()}`} style={{marginLeft:'10px'}}>
+                            Patient: <strong>{appt.name}</strong> | Status: 
+                            <span className={`status-badge-large ${status}`} style={{marginLeft:'10px', textTransform:'capitalize'}}>
                                 {appt.status}
                             </span>
                         </p>
@@ -83,8 +142,9 @@ export default function Diagnosis() {
                                     <FaUserInjured style={{color:'white'}} />
                                 </div>
                                 <div>
-                                    <h2>{appt.patientName}</h2>
+                                    <h2>{appt.name}</h2>
                                     <span className="user-role">Patient</span>
+                                    <div style={{fontSize:'0.85rem', color:'#666', marginTop:'4px'}}>{appt.email}</div>
                                 </div>
                             </div>
                         </div>
@@ -96,13 +156,13 @@ export default function Diagnosis() {
                             </div>
                             <div className="booking-info-row">
                                 <strong>Date & Time</strong>
-                                <span>{appt.date} at {appt.time}</span>
+                                <span>{new Date(appt.date).toLocaleDateString('en-CA')} at {appt.starts_at || appt.time}</span>
                             </div>
                             
                             <div className="file-section" style={{marginTop:'25px'}}>
                                 <strong>Attached Documents:</strong>
-                                {appt.uploadedFiles ? (
-                                    <a href={appt.uploadedFiles} target="_blank" rel="noreferrer" className="file-download-btn" style={{marginTop:'10px'}}>
+                                {fileUrl && fileUrl !== "N/A" ? (
+                                    <a href={fileUrl} target="_blank" rel="noreferrer" className="file-download-btn" style={{marginTop:'10px'}}>
                                         <FaFileAlt /> View Patient File
                                     </a>
                                 ) : (
@@ -123,9 +183,9 @@ export default function Diagnosis() {
                                 <input 
                                     type="text" 
                                     className={`read-only-field ${!isReadOnly ? 'bio-box' : ''}`}
-                                    value={formData.diagnosis} 
+                                    value={formData.description} 
                                     disabled={isReadOnly} 
-                                    onChange={e => setFormData({...formData, diagnosis: e.target.value})} 
+                                    onChange={e => setFormData({...formData, description: e.target.value})} 
                                     required 
                                     placeholder="Enter primary diagnosis..."
                                     style={{border: isReadOnly ? 'none' : '1px solid #e2e8f0', background: isReadOnly ? '#f8fafc' : 'white'}}
@@ -140,7 +200,7 @@ export default function Diagnosis() {
                                     value={formData.prescription} 
                                     disabled={isReadOnly} 
                                     onChange={e => setFormData({...formData, prescription: e.target.value})} 
-                                    required
+                                    
                                     placeholder="List medications and dosage..."
                                     style={{fontFamily:'monospace', border: isReadOnly ? 'none' : '1px solid #e2e8f0', background: isReadOnly ? '#f0fdf4' : 'white', color: isReadOnly ? '#166534' : 'inherit'}}
                                 ></textarea>
@@ -151,9 +211,9 @@ export default function Diagnosis() {
                                 <textarea 
                                     rows="5" 
                                     className={`read-only-field ${!isReadOnly ? 'bio-box' : ''}`}
-                                    value={formData.treatmentPlan} 
+                                    value={formData.treatment_plan} 
                                     disabled={isReadOnly} 
-                                    onChange={e => setFormData({...formData, treatmentPlan: e.target.value})}
+                                    onChange={e => setFormData({...formData, treatment_plan: e.target.value})}
                                     placeholder="Additional notes for patient..."
                                     style={{border: isReadOnly ? 'none' : '1px solid #e2e8f0', background: isReadOnly ? '#f8fafc' : 'white'}}
                                 ></textarea>
@@ -161,8 +221,8 @@ export default function Diagnosis() {
 
                             {!isReadOnly && (
                                <button type="submit" className="btn-primary-action">
-        <FaCheckCircle className="btn-icon-large"/> Complete Visit
-    </button>
+                                    <FaCheckCircle className="btn-icon-large"/> Complete Visit
+                                </button>
                             )}
                         </form>
                     </div>

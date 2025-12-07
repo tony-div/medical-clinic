@@ -69,14 +69,14 @@ export default function MyAppointments() {
         fetchData();
     }, [userId, navigate]);
 
-    // --- FILTERING LOGIC (FIXED) ---
     const getFilteredAppointments = () => {
+        // 1. First, split by Tab (Upcoming vs History)
         let filtered = appointments.filter(a => {
-            const isScheduled = (a.status || "").toLowerCase() === 'scheduled';
-            return activeTab === 'active' ? isScheduled : !isScheduled;
+            const status = (a.status || "").toLowerCase();
+            const isActive = status === 'scheduled' || status === 'rescheduled';
+            return activeTab === 'active' ? isActive : !isActive;
         });
 
-        // ✅ FIX: Crash-proof Search
         if (searchTerm) {
             const lowerSearch = searchTerm.toLowerCase();
             filtered = filtered.filter(a => {
@@ -217,9 +217,11 @@ export default function MyAppointments() {
                                         <td>
                                             <div className="action-buttons">
                                                 <button className="btn-icon view" onClick={() => navigate(`/patient/appointment/${appt.id}`)}><FaExternalLinkAlt /> View</button>
-                                                {(appt.status || "").toLowerCase() === 'scheduled' && (
-                                                    <button className="btn-icon cancel" onClick={() => initiateCancel(appt)}><FaBan /> Cancel</button>
-                                                )}
+                                                {['scheduled', 'rescheduled'].includes((appt.status || "").toLowerCase()) && (
+    <button className="btn-icon cancel" onClick={() => initiateCancel(appt)}>
+        <FaBan /> Cancel
+    </button>
+)}
                                             </div>
                                         </td>
                                     </tr>

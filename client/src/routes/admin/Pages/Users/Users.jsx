@@ -15,7 +15,7 @@ const Toast = Swal.mixin({
   timerProgressBar: true,
 });
 
-const Users = () => {
+const Users = ({ onDataChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSpecModalOpen, setIsSpecModalOpen] = useState(false);
@@ -130,6 +130,8 @@ const Users = () => {
       setIsModalOpen(false);
       setCurrentUser(null);
       refreshData();
+      // [ADDED] - Notify Dashboard to refresh
+      if (onDataChange) onDataChange();
 
     } catch (error) {
       console.error('Error saving user:', error);
@@ -164,6 +166,8 @@ const Users = () => {
         await deleteUser(id);
         Toast.fire({ icon: 'success', title: 'User deleted.' });
         refreshData();
+        // [ADDED] - Notify Dashboard to refresh
+        if (onDataChange) onDataChange();
       } catch (error) {
         console.error('Error deleting user:', error);
         const errorMessage = error.response?.data?.error || 'Failed to delete user';
