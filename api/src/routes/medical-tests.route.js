@@ -4,6 +4,7 @@ import {
   //updateMedicalTest,
   uploadMedicalTestFile,
   getMedicalTestById,
+  getMedicalTestByAppointmentId
   //deleteMedicalTestById,
 } from '../controllers/medical-tests.controller.js';
 import { authenticate } from "../middleware/auth.middleware.js";
@@ -21,5 +22,7 @@ medicalTestsRouter.get('/:id', authenticate, getMedicalTestById);
 //medicalTestsRouter.delete('/:id', deleteMedicalTestById);
 
 medicalTestsRouter.post('/:id/file', upload.single("file"), uploadMedicalTestFile);
+
+medicalTestsRouter.get('/appointment/:appointmentId', authenticate, getMedicalTestByAppointmentId);
 
 export default medicalTestsRouter;

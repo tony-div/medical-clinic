@@ -121,6 +121,70 @@ export const getMedicalTestById = async (req, res) => {
     });
   }
 };
+export const getMedicalTestByAppointmentId = async (req, res) => {
+  try {
+    const appointmentId = req.params.appointmentId;
+    const loggedUser = req.user;
+
+    if (loggedUser.role === "admin") {
+      return res.status(code.FORBIDDEN).json({
+        error: "Admins are not allowed to access medical tests"
+      });
+    }
+
+    const [appointmentRows] = await db.query(
+      query.SELECT_APPOINTMENT_BY_ID,
+      [appointmentId]
+    );
+
+    if (appointmentRows.length === 0) {
+      return res.status(code.NOT_FOUND).json({
+        error: "Appointment not found"
+      });
+    }
+
+    const appointment = appointmentRows[0];
+
+    if (loggedUser.role === "patient") {
+      if (appointment.user_id !== loggedUser.id) {
+        return res.status(code.FORBIDDEN).json({
+          error: "You do not have permission to view this medical test"
+        });
+      }
+    }
+
+    if (loggedUser.role === "doctor") {
+      if (appointment.doctor_id !== loggedUser.doc_id) {
+        return res.status(code.FORBIDDEN).json({
+          error: "You do not have permission to view this medical test"
+        });
+      }
+    }
+
+    const [testRows] = await db.query(
+      query.SELECT_MEDICAL_TEST_BY_APPOINTMENT_ID,
+      [appointmentId]
+    );
+
+    if (testRows.length === 0) {
+      return res.status(code.NOT_FOUND).json({
+        error: "No medical test found for this appointment"
+      });
+    }
+
+    return res.status(code.OK).json({
+      message: "Medical test retrieved successfully",
+      medicalTest: testRows
+    });
+
+  } catch (error) {
+    console.error("Error getting medical test:", error);
+    return res.status(code.INTERNAL_SERVER_ERROR).json({
+      error: "An error occurred while retrieving the medical test"
+    });
+  }
+};
+
 
 
 // apparently there isn't an option to delete or update a medical test 

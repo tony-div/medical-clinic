@@ -18,3 +18,8 @@ export const uploadMedicalTestFile = async (testId, file) => {
         }
     });
 };
+//medicalTestsRouter.get('/appointment/:appointmentId', authenticate, getMedicalTestByAppointmentId);
+
+export const getMedicalTestByAppointmentId = async (appointmentId) => {
+    return api.get(`/medical-tests/appointment/${appointmentId}`);
+};
