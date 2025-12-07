@@ -53,7 +53,7 @@ const reviewSchema = Joi.object({
 export const createReview = async (req, res) => {
   let conn;
   try {
-    conn = await pool.getConnection();
+    conn = await db.getConnection(); 
     await conn.beginTransaction();
 
     const requester = req.user;
@@ -72,6 +72,7 @@ export const createReview = async (req, res) => {
     }
 
     const { doctor_id, rating, comment } = req.body;
+    
     const [doctorRows] = await conn.query(
       "SELECT id, rating_id FROM Doctor WHERE id = ?",
       [doctor_id]
@@ -104,6 +105,7 @@ export const createReview = async (req, res) => {
       );
 
     } else {
+   
       const [oldRating] = await conn.query(
         "SELECT avg_rating, reviews_count FROM DoctorRating WHERE id = ?",
         [ratingId]

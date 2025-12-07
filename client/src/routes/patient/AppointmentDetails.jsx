@@ -94,7 +94,7 @@ export default function AppointmentDetails() {
                     ...apptData,
                     doctorName: doctorInfo.name,
                     specialty: doctorInfo.specialty,
-                    formattedDate: new Date(apptData.date).toLocaleDateString('en-CA'), // Fix date bug
+                    formattedDate: new Date(apptData.date).toLocaleDateString('en-CA'),
                     formattedTime: apptData.starts_at ? apptData.starts_at.substring(0, 5) : apptData.time,
                     testFile: fileUrl,
                     testName: fileName
@@ -112,8 +112,13 @@ export default function AppointmentDetails() {
     }, [id, navigate]);
 
     const submitReview = async () => {
+        // Validation
         if (!reviewText.trim()) return Swal.fire('Oops', 'Please write a comment.', 'warning');
-        if (!appointment.doctor_id) return Swal.fire('Error', 'Doctor ID missing.', 'error');
+        
+        // ✅ SAFETY CHECK: Ensure we have a valid doctor ID
+        if (!appointment.doctor_id) {
+            return Swal.fire('Error', 'Cannot review: No Doctor assigned to this appointment.', 'error');
+        }
 
         try {
             await createReview({
@@ -125,22 +130,24 @@ export default function AppointmentDetails() {
             setShowReviewModal(false);
             setShowSuccessPopup(true);
         } catch (error) {
-            console.error(error);
-            const msg = error.response?.data?.error || "Failed to submit review.";
+            console.error("Review Error:", error);
+            // Show the exact error from the server if available
+            const msg = error.response?.data?.error || "Failed to submit review. Please try again.";
             Swal.fire('Error', msg, 'error');
         }
     };
 
-    // Helper for Star Rating
+    // Helper for Star Rating (Forced Color)
     const renderStars = () => {
         return [...Array(5)].map((_, index) => {
             const starValue = index + 1;
             return (
                 <FaStar 
                     key={index} 
-                    size={24} 
-                    color={starValue <= rating ? "#ffc107" : "#e4e5e9"} 
-                    style={{ cursor: "pointer", margin: "0 2px" }}
+                    size={32} 
+                    // Gold for active, Grey for inactive
+                    color={starValue <= rating ? "#FFD700" : "#E0E0E0"} 
+                    style={{ cursor: "pointer", margin: "0 5px", transition: "color 0.2s" }}
                     onClick={() => setRating(starValue)}
                 />
             );
@@ -300,8 +307,8 @@ export default function AppointmentDetails() {
                             <button className="close-popup" onClick={() => setShowReviewModal(false)}><FaTimes /></button>
                             <h2>Rate Your Experience</h2>
                             
-                            {/* ✅ ADDED STAR RATING UI */}
-                            <div className="star-rating-container" style={{display:'flex', justifyContent:'center', margin:'15px 0'}}>
+                            {/* Star Rating Section */}
+                            <div className="star-rating-container" style={{display:'flex', justifyContent:'center', margin:'20px 0'}}>
                                 {renderStars()}
                             </div>
 
