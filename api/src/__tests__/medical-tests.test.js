@@ -3,12 +3,17 @@ import app from '../index.js';
 
 USERS = [
 {
-    id: 3,
-    email: "charlie.brown@patient.com",
-    password: "strongpass"
+    id: 2,
+    email: "patient1@gmail.com",
+    password: "123123"
     }
 ]
-
+const AP = [
+    {
+        id: 1,
+        status:"complete"
+    }
+]
 
 describe("create medical test for a complete apt", () => {
     let authToken;
@@ -33,7 +38,7 @@ describe("create medical test for a complete apt", () => {
             .post('/medical-tests/')
             .set('Authorization', `Bearer ${authToken}`)
             .send({
-            "appointment_id":1,
+            "appointment_id":AP[0].id,
             "test_date":"2020-05-03",
             "description":"CT Scan"
         });

@@ -3,14 +3,14 @@ import app from '../index.js';
 
 USERS = [
 {
-    id: 5,
-    email: "charlie.punk@patient.com",
-    password: "strongpass"
+    id: 2,
+    email: "patient@gmail.com",
+    password: "123123"
     },
 {
     id:1,
-    email:"alice.smith@clinic.com",
-    password:"strongpass"
+    email:"doc1@mail.com",
+    password:"123123"
     }
 ]
 

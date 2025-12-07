@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaFileMedical, FaCalendarAlt, FaUserMd, FaExternalLinkAlt, FaFileAlt } from 'react-icons/fa';
+import { FaFileMedical, FaCalendarAlt, FaUserMd, FaExternalLinkAlt, FaFileAlt, FaSearch, FaSortAmountDown, FaSortAmountUp } from 'react-icons/fa';
 import PatientSidebar from '../../components/PatientSidebar';
 import './MedicalRecords.css';
 import { getAppointments } from '../../services/appointment';
@@ -11,9 +11,20 @@ export default function MedicalRecords() {
     const navigate = useNavigate();
     const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
     const userId = storedUser.id;
+    
+    // --- STATE ---
     const [records, setRecords] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [sortOrder, setSortOrder] = useState("newest");
     
     const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
+
+    // Helper: Clean Timestamps from Filenames
+    const cleanFileName = (name) => {
+        if (!name) return "Medical Document";
+        const fileName = name.split(/[/\\]/).pop();
+        return fileName.replace(/^\d+[-_]/, '');
+    };
 
     useEffect(() => {
         if (!userId) { navigate('/login'); return; }
@@ -34,52 +45,62 @@ export default function MedicalRecords() {
                     ? docRes.data 
                     : (docRes.data.doctors || docRes.data.data || []);
 
-                // We use Promise.all to fetch them all in parallel
+                // 2. Hydrate with Medical Tests
                 const appointmentsWithTests = await Promise.all(apiAppts.map(async (appt) => {
                     try {
                         const testRes = await getMedicalTestByAppointmentId(appt.id);
                         const tests = testRes.data.medicalTest;
-                        
-                        // If a test is found, attach it to the appointment object
                         if (Array.isArray(tests) && tests.length > 0) {
                             return {
                                 ...appt,
                                 file_path: tests[0].file_path,
-                                test_description: tests[0].description
+                                test_description: tests[0].description,
+                                real_test_date: tests[0].test_date || tests[0].uploaded_at 
                             };
                         }
-                    } catch (err) {
-                        // If 404 (No test found), just return the appointment as is
-                    }
+                    } catch (err) { }
                     return appt;
                 }));
 
-                // 3. Filter & Map (Now 'file_path' exists!)
+                // 3. Map & Format
                 const myRecords = appointmentsWithTests
                     .filter(a => {
-    const path = a.uploadedFiles || a.file_path || a.medical_test_path;
-    // Only allow if path exists AND is not "N/A" AND is not empty
-    return path && path !== "N/A" && path.trim() !== "";
-})
+                        const path = a.file_path || a.medical_test_path;
+                        return path && path !== "N/A" && path.trim() !== "";
+                    }) 
                     .map(appt => {
-                        const doc = apiDocs.find(d => d.id === appt.doctor_id || d.id === appt.doctorId);
+                        // Safe ID Check
+                        const doc = apiDocs.find(d => 
+                            String(d.id) === String(appt.doctor_id) || 
+                            String(d.id) === String(appt.doctorId)
+                        );
                         
                         let fileUrl = appt.file_path || appt.medical_test_path || "";
                         if (fileUrl && !fileUrl.startsWith('http')) {
                             fileUrl = `${API_BASE_URL}${fileUrl}`;
                         }
 
+                        // Display Name Logic
+                        let rawName = appt.test_description || fileUrl;
+                        let displayName = cleanFileName(rawName);
+
+                        // Date Logic (UTC Fix)
+                        const rawDateVal = appt.real_test_date || appt.date;
+                        const dateObj = rawDateVal ? new Date(rawDateVal) : null;
+                        const formattedDate = dateObj ? dateObj.toLocaleDateString('en-CA') : "N/A";
+
                         return {
                             id: appt.id,
-                            date: appt.date ? new Date(appt.date).toISOString().split('T')[0] : "N/A",
-                            type: appt.test_description || "Medical Document",
+                            rawDate: dateObj, // Keep object for sorting
+                            date: formattedDate, // String for display
+                            type: displayName,
                             uploadedFiles: fileUrl,
                             doctorName: doc ? doc.name : "Unknown Doctor",
-                            specialty: doc ? doc.specialty : "General"
+                            specialty: doc ? doc.specialty : "General",
+                            doctorImage: doc && doc.profile_pic_path ? doc.profile_pic_path : null
                         };
                     });
 
-                myRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
                 setRecords(myRecords);
 
             } catch (error) {
@@ -89,6 +110,20 @@ export default function MedicalRecords() {
 
         fetchData();
     }, [userId, navigate]);
+
+    // --- FILTER & SORT LOGIC ---
+    const filteredRecords = records
+        .filter(rec => 
+            rec.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            rec.doctorName.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .sort((a, b) => {
+            if (!a.rawDate) return 1;
+            if (!b.rawDate) return -1;
+            return sortOrder === 'newest' 
+                ? b.rawDate - a.rawDate 
+                : a.rawDate - b.rawDate;
+        });
 
     return (
         <div className="dashboard-layout">
@@ -101,6 +136,28 @@ export default function MedicalRecords() {
                     </div>
                 </header>
 
+                {/* --- SEARCH & CONTROLS BAR --- */}
+                <div className="controls-bar" style={{ marginBottom: '20px', display: 'flex', gap: '15px' }}>
+                    <div className="search-box" style={{ flex: 1 }}>
+                        <FaSearch className="search-icon" />
+                        <input 
+                            type="text" 
+                            placeholder="Search by file name or doctor..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <button 
+                        className="sort-btn" 
+                        onClick={() => setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest')}
+                        style={{ minWidth: '50px' }}
+                        title={sortOrder === 'newest' ? "Newest First" : "Oldest First"}
+                    >
+                        {sortOrder === 'newest' ? <FaSortAmountDown /> : <FaSortAmountUp />}
+                    </button>
+                </div>
+
+                {/* --- RECORDS TABLE --- */}
                 <div className="table-card">
                     <table className="records-table">
                         <thead>
@@ -112,8 +169,8 @@ export default function MedicalRecords() {
                             </tr>
                         </thead>
                         <tbody>
-                            {records.length > 0 ? (
-                                records.map(record => (
+                            {filteredRecords.length > 0 ? (
+                                filteredRecords.map(record => (
                                     <tr key={record.id} className="table-row">
                                         <td>
                                             <div className="date-cell">
@@ -123,7 +180,17 @@ export default function MedicalRecords() {
                                         </td>
                                         <td>
                                             <div className="doc-info">
-                                                <div className="doc-avatar"><FaUserMd /></div>
+                                                <div className="doc-avatar">
+                                                    {record.doctorImage ? (
+                                                        <img 
+                                                            src={record.doctorImage} 
+                                                            alt="Doc" 
+                                                            style={{width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%'}} 
+                                                        />
+                                                    ) : (
+                                                        <FaUserMd />
+                                                    )}
+                                                </div>
                                                 <div>
                                                     <span className="doc-name">{record.doctorName}</span>
                                                     <span className="doc-spec">{record.specialty}</span>
@@ -131,7 +198,10 @@ export default function MedicalRecords() {
                                             </div>
                                         </td>
                                         <td>
-                                            <div className="file-tag"><FaFileAlt /> {record.type}</div>
+                                            <div className="file-tag" title={record.type}>
+                                                <FaFileAlt /> 
+                                                {record.type.length > 25 ? record.type.substring(0, 22) + '...' : record.type}
+                                            </div>
                                         </td>
                                         <td>
                                             <a href={record.uploadedFiles} target="_blank" rel="noreferrer" className="btn-view-file">
@@ -146,7 +216,7 @@ export default function MedicalRecords() {
                                         <div className="empty-content">
                                             <FaFileMedical className="empty-icon"/>
                                             <h3>No Records Found</h3>
-                                            <p>Files uploaded during your appointments will appear here.</p>
+                                            <p>Try changing your search terms.</p>
                                         </div>
                                     </td>
                                 </tr>
