@@ -151,13 +151,13 @@ const Appointments = () => {
     // Updated: Accepts ID directly
     const goToPatient = (patientId) => {
         if (patientId) {
-            navigate(`/users/${patientId}`, { state: { returnTab: 'appointments' } });
+            navigate(`/admin/patient-details/${patientId}`, { state: { returnTab: 'appointments' } });
         }
     };
 
     const goToDoctor = (docId) => {
         if (docId) {
-            navigate(`/doctors/profile/${docId}`, { state: { returnTab: 'appointments' } });
+            navigate(`/admin/doctor-details/${docId}`, { state: { returnTab: 'appointments' } });
         }
     };
 

@@ -46,7 +46,7 @@ const router = createBrowserRouter([
     { path: "/doctor/profile", element: <DoctorPrivateProfile /> },
     { path: "/admin/dashboard", element: <AdminApp /> },
     { path: "/admin/doctor-details/:id", element: <DoctorPrivateProfile /> },
-    { path: "/admin/patient-details/:email", element: <PatientProfile /> },
+    { path: "/admin/patient-details/:id", element: <PatientProfile /> },
     { path: "/admin/appointment/:id", element: <AdminAppointmentDetails /> }, 
     {path: "/patient/appointment/:id", element: <AppointmentDetails /> },
     {path: "/patient/appointments", element: <MyAppointments /> },
