@@ -1,47 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DB_APPOINTMENTS_KEY, DB_DOCTORS_KEY } from '../../../../data/initDB'; // Import Doctors Key to lookup IDs
+// import { DB_APPOINTMENTS_KEY, DB_DOCTORS_KEY } from '../../../../data/initDB'; // Not needed if using API
+
 import './Appointments.css';
 
-import{
-    getAppointments
-} from '../../../../services/appointment.js'
-
-import {
-    getDoctors
-
-} from '../../../../services/doctors.js'
+import { getAppointments } from '../../../../services/appointment.js'
+import { getDoctors } from '../../../../services/doctors.js'
+import { getAllUsers } from '../../../../services/users.js'
 
 const Appointments = () => {
     const navigate = useNavigate();
-    
+
     // --- 1. State ---
     const [appointments, setAppointments] = useState([]);
     const [filteredAppointments, setFilteredAppointments] = useState([]);
-    const [doctorsList, setDoctorsList] = useState([]); // Needed to find Doctor ID by Name
+    const [doctorsList, setDoctorsList] = useState([]); 
 
     // Filters
     const [searchTerm, setSearchTerm] = useState('');
-    const [roleFilter, setRoleFilter] = useState('Doctor'); 
+    const [roleFilter, setRoleFilter] = useState('Doctor');
     const [selectedStatus, setSelectedStatus] = useState('All');
     const [dateRange, setDateRange] = useState('');
+    // const [patientsList, setPatientsList] = useState([]); // Unused state removed for cleanup
 
     // --- 2. Load Data ---
-    const refreshData =async () => {
-        try{
-            const res = await getAppointments();
-            const appts = res.data.appointments || [];
-            const res2 = await getDoctors();
-            const docs = res2.data.data || [];
+    const refreshData = async () => {
+        try {
+            const [resAppts, resDocs, resUsers] = await Promise.all([
+                getAppointments(),
+                getDoctors(),
+                getAllUsers()
+            ]);
+
+            const rawAppts = resAppts.data.appointments || [];
+            const docs = resDocs.data.data || [];
+            const users = resUsers.data.users || [];
+
+            // --- THE FIX: Create enrichedAppts by mapping over rawAppts ---
+            const enrichedAppts = rawAppts.map(appt => {
+                const doctor = docs.find(d => d.id === appt.doctor_id);
+                const patient = users.find(u => u.id === appt.user_id);
+
+                // Helper to Capitalize status (api: "complete" -> ui: "Completed")
+                const normalizeStatus = (s) => {
+                    if (!s) return 'Scheduled';
+                    const lower = s.toLowerCase();
+                    if (lower === 'complete' || lower === 'completed') return 'Completed';
+                    if (lower === 'cancel' || lower === 'cancelled') return 'Cancelled';
+                    return 'Scheduled';
+                };
+
+                return {
+                    ...appt,
+                    // Map API fields to UI fields
+                    time: appt.starts_at ? appt.starts_at.substring(0, 5) : '00:00', // Extract HH:MM
+                    doctorName: doctor ? doctor.name : 'Unknown Doctor',
+                    patientName: patient ? patient.name : 'Unknown Patient',
+                    patientEmail: patient ? patient.email : '',
+                    patientId: patient ? patient.id : null, // Store ID for navigation
+                    status: normalizeStatus(appt.status) // Normalize status string
+                };
+            });
 
             // Sort by Date (Newest first)
-            appts.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            setAppointments(appts);
-            setFilteredAppointments(appts);
-            setDoctorsList(docs); // Save doctors list for lookup
+            enrichedAppts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        } catch (error){
+            setAppointments(enrichedAppts);
+            setFilteredAppointments(enrichedAppts);
+            setDoctorsList(docs);
+
+        } catch (err) {
             console.error("Failed to load appointments list", err);
         }
     };
@@ -59,7 +87,7 @@ const Appointments = () => {
             const term = searchTerm.toLowerCase();
             results = results.filter(appt => {
                 if (roleFilter === 'Doctor') {
-                    return (appt.doctorName || appt.doctor || '').toLowerCase().includes(term);
+                    return (appt.doctorName || '').toLowerCase().includes(term);
                 } else {
                     return (appt.patientName || '').toLowerCase().includes(term);
                 }
@@ -105,22 +133,17 @@ const Appointments = () => {
     };
 
     // --- 4. Navigation Handlers ---
-    
-    // Go to Patient Profile (using email from appointment data)
-    const goToPatient = (email) => {
-        if (email) {
-            // Pass 'appointments' as the return destination
-            navigate(`/admin/patient-details/${email}`, { state: { returnTab: 'appointments' } });
+
+    // Updated: Accepts ID directly
+    const goToPatient = (patientId) => {
+        if (patientId) {
+            navigate(`/users/${patientId}`, { state: { returnTab: 'appointments' } });
         }
     };
 
-    const goToDoctor = (docName) => {
-        const doc = doctorsList.find(d => d.name === docName);
-        if (doc) {
-            // Pass 'appointments' as the return destination
-            navigate(`/admin/doctor-details/${doc.id}`, { state: { returnTab: 'appointments' } });
-        } else {
-            alert("Doctor profile not found in database.");
+    const goToDoctor = (docId) => {
+        if (docId) {
+            navigate(`/doctors/profile/${docId}`, { state: { returnTab: 'appointments' } });
         }
     };
 
@@ -128,14 +151,14 @@ const Appointments = () => {
         <div className="appointments-page">
             <div className="page-header">
                 <h2>Appointments</h2>
-                
+
                 {/* Search Bar */}
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    <select 
-                        className="filter-select" 
-                        value={roleFilter} 
+                    <select
+                        className="filter-select"
+                        value={roleFilter}
                         onChange={e => setRoleFilter(e.target.value)}
-                        style={{width:'100px'}}
+                        style={{ width: '100px' }}
                     >
                         <option value="Doctor">Doctor</option>
                         <option value="Patient">Patient</option>
@@ -160,7 +183,7 @@ const Appointments = () => {
                         <option value="All">All Statuses</option>
                         <option value="Scheduled">Scheduled</option>
                         <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option> {/* Added Cancelled */}
+                        <option value="Cancelled">Cancelled</option>
                     </select>
                 </div>
 
@@ -192,28 +215,29 @@ const Appointments = () => {
                         {filteredAppointments.length > 0 ? (
                             filteredAppointments.map((appt) => (
                                 <tr key={appt.id}>
-                                    <td>{appt.date}</td>
+                                    {/* Format Date: YYYY-MM-DD -> Locale Date */}
+                                    <td>{new Date(appt.date).toLocaleDateString()}</td>
                                     <td>{appt.time}</td>
-                                    
+
                                     {/* CLICKABLE PATIENT NAME */}
                                     <td>
-                                        <span 
-                                            className="clickable-link" 
-                                            onClick={() => goToPatient(appt.patientEmail)}
-                                            style={{color:'#3498DB', fontWeight:'bold', cursor:'pointer', textDecoration:'underline'}}
+                                        <span
+                                            className="clickable-link"
+                                            onClick={() => goToPatient(appt.patientId)} // Pass ID directly
+                                            style={{ color: '#3498DB', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}
                                         >
-                                            {appt.patientName || "Unknown"}
+                                            {appt.patientName}
                                         </span>
                                     </td>
 
                                     {/* CLICKABLE DOCTOR NAME */}
                                     <td>
-                                        <span 
+                                        <span
                                             className="clickable-link"
-                                            onClick={() => goToDoctor(appt.doctorName || appt.doctor)}
-                                            style={{color:'#3498DB', fontWeight:'bold', cursor:'pointer', textDecoration:'underline'}}
+                                            onClick={() => goToDoctor(appt.doctor_id)} // Use API doctor_id
+                                            style={{ color: '#3498DB', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}
                                         >
-                                            {appt.doctorName || appt.doctor}
+                                            {appt.doctorName}
                                         </span>
                                     </td>
 
@@ -222,22 +246,21 @@ const Appointments = () => {
                                             {appt.status}
                                         </span>
                                     </td>
-                                    
+
                                     <td>
                                         <div className="actions-cell">
-        {appt.status === 'Completed' ? (
-            <button 
-                className="btn-outline" 
-                style={{borderColor: '#3498DB', color: '#3498DB'}}
-                // CHANGE THIS LINE:
-                onClick={() => navigate(`/admin/appointment/${appt.id}`)}
-            >
-                View Report
-            </button>
-        ) : (
-            <span style={{color:'#999', fontSize:'0.85rem'}}>-</span>
-        )}
-    </div>
+                                            {appt.status === 'Completed' ? (
+                                                <button
+                                                    className="btn-outline"
+                                                    style={{ borderColor: '#3498DB', color: '#3498DB' }}
+                                                    onClick={() => navigate(`/admin/appointment/${appt.id}`)}
+                                                >
+                                                    View Report
+                                                </button>
+                                            ) : (
+                                                <span style={{ color: '#999', fontSize: '0.85rem' }}>-</span>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))

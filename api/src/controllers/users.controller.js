@@ -46,6 +46,26 @@ export const getUserById = async (req, res) => {
     }
 };
 
+export const getAllUsers = async(req, res) =>{
+
+  try{
+    if(req.user.role === 'admin'){
+      const [users] = await db.query(query.SELECT_ALL_USERS)
+      return res.status(code.SUCCESS).json({
+        message:"success",
+        users:users
+      })
+    }
+    else
+    {
+      return res.status(code.FORBIDDEN)
+    }
+
+  } 
+  catch(error){
+    return res.status(code.SERVER_ERROR).json({ error: "Internal server error" });
+  }
+}
 
 const updateUserSchema = Joi.object({
   email: Joi.string().email().max(255).optional(),
@@ -465,4 +485,3 @@ export const createDoctor = async (req, res) => {
     return res.status(code.SERVER_ERROR).json({ error: "Internal server error" });
   }
 };
-

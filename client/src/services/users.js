@@ -4,6 +4,10 @@ export const getUser = async (userId) => {
     return api.get(`/users/${userId}`);
 };
 
+export const getAllUsers = async() => {
+    return api.get(`/users`);
+}
+
 export const updateUser = async (userId, data) => {
     return api.patch(`/users/${userId}`, data);
 }
