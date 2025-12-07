@@ -172,14 +172,14 @@ export const getMedicalTestByAppointmentId = async (req, res) => {
       });
     }
 
-    return res.status(code.OK).json({
+    return res.status(code.SUCCESS).json({
       message: "Medical test retrieved successfully",
       medicalTest: testRows
     });
 
   } catch (error) {
     console.error("Error getting medical test:", error);
-    return res.status(code.INTERNAL_SERVER_ERROR).json({
+    return res.status(code.SERVER_ERROR).json({
       error: "An error occurred while retrieving the medical test"
     });
   }
