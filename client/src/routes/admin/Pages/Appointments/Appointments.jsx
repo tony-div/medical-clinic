@@ -14,14 +14,17 @@ const Appointments = () => {
     // --- 1. State ---
     const [appointments, setAppointments] = useState([]);
     const [filteredAppointments, setFilteredAppointments] = useState([]);
-    const [doctorsList, setDoctorsList] = useState([]); 
+    const [doctorsList, setDoctorsList] = useState([]);
 
     // Filters
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState('Doctor');
     const [selectedStatus, setSelectedStatus] = useState('All');
     const [dateRange, setDateRange] = useState('');
-    // const [patientsList, setPatientsList] = useState([]); // Unused state removed for cleanup
+
+    // [ADDED] - Pagination state (same as Users.jsx)
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
 
     // --- 2. Load Data ---
     const refreshData = async () => {
@@ -122,6 +125,17 @@ const Appointments = () => {
         setFilteredAppointments(results);
     }, [searchTerm, roleFilter, selectedStatus, dateRange, appointments]);
 
+    // [ADDED] - Reset pagination when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, roleFilter, selectedStatus, dateRange]);
+
+    // [ADDED] - Pagination calculations (same as Users.jsx)
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentAppointments = filteredAppointments.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredAppointments.length / itemsPerPage);
+
     // Helper for Status Colors
     const getStatusClass = (status) => {
         switch (status?.toLowerCase()) {
@@ -212,33 +226,48 @@ const Appointments = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredAppointments.length > 0 ? (
-                            filteredAppointments.map((appt) => (
+                        {/* [MODIFIED] - Use currentAppointments instead of filteredAppointments */}
+                        {currentAppointments.length > 0 ? (
+                            currentAppointments.map((appt) => (
                                 <tr key={appt.id}>
                                     {/* Format Date: YYYY-MM-DD -> Locale Date */}
                                     <td>{new Date(appt.date).toLocaleDateString()}</td>
                                     <td>{appt.time}</td>
 
-                                    {/* CLICKABLE PATIENT NAME */}
+                                    {/* [MODERNIZED] - Patient with avatar */}
                                     <td>
-                                        <span
-                                            className="clickable-link"
-                                            onClick={() => goToPatient(appt.patientId)} // Pass ID directly
-                                            style={{ color: '#3498DB', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}
-                                        >
-                                            {appt.patientName}
-                                        </span>
+                                        <div className="user-cell" onClick={() => goToPatient(appt.patientId)} style={{ cursor: 'pointer' }}>
+                                            <div
+                                                className="avatar-circle"
+                                                style={{
+                                                    background: '#e1f5fe',
+                                                    color: '#0288d1'
+                                                }}
+                                            >
+                                                {appt.patientName ? appt.patientName.charAt(0).toUpperCase() : 'P'}
+                                            </div>
+                                            <span className="user-name patient-name">
+                                                {appt.patientName}
+                                            </span>
+                                        </div>
                                     </td>
 
-                                    {/* CLICKABLE DOCTOR NAME */}
+                                    {/* [MODERNIZED] - Doctor with avatar */}
                                     <td>
-                                        <span
-                                            className="clickable-link"
-                                            onClick={() => goToDoctor(appt.doctor_id)} // Use API doctor_id
-                                            style={{ color: '#3498DB', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}
-                                        >
-                                            {appt.doctorName}
-                                        </span>
+                                        <div className="user-cell" onClick={() => goToDoctor(appt.doctor_id)} style={{ cursor: 'pointer' }}>
+                                            <div
+                                                className="avatar-circle"
+                                                style={{
+                                                    background: '#e6f4ea',
+                                                    color: '#137333'
+                                                }}
+                                            >
+                                                {appt.doctorName ? appt.doctorName.charAt(0).toUpperCase() : 'D'}
+                                            </div>
+                                            <span className="user-name doctor-name">
+                                                {appt.doctorName}
+                                            </span>
+                                        </div>
                                     </td>
 
                                     <td>
@@ -273,6 +302,27 @@ const Appointments = () => {
                         )}
                     </tbody>
                 </table>
+
+                {/* [ADDED] - Pagination (same style as Users.jsx) */}
+                {filteredAppointments.length > itemsPerPage && (
+                    <div className="paginationContainer">
+                        <button
+                            className="pageBtn"
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                        >
+                            &lt; Prev
+                        </button>
+                        <span className="pageInfo">Page {currentPage} of {totalPages}</span>
+                        <button
+                            className="pageBtn"
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                        >
+                            Next &gt;
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

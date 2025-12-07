@@ -77,27 +77,6 @@ export const getUserById = async (req, res) => {
   }
 };
 
-export const getAllUsers = async(req, res) =>{
-
-  try{
-    if(req.user.role === 'admin'){
-      const [users] = await db.query(query.SELECT_ALL_USERS)
-      return res.status(code.SUCCESS).json({
-        message:"success",
-        users:users
-      })
-    }
-    else
-    {
-      return res.status(code.FORBIDDEN)
-    }
-
-  } 
-  catch(error){
-    return res.status(code.SERVER_ERROR).json({ error: "Internal server error" });
-  }
-}
-
 const updateUserSchema = Joi.object({
   email: Joi.string().email().max(255).optional(),
   password: Joi.string().min(6).max(255).optional(),
@@ -122,18 +101,18 @@ export const updateUser = async (req, res) => {
   let docFlag = false;
   let updatedDoc = null;
   try {
-      const userId = req.params.userId;
-      const loggedUser = req.user;
-      if(loggedUser.role === "doctor"){
-        return res.status(code.FORBIDDEN).json({ error: "You're not permitted to update this person's info" });
-      }
-      const { error } = updateUserSchema.validate(req.body);
-      if (error) {
-        console.log(error.message);
-        return res.status(code.BAD_REQUEST).json({
-          error: "An invalid entry was entered, please check the inputs"
-        });
-      }
+    const userId = req.params.userId;
+    const loggedUser = req.user;
+    if (loggedUser.role === "doctor") {
+      return res.status(code.FORBIDDEN).json({ error: "You're not permitted to update this person's info" });
+    }
+    const { error } = updateUserSchema.validate(req.body);
+    if (error) {
+      console.log(error.message);
+      return res.status(code.BAD_REQUEST).json({
+        error: "An invalid entry was entered, please check the inputs"
+      });
+    }
 
     const { email, password, name, phone_number, address, gender, birth_date, role } = req.body;
     let updatedUser = { email, password, name, phone_number, address, gender, birth_date, role };
