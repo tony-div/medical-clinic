@@ -67,21 +67,14 @@ export default function DoctorProfile() {
                 const revRes = await getReviewsByDoctorId(id);
                 const reviews = revRes.data.data || [];
                 setReviewsList(reviews);
-                let avgRating = "New";
-                let reviewsCount = 0;
 
-                if (doctorData.rating_id) {
-                    const ratingRes = await getRating(doctorData.rating_id);
-                    const rating = ratingRes.data.rating;
+                let avgRating =
+                    doctorData.avg_rating
+                        ? Number(doctorData.avg_rating).toFixed(1)
+                        : "New";
 
-                    if (rating) {
-                        avgRating = rating.avg_rating.toFixed(1);
-                        reviewsCount = rating.reviews_count;
-                    }
-                }
-
+                let reviewsCount = doctorData.reviews_count || 0;
                 setStats({ rating: avgRating, count: reviewsCount });
-
             } catch (err) {
                 console.error("Error loading doctor profile:", err);
             }

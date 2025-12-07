@@ -21,7 +21,7 @@ export default function BookingPage() {
 
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedSlot, setSelectedSlot] = useState(null);
-
+    const [isLoading, setIsLoading] = useState(false);
     const [startIndex, setStartIndex] = useState(0);
     const DAYS_TO_SHOW = 3;
 
@@ -151,6 +151,7 @@ export default function BookingPage() {
         }
 
         try {
+            setIsLoading(true); 
             const payload = {
                 doctor_id: Number(doctorId),
                 reason: reason.trim(),
@@ -181,7 +182,7 @@ export default function BookingPage() {
 
                 await uploadMedicalTestFile(medicalTestId, selectedFile);
             }
-
+            setIsLoading(false); 
             Swal.fire({
                 icon: "success",
                 title: "Success!",
@@ -191,6 +192,7 @@ export default function BookingPage() {
             }).then(() => navigate("/patient/dashboard"));
 
         } catch (err) {
+            setIsLoading(false); 
             const msg =
                 err.response?.data?.error ||
                 err.message ||
@@ -316,6 +318,12 @@ export default function BookingPage() {
                     </div>
                 </div>
             </div>
+            {isLoading && (
+            <div className="loading-overlay">
+                <div className="spinner"></div>
+                <p>Please wait…</p>
+            </div>
+        )}
         </div>
     );
 }
