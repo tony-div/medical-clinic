@@ -110,7 +110,7 @@ function Nav() {
                 <div className="mobile-buttons">
                     {userRole ? (
                         <>
-                            <Link to="/patient/dashboard" className="btn primary" onClick={closeMenu}>My Portal</Link>
+                            <Link to={`/${userRole}/dashboard`}  className="btn primary" onClick={closeMenu}>My Portal</Link>
                             <button className="btn" onClick={handleLogout}>Logout</button>
                         </>
                     ) : (
@@ -126,7 +126,7 @@ function Nav() {
             <div className="navbar-right">
                 {userRole ? (
                     <>
-                        <Link to="/patient/dashboard" className="btn primary">My Portal</Link>
+                        <Link to={`/${userRole}/dashboard`}  className="btn primary">My Portal</Link>
                         <button className="btn" onClick={handleLogout}>Logout</button>
                     </>
                 ) : (
