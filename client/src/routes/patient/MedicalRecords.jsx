@@ -15,12 +15,20 @@ export default function MedicalRecords() {
     
     const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
 
+    // ✅ NEW HELPER: Removes timestamps (e.g., "16345...-my_file.pdf" -> "my_file.pdf")
+    const cleanFileName = (name) => {
+        if (!name) return "Medical Document";
+        // Remove path (e.g., "/uploads/")
+        const fileName = name.split(/[/\\]/).pop();
+        // Remove starting numbers followed by - or _
+        return fileName.replace(/^\d+[-_]/, '');
+    };
+
     useEffect(() => {
         if (!userId) { navigate('/login'); return; }
 
         const fetchData = async () => {
             try {
-                // 1. Fetch Appointments & Doctors
                 const [apptRes, docRes] = await Promise.all([
                     getAppointments(),
                     getDoctors()
@@ -34,33 +42,28 @@ export default function MedicalRecords() {
                     ? docRes.data 
                     : (docRes.data.doctors || docRes.data.data || []);
 
-                // We use Promise.all to fetch them all in parallel
                 const appointmentsWithTests = await Promise.all(apiAppts.map(async (appt) => {
                     try {
                         const testRes = await getMedicalTestByAppointmentId(appt.id);
                         const tests = testRes.data.medicalTest;
                         
-                        // If a test is found, attach it to the appointment object
                         if (Array.isArray(tests) && tests.length > 0) {
                             return {
                                 ...appt,
                                 file_path: tests[0].file_path,
-                                test_description: tests[0].description
+                                test_description: tests[0].description,
+                                real_test_date: tests[0].test_date || tests[0].uploaded_at 
                             };
                         }
-                    } catch (err) {
-                        // If 404 (No test found), just return the appointment as is
-                    }
+                    } catch (err) { }
                     return appt;
                 }));
 
-                // 3. Filter & Map (Now 'file_path' exists!)
                 const myRecords = appointmentsWithTests
                     .filter(a => {
-    const path = a.uploadedFiles || a.file_path || a.medical_test_path;
-    // Only allow if path exists AND is not "N/A" AND is not empty
-    return path && path !== "N/A" && path.trim() !== "";
-})
+                        const path = a.file_path || a.medical_test_path;
+                        return path && path !== "N/A" && path.trim() !== "";
+                    }) 
                     .map(appt => {
                         const doc = apiDocs.find(d => d.id === appt.doctor_id || d.id === appt.doctorId);
                         
@@ -69,10 +72,22 @@ export default function MedicalRecords() {
                             fileUrl = `${API_BASE_URL}${fileUrl}`;
                         }
 
+                        // ✅ FIX: Use the cleaning logic
+                        // 1. Try Description first
+                        // 2. If Description is missing (old records), use Filename
+                        // 3. Always run it through cleanFileName to remove the timestamp numbers
+                        let rawName = appt.test_description || fileUrl;
+                        let displayName = cleanFileName(rawName);
+
+                        const rawDate = appt.real_test_date || appt.date;
+                        const formattedDate = rawDate 
+                            ? new Date(rawDate).toLocaleDateString('en-CA')
+                            : "N/A";
+
                         return {
                             id: appt.id,
-                            date: appt.date ? new Date(appt.date).toISOString().split('T')[0] : "N/A",
-                            type: appt.test_description || "Medical Document",
+                            date: formattedDate, 
+                            type: displayName, // <--- Using the clean name
                             uploadedFiles: fileUrl,
                             doctorName: doc ? doc.name : "Unknown Doctor",
                             specialty: doc ? doc.specialty : "General"
@@ -131,7 +146,10 @@ export default function MedicalRecords() {
                                             </div>
                                         </td>
                                         <td>
-                                            <div className="file-tag"><FaFileAlt /> {record.type}</div>
+                                            <div className="file-tag" title={record.type}>
+                                                <FaFileAlt /> 
+                                                {record.type.length > 25 ? record.type.substring(0, 22) + '...' : record.type}
+                                            </div>
                                         </td>
                                         <td>
                                             <a href={record.uploadedFiles} target="_blank" rel="noreferrer" className="btn-view-file">

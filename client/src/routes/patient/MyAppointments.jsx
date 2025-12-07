@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaCalendarAlt, FaUserMd, FaClock, FaExternalLinkAlt, FaBan, FaExclamationTriangle } from 'react-icons/fa';
+import { FaCalendarAlt, FaUserMd, FaClock, FaExternalLinkAlt, FaBan, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
+// ✅ IMPORT 1: SweetAlert
+import Swal from 'sweetalert2';
 import PatientSidebar from '../../components/PatientSidebar';
 import './MyAppointments.css';
-import { getAppointments } from '../../services/appointment';
+import { getAppointments, updateAppointment } from '../../services/appointment'; // Ensure updateAppointment is imported
 import { getDoctors } from '../../services/doctors';
 
 export default function MyAppointments() {
     const navigate = useNavigate();
     
-    // Get ID
     const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
     const userId = storedUser.id;
     
@@ -23,13 +24,11 @@ export default function MyAppointments() {
 
         const fetchData = async () => {
             try {
-                // Fetch User's Appts & Doctors
                 const [apptRes, docRes] = await Promise.all([
                     getAppointments(),
                     getDoctors()
                 ]);
 
-                // Safe Unwrap
                 const apiAppts = Array.isArray(apptRes.data) 
                     ? apptRes.data 
                     : (apptRes.data.appointments || apptRes.data.data || []);
@@ -38,15 +37,15 @@ export default function MyAppointments() {
                     ? docRes.data 
                     : (docRes.data.doctors || docRes.data.data || []);
 
-                // Map
                 const mappedAppts = apiAppts.map(appt => {
                     const doc = apiDocs.find(d => d.id === appt.doctor_id || d.id === appt.doctorId);
                     return {
                         ...appt,
                         id: appt.id,
-                        date: appt.date ? appt.date.toString().split('T')[0] : "",
+                        date: appt.date ? new Date(appt.date).toLocaleDateString('en-CA') : "",
                         time: appt.time || appt.starts_at,
-                        status: appt.status || 'Scheduled',
+                        // Ensure we handle status casing gracefully for display
+                        status: appt.status ? appt.status.charAt(0).toUpperCase() + appt.status.slice(1) : 'Scheduled',
                         doctorName: doc ? doc.name : "Unknown Doctor",
                         specialty: doc ? doc.specialty : "General"
                     };
@@ -72,7 +71,8 @@ export default function MyAppointments() {
     const confirmCancel = async () => {
         if (!selectedAppt) return;
         try {
-            await updateAppointment(selectedAppt.id, { status: "Cancelled" });
+            // ✅ FIX: Send lowercase "cancelled" to match Database Enum
+            await updateAppointment(selectedAppt.id, { status: "cancelled" });
             
             // Optimistic update
             const updatedList = appointments.map(a => 
@@ -82,8 +82,26 @@ export default function MyAppointments() {
             updatedList.sort((a, b) => new Date(b.date) - new Date(a.date));
             setAppointments(updatedList);
             setShowCancelModal(false);
+
+            // ✅ Success Popup
+            Swal.fire({
+                icon: 'success',
+                title: 'Cancelled',
+                text: 'Your appointment has been cancelled successfully.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
         } catch (error) {
-            alert("Failed to cancel. Please try again.");
+            console.error("Cancel Error:", error);
+            setShowCancelModal(false);
+            
+            // ✅ Nice Error Popup
+            Swal.fire({
+                icon: 'error',
+                title: 'Cancellation Failed',
+                text: error.response?.data?.error || "Unable to cancel appointment. Please try again later.",
+            });
         }
     };
 

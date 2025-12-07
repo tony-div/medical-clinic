@@ -6,7 +6,6 @@ import './PatientDashboard.css';
 import { getAppointments } from '../../services/appointment';
 import { getDoctors } from '../../services/doctors';
 
-
 export default function PatientDashboard() {
     const navigate = useNavigate();
     
@@ -20,50 +19,27 @@ export default function PatientDashboard() {
     const [stats, setStats] = useState({ total: 0, completed: 0 });
 
     useEffect(() => {
-    if (!userId) { 
-        console.warn("⛔ No User ID found in localStorage. Redirecting.");
-        navigate('/login'); 
-        return; 
-    }
+        if (!userId) { 
+            navigate('/login'); 
+            return; 
+        }
 
-    const fetchData = async () => {
-        try {
-            console.log("🔍 STEP 1: Current User ID is:", userId);
+        const fetchData = async () => {
+            try {
+                // Fetch Appointments & Doctors
+                const [appointmentsRes, doctorsRes] = await Promise.all([
+                    getAppointments(),
+                    getDoctors()
+                ]);
+                
+                // Safe Unwrap
+                const apiAppointments = Array.isArray(appointmentsRes.data) 
+                    ? appointmentsRes.data 
+                    : (appointmentsRes.data?.appointments || appointmentsRes.data?.data || []);
 
-            // Fetch Appointments
-            const [appointmentsRes, doctorsRes] = await Promise.all([
-   getAppointments(), // <--- No ID needed! It uses your token.
-   getDoctors()
-]);
-            console.log("🔍 STEP 2: Raw API Response:", appointmentsRes);
-            
-            // Check exactly what the backend sent back
-            const rawData = appointmentsRes.data;
-            console.log("🔍 STEP 3: Response .data property:", rawData);
-            
-            // UNWRAPPING LOGIC WITH DEBUGGING
-            let apiAppointments = [];
-            
-            if (Array.isArray(rawData)) {
-                console.log("✅ Data is an Array immediately.");
-                apiAppointments = rawData;
-            } else if (rawData.appointments && Array.isArray(rawData.appointments)) {
-                 console.log("✅ Data found inside .appointments key");
-                apiAppointments = rawData.appointments;
-            } else if (rawData.data && Array.isArray(rawData.data)) {
-                 console.log("✅ Data found inside .data key");
-                apiAppointments = rawData.data;
-            } else {
-                console.error("❌ Could not find array in response. Keys found:", Object.keys(rawData));
-            }
-
-            console.log("🔍 STEP 4: Final array to be mapped:", apiAppointments);
-
-            const apiDoctors = Array.isArray(doctorsRes.data) 
-                ? doctorsRes.data 
-                : (doctorsRes.data?.doctors || doctorsRes.data?.data || []);
-
-                console.log("✅ Unwrapped Appointments:", apiAppointments);
+                const apiDoctors = Array.isArray(doctorsRes.data) 
+                    ? doctorsRes.data 
+                    : (doctorsRes.data?.doctors || doctorsRes.data?.data || []);
 
                 // Map Data
                 const formattedAppts = apiAppointments.map(appt => {
@@ -72,29 +48,24 @@ export default function PatientDashboard() {
                     return {
                         ...appt,
                         id: appt.id,
-                        // Handle date strictly
-                        date: appt.date ? new Date(appt.date).toISOString().split('T')[0] : "N/A",
+                        // Fix Date Bug: Use Local Date String
+                        date: appt.date ? new Date(appt.date).toLocaleDateString('en-CA') : "N/A",
                         time: appt.time || appt.starts_at || "00:00",
-                        status: (appt.status || 'Scheduled').charAt(0).toUpperCase() + (appt.status || 'Scheduled').slice(1), // Capitalize
-                        diagnosis: appt.diagnosis,
+                        status: (appt.status || 'Scheduled').charAt(0).toUpperCase() + (appt.status || 'Scheduled').slice(1), 
                         doctorName: doc ? doc.name : "Unknown Doctor",
                         specialty: doc ? doc.specialty : "General",
                         image: doc ? doc.image : "/assets/default-doc.png"
                     };
                 });
                 
-                // Sort
                 formattedAppts.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-                // Find Upcoming (Must be Scheduled AND in the future/today)
-                // Note: Since we are debugging, let's just show ANY 'Scheduled' as upcoming
                 const next = formattedAppts.find(a => a.status === 'Scheduled');
                 setUpcomingAppt(next || null);
 
-                // History (Everything else)
                 const history = formattedAppts
                     .filter(a => a.status !== 'Scheduled')
-                    .sort((a, b) => new Date(b.date) - new Date(a.date)); // Newest first
+                    .sort((a, b) => new Date(b.date) - new Date(a.date)); 
                 
                 setRecentHistory(history);
 
@@ -104,7 +75,7 @@ export default function PatientDashboard() {
                 });
 
            } catch (error) {
-            console.error("⚠️ Error fetching dashboard data:", error);
+            console.error("Error fetching dashboard data:", error);
         }
         };
 
@@ -200,28 +171,36 @@ export default function PatientDashboard() {
                         <table className="history-table">
                             <thead>
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Doctor</th>
-                                    <th>Status</th>
-                                    <th>Diagnosis</th>
-                                    <th>Action</th> 
+                                    {/* WIDTHS ensure columns stay aligned */}
+                                    <th style={{width: '25%'}}>Date</th>
+                                    <th style={{width: '35%'}}>Doctor</th>
+                                    <th style={{width: '20%'}}>Status</th>
+                                    <th style={{width: '20%', textAlign: 'right'}}>Action</th> 
                                 </tr>
                             </thead>
                             <tbody>
                                 {recentHistory.length > 0 ? (
                                     recentHistory.slice(0, 3).map((item) => (
                                         <tr key={item.id} className="table-row">
-                                            <td className="date-cell"><FaClock className="mini-icon"/> {item.date}</td>
-                                            <td className="doc-cell"><FaUserMd className="mini-icon"/> {item.doctorName}</td>
+                                            <td>
+                                                {/* Wrapper div safely holds the icon and text */}
+                                                <div className="date-cell">
+                                                    <FaClock className="mini-icon"/> <span>{item.date}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="doc-cell">
+                                                    <FaUserMd className="mini-icon"/> <span>{item.doctorName}</span>
+                                                </div>
+                                            </td>
                                             <td>
                                                 <span className={`status-badge ${getStatusClass(item.status)}`}>
                                                     {item.status}
                                                 </span>
                                             </td>
-                                            <td className="diagnosis-text">{item.diagnosis || "-"}</td>
-                                            <td>
+                                            <td style={{textAlign: 'right'}}>
                                                 <button 
-                                                    className="view-btn"
+                                                    className="view-details-btn"
                                                     onClick={() => navigate(`/patient/appointment/${item.id}`)}
                                                 >
                                                     View <FaExternalLinkAlt style={{fontSize:'10px'}}/>
@@ -231,7 +210,7 @@ export default function PatientDashboard() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="5" className="empty-table">No recent history found.</td>
+                                        <td colSpan="4" className="empty-table">No recent history found.</td>
                                     </tr>
                                 )}
                             </tbody>
