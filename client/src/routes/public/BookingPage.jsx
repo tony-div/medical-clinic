@@ -166,9 +166,10 @@ export default function BookingPage() {
                 throw new Error("Failed to retrieve appointment ID.");
             }
             if (selectedFile) {
+                // ✅ FIX: Use selectedFile.name instead of reason.trim()
                 const testPayload = {
                     appointment_id: appointmentId,
-                    description: reason.trim(),
+                    description: selectedFile.name, 
                     test_date: null
                 };
 
@@ -254,10 +255,10 @@ export default function BookingPage() {
                                     const displayDate = isToday
                                         ? "Today"
                                         : dateObj.toLocaleDateString('en-US', {
-                                            weekday: "short",
-                                            month: "numeric",
-                                            day: "numeric"
-                                        });
+                                                weekday: "short",
+                                                month: "numeric",
+                                                day: "numeric"
+                                            });
 
                                     return (
                                         <div
