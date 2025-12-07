@@ -1,4 +1,5 @@
 import React from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaChartLine, FaUserMd, FaCalendarCheck, FaClock, FaSignOutAlt, FaStethoscope } from 'react-icons/fa';
 import './PatientSidebar.css'; // Re-using the same professional styles
@@ -6,11 +7,20 @@ import './PatientSidebar.css'; // Re-using the same professional styles
 export default function DoctorSidebar() {
     const location = useLocation();
     const navigate = useNavigate();
-
+    const [userRole, setUserRole] = useState(null);
     const isActive = (path) => location.pathname === path ? 'active' : '';
+    useEffect(() => {
+        // 1. Identify logged-in user
+        const storedUser = localStorage.getItem("currentUser");
+        if (storedUser) {
+            const userObj = JSON.parse(storedUser);
+            setUserRole(userObj.role);  // "patient" or "doctor" or "admin"
+        }
+    }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem("userCurrent");
+        localStorage.removeItem("currentUser");
+        setUserRole(null);
         navigate('/');
     };
 
