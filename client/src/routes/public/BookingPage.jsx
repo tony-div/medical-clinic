@@ -24,7 +24,8 @@ export default function BookingPage() {
     const [startIndex, setStartIndex] = useState(0);
     const DAYS_TO_SHOW = 3;
 
-    const currentUser = JSON.parse(localStorage.getItem("user"));
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
     const currentUserEmail = currentUser?.email || null;
 
     /* -------------------------------------------------------------
