@@ -1,66 +1,85 @@
 import React, { useEffect, useState } from 'react';
 import { MdPeople, MdMedicalServices, MdEventAvailable } from 'react-icons/md';
-import { DB_PATIENTS_KEY, DB_DOCTORS_KEY, DB_APPOINTMENTS_KEY } from '../../../data/initDB';
 
-const Dashboard = () => {
+// [MODIFIED] - Import API services instead of localStorage keys
+import { getAllUsers } from '../../../services/users';
+import { getDoctors } from '../../../services/doctors';
+import { getAppointments } from '../../../services/appointment';
+
+// [MODIFIED] - Accept refreshKey prop to trigger re-fetch when data changes
+const Dashboard = ({ refreshKey }) => {
   const [stats, setStats] = useState({ patients: 0, doctors: 0, todayAppts: 0 });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Move the logic into a reusable function
-    const fetchStats = () => {
-      const patients = JSON.parse(localStorage.getItem(DB_PATIENTS_KEY) || "[]");
-      const doctors = JSON.parse(localStorage.getItem(DB_DOCTORS_KEY) || "[]");
-      const appts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
+    // Fetch stats from API
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
 
-      const today = new Date().toISOString().split('T')[0];
-      const todaysCount = appts.filter(a => a.date === today).length;
+        const [resUsers, resDocs, resAppts] = await Promise.all([
+          getAllUsers(),
+          getDoctors(),
+          getAppointments()
+        ]);
 
-      // Update state (React will only re-render if these numbers change)
-      setStats({
-        patients: patients.length,
-        doctors: doctors.length,
-        todayAppts: todaysCount
-      });
+        const users = resUsers.data.users || [];
+        const doctors = resDocs.data.data || [];
+        const appointments = resAppts.data.appointments || [];
+
+        // Count patients (users with role 'patient')
+        const patientCount = users.filter(u => u.role === 'patient').length;
+
+        // Count today's appointments
+        const today = new Date().toISOString().split('T')[0];
+        const todaysCount = appointments.filter(a => a.date === today).length;
+
+        setStats({
+          patients: patientCount,
+          doctors: doctors.length,
+          todayAppts: todaysCount
+        });
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // 2. Run it immediately when page loads
     fetchStats();
-
-    // 3. Run it again every 1000 milliseconds (1 second) to keep it in sync
-    const intervalId = setInterval(fetchStats, 1000);
-
-    // 4. Cleanup: Stop the timer when the user leaves the Dashboard page
-    return () => clearInterval(intervalId);
-  }, []);
+  }, [refreshKey]); // [MODIFIED] - Re-fetch when refreshKey changes
 
   return (
     <div>
       <h2 style={{ marginBottom: '24px', color: '#333' }}>Dashboard</h2>
-      <div style={styles.cardContainer}>
-        <Card
-          title="Total Users"
-          count={stats.patients}
-          icon={<MdPeople />}
-          borderColor="#1e4b8f"
-        />
-        <Card
-          title="Total Doctors"
-          count={stats.doctors}
-          icon={<MdMedicalServices />}
-          borderColor="#1e4b8f"
-        />
-        <Card
-          title="Today's Appointments"
-          count={stats.todayAppts}
-          icon={<MdEventAvailable />}
-          borderColor="#1e4b8f"
-        />
-      </div>
+      {loading ? (
+        <p style={{ color: '#666' }}>Loading stats...</p>
+      ) : (
+        <div style={styles.cardContainer}>
+          <Card
+            title="Total Patients"
+            count={stats.patients}
+            icon={<MdPeople />}
+            borderColor="#1e4b8f"
+          />
+          <Card
+            title="Total Doctors"
+            count={stats.doctors}
+            icon={<MdMedicalServices />}
+            borderColor="#1e4b8f"
+          />
+          <Card
+            title="Today's Appointments"
+            count={stats.todayAppts}
+            icon={<MdEventAvailable />}
+            borderColor="#1e4b8f"
+          />
+        </div>
+      )}
     </div>
   );
 };
 
-// ... keep your Card component and styles exactly as they were ...
 const Card = ({ title, count, icon, borderColor }) => (
   <div style={{ ...styles.card, border: `1px solid ${borderColor}` }}>
     <div>
