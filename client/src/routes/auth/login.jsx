@@ -34,8 +34,8 @@ export default function Login() {
     
       // 1. SAVE SESSION DATA
       localStorage.setItem("token", token);
-      // localStorage.setItem("activeUserEmail", user.email);
-      localStorage.setItem("userRole", user.role);
+      //localStorage.setItem("activeUserEmail", user.email);
+      //localStorage.setItem("userRole", user.role);
       //localStorage.setItem("user", JSON.stringify(user));
       // 2. CRITICAL FIX: Save the full User Object (with ID)
       // This allows PatientProfile to know WHO is logged in (ID, Name, etc.)

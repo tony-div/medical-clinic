@@ -29,7 +29,7 @@ export default function DoctorProfile() {
     const [waitingTime, setWaitingTime] = useState("15 Mins");
     const [stats, setStats] = useState({ rating: "New", count: 0 });
 
-    const currentUser = localStorage.getItem("activeUserEmail");
+    const currentUser = localStorage.getItem("currentUser");
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showBlockModal, setShowBlockModal] = useState(false);
 

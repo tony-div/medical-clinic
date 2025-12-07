@@ -16,9 +16,10 @@ function Nav() {
 
     useEffect(() => {
         // 1. Identify logged-in user
-        const storedUser = localStorage.getItem("activeUserEmail");
+        const storedUser = localStorage.getItem("currentUser");
         if (storedUser) {
-            setUserRole("patient");
+            const userObj = JSON.parse(storedUser);
+            setUserRole(userObj.role);  // "patient" or "doctor" or "admin"
         }
 
         // 2. Load specialties via API
@@ -46,7 +47,7 @@ function Nav() {
     const closeMenu = () => setIsMenuOpen(false);
 
     const handleLogout = () => {
-        localStorage.removeItem("activeUserEmail");
+        localStorage.removeItem("currentUser");
         setUserRole(null);
         navigate('/');
         closeMenu();

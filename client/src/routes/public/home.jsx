@@ -7,7 +7,7 @@ import { DB_DOCTORS_KEY } from '../../data/initDB.js';
 import './home.css';
 
 export default function Home() {
-  const isLoggedIn = localStorage.getItem("activeUserEmail");
+  const isLoggedIn = localStorage.getItem("currentUser");
   
   const [departments, setDepartments] = useState([]);
 

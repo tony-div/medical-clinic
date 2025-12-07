@@ -10,7 +10,7 @@ export default function DoctorSidebar() {
     const isActive = (path) => location.pathname === path ? 'active' : '';
 
     const handleLogout = () => {
-        localStorage.removeItem("activeUserEmail");
+        localStorage.removeItem("userCurrent");
         navigate('/');
     };
 

@@ -10,7 +10,7 @@ export default function PatientSidebar() {
     const isActive = (path) => location.pathname === path ? 'active' : '';
 
     const handleLogout = () => {
-        localStorage.removeItem("activeUserEmail");
+        localStorage.removeItem("currentUser");
         // Optional: Redirect to login immediately if your route protection doesn't catch it
         // window.location.href = '/login'; 
     };
