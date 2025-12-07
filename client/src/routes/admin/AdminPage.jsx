@@ -21,21 +21,22 @@ const AdminPage = () => {
       toggleSidebar={toggleSidebar}
     >
       {/* 1. Dashboard Section */}
-      <section id="dashboard" style={{ paddingTop: '20px', height: '100vh', overflow: 'auto' }}>
+      {/* [FIX] - Removed height: 100vh to allow natural content sizing */}
+      <section id="dashboard" style={{ paddingTop: '20px', paddingBottom: '40px' }}>
         <Dashboard />
       </section>
 
-      <hr style={{ margin: '40px 0', border: '0', borderTop: '1px solid #ddd' }} />
+      <hr style={{ margin: '20px 0', border: '0', borderTop: '1px solid #ddd' }} />
 
       {/* 2. Users Section */}
-      <section id="users" style={{ paddingTop: '20px', height: '100vh', overflow: 'auto' }}>
+      <section id="users" style={{ paddingTop: '20px', paddingBottom: '40px' }}>
         <Users />
       </section>
 
-      <hr style={{ margin: '40px 0', border: '0', borderTop: '1px solid #ddd' }} />
+      <hr style={{ margin: '20px 0', border: '0', borderTop: '1px solid #ddd' }} />
 
-      {/* 3. Appointments Section (Placeholder) */}
-      <section id="appointments" style={{ paddingTop: '20px', height: '100vh', overflow: 'auto' }}>
+      {/* 3. Appointments Section */}
+      <section id="appointments" style={{ paddingTop: '20px', paddingBottom: '40px' }}>
         <Appointments />
       </section>
     </Layout>
