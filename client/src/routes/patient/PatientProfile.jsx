@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom'; 
 import { FaUser, FaEnvelope, FaLock, FaPhone, FaMapMarkerAlt, FaBirthdayCake, FaVenusMars, FaArrowLeft, FaPen, FaSave, FaTimes, FaCheckCircle } from 'react-icons/fa';
+// ✅ IMPORT SWEETALERT
+import Swal from 'sweetalert2'; 
 import PatientSidebar from '../../components/PatientSidebar';
-import { getUser, updateUser } from '../../services/users'; // Import User Services
+import { getUser, updateUser } from '../../services/users';
 import './PatientProfile.css'; 
 
 export default function PatientProfile() {
+    console.log("✅ NEW PROFILE PAGE LOADED"); // <--- Check your console for this!
+
     const navigate = useNavigate();
     const location = useLocation(); 
-    const { email } = useParams(); // If email exists, it's Admin View
+    const { email } = useParams(); 
     
-    // 1. Get the ID from Local Storage
-    // We saved this in Login.jsx just now!
     const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
     const currentUserId = storedUser.id;
     
@@ -22,7 +24,6 @@ export default function PatientProfile() {
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
     useEffect(() => {
-        // If no ID found and not in Admin Mode, redirect to login
         if (!currentUserId && !email) { 
             navigate('/login'); 
             return; 
@@ -31,8 +32,6 @@ export default function PatientProfile() {
         const fetchProfile = async () => {
             try {
                 let profileData = null;
-
-                // A. Normal Patient Flow: Use ID from Session
                 if (currentUserId && !email) {
                     const response = await getUser(currentUserId);
                     profileData = response.data.user || response.data;
@@ -47,7 +46,6 @@ export default function PatientProfile() {
                     });
                     calculateAge(profileData.birth_date);
                 } else {
-                    // Fallback to local storage data if API fetch fails (prevents white screen)
                     if (storedUser.email) {
                         setUserData({ ...storedUser, phone: "", address: "" });
                     } else {
@@ -56,7 +54,6 @@ export default function PatientProfile() {
                 }
             } catch (error) {
                 console.error("Error loading profile:", error);
-                // Fallback
                 if (storedUser.email) {
                      setUserData({ ...storedUser, phone: "", address: "" });
                 } else {
@@ -78,10 +75,13 @@ export default function PatientProfile() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        
+        // 1. TYPING RULES: Prevent letters and limit length while typing
         if (name === 'phone') {
-            if (!/^\d*$/.test(value)) return;
-            if (value.length > 11) return;
+            if (!/^\d*$/.test(value)) return; // Only allow numbers
+            if (value.length > 11) return;    // Stop typing after 11 digits
         }
+        
         setUserData({ ...userData, [name]: value });
         if (name === 'birth_date') calculateAge(value);
     };
@@ -89,21 +89,32 @@ export default function PatientProfile() {
     const handleSave = async (e) => {
         e.preventDefault();
         
+        // 2. SAVING RULES: Strict Check before sending to backend
+        if (!userData.phone || userData.phone.length !== 11 || !userData.phone.startsWith('01')) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Phone Number',
+                text: 'Phone number must be exactly 11 digits and start with 01 (e.g., 01xxxxxxxxx).'
+            });
+            return; // <--- STOP HERE if invalid
+        }
+
         try {
             const payload = {
                 name: userData.name,
                 email: userData.email,
-                // Only send password if changed/needed
-                ...(userData.password ? { password: userData.password } : {}),
                 phone_number: userData.phone,
                 address: userData.address,
-                gender: userData.gender,
-                birth_date: userData.birth_date
+                gender: userData.gender === "" ? null : userData.gender,
+                birth_date: userData.birth_date === "" ? null : userData.birth_date
             };
 
-            await updateUser(userData.id, payload);
+            if (userData.password && userData.password.trim() !== "") {
+                payload.password = userData.password;
+            }
 
-            // Update Session Data
+            await updateUser(currentUserId, payload);
+
             const updatedCache = { ...storedUser, ...userData };
             localStorage.setItem("currentUser", JSON.stringify(updatedCache));
             localStorage.setItem("userName", userData.name); 
@@ -113,7 +124,15 @@ export default function PatientProfile() {
 
         } catch (error) {
             console.error("Update failed:", error);
-            alert("Failed to update profile. " + (error.response?.data?.error || ""));
+            
+            // Nice Error Popup for Server Errors
+            const errorMsg = error.response?.data?.error || "Failed to update profile.";
+            Swal.fire({
+                icon: 'error',
+                title: 'Update Failed',
+                text: errorMsg,
+                confirmButtonColor: '#d33'
+            });
         }
     };
 
@@ -146,7 +165,7 @@ export default function PatientProfile() {
                     <div className="popup-overlay fade-in">
                         <div className="popup-container slide-up">
                             <div className="popup-icon-container">
-                                <FaCheckCircle className="popup-icon" />
+                                <FaCheckCircle className="popup-icon success" />
                             </div>
                             <h3 className="popup-title">Success!</h3>
                             <p className="popup-message">Your profile has been updated successfully.</p>
@@ -196,7 +215,14 @@ export default function PatientProfile() {
                             <div className="form-grid">
                                 <div className="input-group">
                                     <label><FaEnvelope className="icon"/> Email Address</label>
-                                    <input name="email" type="email" value={userData.email} onChange={handleChange} disabled={true} className="input-field locked"/>
+                                    <input 
+                                        name="email" 
+                                        type="email" 
+                                        value={userData.email} 
+                                        onChange={handleChange} 
+                                        disabled={!isEditing || isAdminView} 
+                                        className={`input-field ${isEditing ? 'editable' : 'locked'}`}
+                                    />
                                 </div>
                                 <div className="input-group">
                                     <label><FaLock className="icon"/> Password</label>

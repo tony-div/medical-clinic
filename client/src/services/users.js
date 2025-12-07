@@ -8,8 +8,9 @@ export const getUser = async (userId) => {
     return api.get(`/users/${userId}`);
 };
 
-export const updateUser = async (userId) => {
-    return api.patch(`/users/${userId}`);
+
+export const updateUser = async (userId, data) => {
+    return api.patch(`/users/${userId}`, data);
 }
 
 export const deleteUser = async (userId) => {
