@@ -9,31 +9,15 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve('./../infra/.env') });
 
-// [ADDED] - Get all users for admin panel (admin only)
 export const getAllUsers = async (req, res) => {
   try {
-    const loggedUser = req.user;
-    // Only admins can get all users
-    if (loggedUser.role !== "admin") {
+    if (req.user.role === "admin") {
+      const [users] = await db.query(query.SELECT_ALL_USERS);
+      return res.status(code.SUCCESS).json({ message: "success", users: users });
+      
+    } else {
       return res.status(code.FORBIDDEN).json({ error: "Admin access required" });
     }
-    const [users] = await db.query(query.SELECT_ALL_USERS);
-    // Add role colors for frontend display
-    const usersWithColors = users.map(user => {
-      let roleColor, roleText;
-      switch (user.role) {
-        case 'patient':
-          roleColor = '#e1f5fe'; roleText = '#0288d1'; break;
-        case 'doctor':
-          roleColor = '#e6f4ea'; roleText = '#137333'; break;
-        case 'admin':
-          roleColor = '#e8f0fe'; roleText = '#1e4b8f'; break;
-        default:
-          roleColor = '#f5f5f5'; roleText = '#333';
-      }
-      return { ...user, roleColor, roleText };
-    });
-    return res.status(code.SUCCESS).json({ message: "success", users: usersWithColors });
   } catch (error) {
     console.error(error);
     return res.status(code.SERVER_ERROR).json({ error: "Internal server error" });
