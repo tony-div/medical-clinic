@@ -8,6 +8,7 @@ import './BookingPage.css';
 import { getDoctorById } from '../../services/doctors';
 import { getTimeSlots } from '../../services/time-slots';
 import { createAppointment } from '../../services/appointment';
+import { createMedicalTest, uploadMedicalTestFile  } from "../../services/medical-tests";
 
 export default function BookingPage() {
     const { doctorId } = useParams();
@@ -99,9 +100,6 @@ export default function BookingPage() {
     setSelectedDate(todayStr);
     }, [doctor, next7Days]);
 
-    /* -------------------------------------------------------------
-       Handle clicking a date -> load slots for it
-    --------------------------------------------------------------*/
     const handleDateClick = (dateObj) => {
         const dateStr = dateObj.toISOString().split("T")[0];
 
@@ -111,24 +109,25 @@ export default function BookingPage() {
         fetchSlotsForDate(dateStr);
     };
 
-    /* -------------------------------------------------------------
-       Handle Slot Click
-    --------------------------------------------------------------*/
     const handleSlotClick = (slot) => {
         setSelectedSlot(slot);
     };
 
-    /* -------------------------------------------------------------
-       File Upload
-    --------------------------------------------------------------*/
+    const [filePreviewUrl, setFilePreviewUrl] = useState(null);
+
     const handleFileChange = (e) => {
         const file = e.target.files[0];
-        if (file) setSelectedFile(URL.createObjectURL(file));
+
+        if (file) {
+            setSelectedFile(file);
+            setFilePreviewUrl(URL.createObjectURL(file));
+        } else {
+            setSelectedFile(null);
+            setFilePreviewUrl(null);
+        }
     };
 
-    /* -------------------------------------------------------------
-       Book appointment
-    --------------------------------------------------------------*/
+
     const handleConfirm = async () => {
         if (!currentUserEmail) {
             Swal.fire({
@@ -142,33 +141,63 @@ export default function BookingPage() {
             });
             return;
         }
-
         if (!selectedDate || !selectedSlot || !reason.trim()) {
-            Swal.fire('Missing Details', 'Please choose a date, a time, and enter a reason.', 'warning');
+            Swal.fire(
+                'Missing Information',
+                'Please choose a date, a time slot, and provide a reason.',
+                'warning'
+            );
             return;
         }
 
         try {
             const payload = {
                 doctor_id: Number(doctorId),
-                reason,
+                reason: reason.trim(),
                 date: selectedDate,
                 starts_at: selectedSlot.startTime,
                 ends_at: selectedSlot.endTime
             };
 
-            const res = await createAppointment(payload);
+            const appointmentRes = await createAppointment(payload);
+            const appointmentId = appointmentRes?.data?.appointment_id;
+
+            if (!appointmentId) {
+                throw new Error("Failed to retrieve appointment ID.");
+            }
+
+            const testPayload = {
+                appointment_id: appointmentId,
+                description: "N/A",
+                test_date: null
+            };
+
+            const testRes = await createMedicalTest(testPayload);
+            const medicalTestId = testRes?.data?.medical_test?.id;
+
+            if (!medicalTestId) {
+                throw new Error("Failed to create medical test.");
+            }
+
+            if (selectedFile) {
+                await uploadMedicalTestFile(medicalTestId, selectedFile);
+            }
 
             Swal.fire({
-                icon: 'success',
-                title: 'Booking Confirmed!',
-                text: `See you on ${selectedDate} at ${selectedSlot.startTime}`,
-                confirmButtonText: 'Go to Dashboard',
-                confirmButtonColor: '#27AE60'
-            }).then(() => navigate('/patient/dashboard'));
+                icon: "success",
+                title: "Success!",
+                text: "Your appointment has been booked and the medical test was created.",
+                confirmButtonText: "Go to Dashboard",
+                confirmButtonColor: "#27AE60"
+            }).then(() => navigate("/patient/dashboard"));
 
         } catch (err) {
-            Swal.fire('Error', err.response?.data?.error || 'Could not create appointment.', 'error');
+            const msg =
+                err.response?.data?.error ||
+                err.message ||
+                "An unexpected error occurred.";
+
+            Swal.fire("Error", msg, "error");
         }
     };
 
