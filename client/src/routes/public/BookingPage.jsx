@@ -29,9 +29,6 @@ export default function BookingPage() {
 
     const currentUserEmail = currentUser?.email || null;
 
-    /* -------------------------------------------------------------
-       Load doctor on mount
-    --------------------------------------------------------------*/
     useEffect(() => {
         async function loadDoctor() {
             try {
@@ -53,9 +50,6 @@ export default function BookingPage() {
         loadDoctor();
     }, [doctorId, navigate]);
 
-    /* -------------------------------------------------------------
-       Pre-calc the next 7 days
-    --------------------------------------------------------------*/
     const next7Days = useMemo(() => {
         const arr = [];
         const base = new Date();
@@ -63,14 +57,19 @@ export default function BookingPage() {
         for (let i = 0; i < 7; i++) {
             const d = new Date(base);
             d.setDate(base.getDate() + i);
-            arr.push(d);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+
+            arr.push({
+                dateObj: d,
+                dateStr: `${year}-${month}-${day}`
+            });
         }
+
         return arr;
     }, []);
 
-    /* -------------------------------------------------------------
-       Fetch slots for a specific date (lazy-loaded)
-    --------------------------------------------------------------*/
     const fetchSlotsForDate = async (dateStr) => {
         if (slotsByDate[dateStr]) return; // already loaded
 
@@ -87,22 +86,22 @@ export default function BookingPage() {
             console.error(err);
         }
     };
-
-        useEffect(() => {
+    useEffect(() => {
     if (!doctor) return;
 
     next7Days.forEach(d => {
-        const dateStr = d.toISOString().split("T")[0];
-        fetchSlotsForDate(dateStr);
+        fetchSlotsForDate(d.dateStr);
     });
 
-    const todayStr = new Date().toISOString().split("T")[0];
-    setSelectedDate(todayStr);
-    }, [doctor, next7Days]);
+    setSelectedDate(next7Days[0].dateStr);
+}, [doctor, next7Days]);
+
 
     const handleDateClick = (dateObj) => {
-        const dateStr = dateObj.toISOString().split("T")[0];
-
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
         setSelectedDate(dateStr);
         setSelectedSlot(null);
 
@@ -201,10 +200,6 @@ export default function BookingPage() {
             Swal.fire("Error", msg, "error");
         }
     };
-
-    /* -------------------------------------------------------------
-       Carousel Navigation
-    --------------------------------------------------------------*/
     const handleNext = () => {
         if (startIndex + DAYS_TO_SHOW < next7Days.length)
             setStartIndex(startIndex + 1);
@@ -250,18 +245,29 @@ export default function BookingPage() {
                             <button className="nav-arrow" onClick={handlePrev} disabled={startIndex === 0}>‹</button>
 
                             <div className="carousel-container">
-                                {visibleDays.map((dateObj, idx) => {
-                                    const dateStr = dateObj.toISOString().split("T")[0];
-                                    const isToday = new Date().toDateString() === dateObj.toDateString();
+                                {visibleDays.map((day, idx) => {
+                                    const { dateObj, dateStr } = day;
 
+                                    const isToday = new Date().toDateString() === dateObj.toDateString();
                                     const slots = slotsByDate[dateStr] || [];
+
                                     const displayDate = isToday
                                         ? "Today"
-                                        : dateObj.toLocaleDateString('en-US', { weekday: "short", month: "numeric", day: "numeric" });
+                                        : dateObj.toLocaleDateString('en-US', {
+                                            weekday: "short",
+                                            month: "numeric",
+                                            day: "numeric"
+                                        });
 
                                     return (
-                                        <div key={idx} className="day-column" onClick={() => handleDateClick(dateObj)} style={{ cursor: "pointer" }} >
+                                        <div
+                                            key={idx}
+                                            className="day-column"
+                                            onClick={() => handleDateClick(dateObj)}
+                                            style={{ cursor: "pointer" }}
+                                        >
                                             <div className="day-header">{displayDate}</div>
+
                                             <div className="slots-list">
                                                 {slots.length > 0 ? (
                                                     slots
@@ -269,9 +275,12 @@ export default function BookingPage() {
                                                         .map((slot, i) => (
                                                             <div
                                                                 key={i}
-                                                                className={`time-slot ${selectedSlot === slot ? "active" : ""}`}
+                                                                className={`time-slot ${
+                                                                    selectedSlot === slot ? "active" : ""
+                                                                }`}
                                                                 onClick={(e) => {
-                                                                    e.stopPropagation();  // <-- SUPER IMPORTANT
+                                                                    e.stopPropagation();
+                                                                    handleDateClick(day.dateObj);
                                                                     handleSlotClick(slot);
                                                                 }}
                                                             >
@@ -283,9 +292,10 @@ export default function BookingPage() {
                                                 )}
                                             </div>
                                         </div>
-
                                     );
                                 })}
+
+                                
                             </div>
 
                             <button className="nav-arrow" onClick={handleNext} disabled={startIndex + DAYS_TO_SHOW >= next7Days.length}>›</button>
