@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom'; 
 import { FaUser, FaEnvelope, FaLock, FaPhone, FaMapMarkerAlt, FaBirthdayCake, FaVenusMars, FaArrowLeft, FaPen, FaSave, FaTimes, FaCheckCircle } from 'react-icons/fa';
-// ✅ IMPORT SWEETALERT
 import Swal from 'sweetalert2'; 
 import PatientSidebar from '../../components/PatientSidebar';
 import { getUser, updateUser } from '../../services/users';
 import './PatientProfile.css'; 
 
 export default function PatientProfile() {
-    console.log("✅ NEW PROFILE PAGE LOADED"); // <--- Check your console for this!
-
     const navigate = useNavigate();
     const location = useLocation(); 
     const { email } = useParams(); 
@@ -53,7 +50,6 @@ export default function PatientProfile() {
                     }
                 }
             } catch (error) {
-                console.error("Error loading profile:", error);
                 if (storedUser.email) {
                      setUserData({ ...storedUser, phone: "", address: "" });
                 } else {
@@ -76,10 +72,9 @@ export default function PatientProfile() {
     const handleChange = (e) => {
         const { name, value } = e.target;
         
-        // 1. TYPING RULES: Prevent letters and limit length while typing
         if (name === 'phone') {
-            if (!/^\d*$/.test(value)) return; // Only allow numbers
-            if (value.length > 11) return;    // Stop typing after 11 digits
+            if (!/^\d*$/.test(value)) return; 
+            if (value.length > 11) return;    
         }
         
         setUserData({ ...userData, [name]: value });
@@ -89,14 +84,13 @@ export default function PatientProfile() {
     const handleSave = async (e) => {
         e.preventDefault();
         
-        // 2. SAVING RULES: Strict Check before sending to backend
         if (!userData.phone || userData.phone.length !== 11 || !userData.phone.startsWith('01')) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Invalid Phone Number',
                 text: 'Phone number must be exactly 11 digits and start with 01 (e.g., 01xxxxxxxxx).'
             });
-            return; // <--- STOP HERE if invalid
+            return; 
         }
 
         try {
@@ -123,9 +117,6 @@ export default function PatientProfile() {
             setShowSuccessPopup(true);
 
         } catch (error) {
-            console.error("Update failed:", error);
-            
-            // Nice Error Popup for Server Errors
             const errorMsg = error.response?.data?.error || "Failed to update profile.";
             Swal.fire({
                 icon: 'error',
@@ -160,7 +151,6 @@ export default function PatientProfile() {
                     width: isAdminView ? '100%' : 'calc(100% - 260px)'
                 }}
             >
-                {/* SUCCESS POPUP */}
                 {showSuccessPopup && (
                     <div className="popup-overlay fade-in">
                         <div className="popup-container slide-up">
