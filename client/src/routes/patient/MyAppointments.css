@@ -277,3 +277,15 @@
     background: #2563eb;
     color: white;
 }
+
+
+.status-badge.rescheduled {
+    background: #fff7ed; /* Light Orange */
+    color: #c2410c;       /* Dark Orange */
+    border: 1px solid #ffedd5;
+}
+
+/* Ensure these match too */
+.status-badge.scheduled { background: #e0f2fe; color: #0369a1; }
+.status-badge.completed, .status-badge.complete { background: #dcfce7; color: #15803d; }
+.status-badge.cancelled { background: #fee2e2; color: #b91c1c; }

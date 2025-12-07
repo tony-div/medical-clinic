@@ -14,7 +14,6 @@ import { getAppointmentById } from '../../services/appointment';
 import { getDoctorById } from '../../services/doctors';
 import { getDiagnosisByAppointmentId } from '../../services/diagnosis';
 import { createReview } from '../../services/reviews';
-// ✅ CHANGE 1: Import the new Medical Test service
 import { getMedicalTestByAppointmentId } from '../../services/medical-tests';
 
 export default function AppointmentDetails() {
@@ -32,7 +31,7 @@ export default function AppointmentDetails() {
     // Review Modal State
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false); 
-    const [rating, setRating] = useState(5);
+    const [rating, setRating] = useState(5); // Default 5 stars
     const [reviewText, setReviewText] = useState("");
 
     useEffect(() => {
@@ -63,9 +62,10 @@ export default function AppointmentDetails() {
                     }
                 }
 
-                // 3. Get Diagnosis (Only if completed)
+                // 3. Get Diagnosis
                 let diagnosisData = null;
-                if (apptData.status === 'Complete' || apptData.status === 'complete') {
+                const status = (apptData.status || "").toLowerCase();
+                if (status === 'complete' || status === 'completed') {
                     try {
                         const diagRes = await getDiagnosisByAppointmentId(id);
                         diagnosisData = diagRes.data?.diagnosis || diagRes.data;
@@ -74,42 +74,36 @@ export default function AppointmentDetails() {
                     }
                 }
 
-                // ✅ CHANGE 2: Fetch Medical Test using the new endpoint
-                let testFileUrl = "";
+                // 4. Get Medical Test
+                let fileUrl = "";
+                let fileName = "";
                 try {
-                    // We use the ID from the URL (appointment ID)
                     const testRes = await getMedicalTestByAppointmentId(id);
-                    // The controller returns { message: "...", medicalTest: [...] }
                     const tests = testRes.data.medicalTest;
-                    
                     if (Array.isArray(tests) && tests.length > 0) {
-                        const file_path = tests[0].file_path;
-                        if (file_path) {
-                            // Format the URL
-                            testFileUrl = file_path.startsWith('http') 
-                                ? file_path 
-                                : `${API_BASE_URL}${file_path}`;
+                        fileUrl = tests[0].file_path;
+                        fileName = tests[0].description || "Medical Test";
+                        
+                        if (fileUrl && !fileUrl.startsWith('http')) {
+                            fileUrl = `${API_BASE_URL}${fileUrl}`;
                         }
                     }
-                } catch (err) {
-                    // It's okay if no test is found (404), just log it gently
-                    console.log("No medical test uploaded for this appointment.");
-                }
+                } catch (e) {}
 
                 setAppointment({
                     ...apptData,
                     doctorName: doctorInfo.name,
                     specialty: doctorInfo.specialty,
-                    formattedDate: new Date(apptData.date).toLocaleDateString(),
-                    formattedTime: apptData.starts_at || apptData.time,
-                    testFile: testFileUrl // ✅ CHANGE 3: Store the result here
+                    formattedDate: new Date(apptData.date).toLocaleDateString('en-CA'), // Fix date bug
+                    formattedTime: apptData.starts_at ? apptData.starts_at.substring(0, 5) : apptData.time,
+                    testFile: fileUrl,
+                    testName: fileName
                 });
                 setDiagnosis(diagnosisData);
                 setLoading(false);
 
             } catch (error) {
                 console.error("Error loading details:", error);
-                Swal.fire("Error", "Could not load appointment details.", "error");
                 navigate('/patient/appointments');
             }
         };
@@ -119,6 +113,7 @@ export default function AppointmentDetails() {
 
     const submitReview = async () => {
         if (!reviewText.trim()) return Swal.fire('Oops', 'Please write a comment.', 'warning');
+        if (!appointment.doctor_id) return Swal.fire('Error', 'Doctor ID missing.', 'error');
 
         try {
             await createReview({
@@ -136,10 +131,28 @@ export default function AppointmentDetails() {
         }
     };
 
+    // Helper for Star Rating
+    const renderStars = () => {
+        return [...Array(5)].map((_, index) => {
+            const starValue = index + 1;
+            return (
+                <FaStar 
+                    key={index} 
+                    size={24} 
+                    color={starValue <= rating ? "#ffc107" : "#e4e5e9"} 
+                    style={{ cursor: "pointer", margin: "0 2px" }}
+                    onClick={() => setRating(starValue)}
+                />
+            );
+        });
+    };
+
     if (loading) return <div className="loading-state">Loading details...</div>;
     if (!appointment) return null;
 
-    if (appointment.status === 'Cancelled' || appointment.status === 'cancelled') {
+    const status = (appointment.status || "").toLowerCase();
+
+    if (status === 'cancelled') {
         return (
             <div className="dashboard-layout">
                 <PatientSidebar />
@@ -162,10 +175,10 @@ export default function AppointmentDetails() {
             <PatientSidebar />
             <main className="dashboard-main fade-in">
                 <header className="details-header">
+                    <h1>Appointment Details</h1>
                     <button className="back-btn" onClick={() => navigate(-1)}>
                         <FaArrowLeft /> Back
                     </button>
-                    <h1>Appointment Details</h1>
                 </header>
 
                 <div className="details-grid">
@@ -206,17 +219,17 @@ export default function AppointmentDetails() {
                                 </div>
                             </div>
                             <div className="meta-item">
-                                <FaCheckCircle className={`meta-icon status-${(appointment.status || "").toLowerCase()}`}/>
+                                <FaCheckCircle className={`meta-icon status-${status === 'completed' || status === 'complete' ? 'complete' : status}`}/>
                                 <div>
                                     <label>Status</label>
-                                    <span className={`status-badge ${(appointment.status || "").toLowerCase()}`}>
+                                    <span className={`status-badge ${status === 'completed' || status === 'complete' ? 'complete' : status}`}>
                                         {appointment.status}
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        {(appointment.status === 'Complete' || appointment.status === 'complete') && (
+                        {(status === 'complete' || status === 'completed') && (
                             <button className="review-btn-large" onClick={() => setShowReviewModal(true)}>
                                 <FaStar /> Rate & Review Doctor
                             </button>
@@ -229,9 +242,9 @@ export default function AppointmentDetails() {
                         {/* 1. Medical Test Card */}
                         <div className="medical-card">
                             <h3><FaFileMedical /> Medical Test / Attachments</h3>
-                            {appointment.testFile ? (
+                            {appointment.testFile && appointment.testFile !== "N/A" ? (
                                 <div className="attachment-box">
-                                    <p>A medical test or document is attached to this appointment.</p>
+                                    <p>{appointment.testName}</p>
                                     <a 
                                         href={appointment.testFile} 
                                         target="_blank" 
@@ -280,13 +293,23 @@ export default function AppointmentDetails() {
                     </div>
                 </div>
 
-                {/* Review Modal & Success Popup */}
+                {/* Review Modal */}
                 {showReviewModal && (
                     <div className="popup-overlay fade-in">
                         <div className="popup-container slide-up">
                             <button className="close-popup" onClick={() => setShowReviewModal(false)}><FaTimes /></button>
                             <h2>Rate Your Experience</h2>
-                            <textarea placeholder="Write your review here..." value={reviewText} onChange={(e) => setReviewText(e.target.value)}></textarea>
+                            
+                            {/* ✅ ADDED STAR RATING UI */}
+                            <div className="star-rating-container" style={{display:'flex', justifyContent:'center', margin:'15px 0'}}>
+                                {renderStars()}
+                            </div>
+
+                            <textarea 
+                                placeholder="Write your review here..." 
+                                value={reviewText} 
+                                onChange={(e) => setReviewText(e.target.value)}
+                            ></textarea>
                             <button className="popup-btn primary" onClick={submitReview}>Submit Review</button>
                         </div>
                     </div>

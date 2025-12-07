@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { FaCalendarAlt, FaSearch, FaFilter, FaUserInjured, FaClock, FaStethoscope, FaEdit, FaBan, FaFileAlt, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaCalendarAlt, FaSearch, FaFilter, FaUserInjured, FaClock, FaStethoscope, FaEdit, FaBan, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 import DoctorSidebar from '../../components/DoctorSidebar';
-import { DB_APPOINTMENTS_KEY } from '../../data/initDB'; 
 import './DoctorAppointments.css'; 
+
+// ✅ IMPORT SERVICES
+import { getAppointments, updateAppointment } from '../../services/appointment';
+import { getUser } from '../../services/users';
 
 export default function DoctorAppointments() {
     const navigate = useNavigate();
-    const currentUserEmail = localStorage.getItem("activeUserEmail");
+    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
     
     const [appointments, setAppointments] = useState([]);
     const [filteredAppts, setFilteredAppts] = useState([]);
@@ -17,64 +20,83 @@ export default function DoctorAppointments() {
     // Modals
     const [showReschedule, setShowReschedule] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
-    
-    // --- 1. NEW STATE: Success Popup ---
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const [selectedAppt, setSelectedAppt] = useState(null);
     const [newDate, setNewDate] = useState("");
     const [newTime, setNewTime] = useState("");
 
-    // --- 1. LOAD DATA SAFELY ---
+    // --- 1. LOAD DATA FROM API ---
     useEffect(() => {
-        if (!currentUserEmail) { navigate('/login'); return; }
-
-        try {
-            // Safe Name Extraction
-            const namePart = currentUserEmail.split('@')[0];
-            const nameKey = namePart ? namePart.toLowerCase() : "";
-
-            const rawData = localStorage.getItem(DB_APPOINTMENTS_KEY);
-            const allAppts = rawData ? JSON.parse(rawData) : [];
-            
-            if (!Array.isArray(allAppts)) {
-                console.error("Data corrupted: Appointments is not an array");
-                setAppointments([]);
-                return;
-            }
-
-            // Safe Filtering
-            const myAppts = allAppts.filter(a => {
-                const doc1 = typeof a.doctor === 'string' ? a.doctor.toLowerCase() : "";
-                const doc2 = typeof a.doctorName === 'string' ? a.doctorName.toLowerCase() : "";
-                return doc1.includes(nameKey) || doc2.includes(nameKey);
-            });
-            
-            setAppointments(myAppts);
-
-        } catch (err) {
-            console.error("Crash prevented:", err);
-            setAppointments([]); // Fallback to empty list
+        if (!currentUser.id || currentUser.role !== 'doctor') { 
+            navigate('/login'); 
+            return; 
         }
-    }, [currentUserEmail, navigate]);
 
-    // --- 2. FILTER & SORT SAFELY ---
+        const fetchData = async () => {
+            try {
+                // A. Fetch Appointments
+                const res = await getAppointments();
+                const allAppts = Array.isArray(res.data) 
+                    ? res.data 
+                    : (res.data.appointments || res.data.Appointments || []);
+
+                // B. Hydrate with Patient Info (Names)
+                // We need to fetch User details for every appointment to get the Patient Name
+                const hydratedList = await Promise.all(allAppts.map(async (appt) => {
+                    let patientName = "Unknown";
+                    let patientEmail = "";
+                    
+                    if (appt.user_id) {
+                        try {
+                            const userRes = await getUser(appt.user_id);
+                            const u = userRes.data.user || userRes.data;
+                            patientName = u.name;
+                            patientEmail = u.email;
+                        } catch (e) {
+                            console.error("Error fetching patient:", appt.user_id);
+                        }
+                    }
+
+                    return {
+                        ...appt,
+                        id: appt.id,
+                        patientName,
+                        patientEmail,
+                        // Format Data for Display
+                        dateDisplay: new Date(appt.date).toLocaleDateString('en-CA'),
+                        timeDisplay: appt.starts_at ? appt.starts_at.substring(0, 5) : "00:00",
+                        // Normalize Status
+                        status: appt.status ? appt.status.charAt(0).toUpperCase() + appt.status.slice(1) : 'Scheduled'
+                    };
+                }));
+
+                setAppointments(hydratedList);
+                setFilteredAppts(hydratedList);
+
+            } catch (err) {
+                console.error("Error loading appointments:", err);
+            }
+        };
+
+        fetchData();
+    }, [currentUser.id, navigate]);
+
+    // --- 2. FILTER & SORT ---
     useEffect(() => {
         let results = [...appointments];
 
         if (searchTerm) {
             const lowerSearch = searchTerm.toLowerCase();
-            results = results.filter(a => {
-                const pName = typeof a.patientName === 'string' ? a.patientName.toLowerCase() : "";
-                const status = typeof a.status === 'string' ? a.status.toLowerCase() : "";
-                return pName.includes(lowerSearch) || status.includes(lowerSearch);
-            });
+            results = results.filter(a => 
+                (a.patientName && a.patientName.toLowerCase().includes(lowerSearch)) ||
+                (a.status && a.status.toLowerCase().includes(lowerSearch))
+            );
         }
 
         results.sort((a, b) => {
-            // Default to today if date is missing/invalid
-            const dateA = a.date ? new Date(a.date) : new Date();
-            const dateB = b.date ? new Date(b.date) : new Date();
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
             
             if (sortOrder === 'newest') {
                 return dateB - dateA; 
@@ -87,67 +109,64 @@ export default function DoctorAppointments() {
     }, [searchTerm, appointments, sortOrder]); 
 
 
-    useEffect(() => {
-        if (!currentUserEmail) { navigate('/login'); return; }
-        try {
-            const rawData = localStorage.getItem(DB_APPOINTMENTS_KEY);
-            const allAppts = rawData ? JSON.parse(rawData) : [];
-            const name = currentUserEmail.split('@')[0].toLowerCase();
-            const myAppts = allAppts.filter(a => {
-                if (!a) return false;
-                const dName = a.doctorName ? String(a.doctorName).toLowerCase() : "";
-                const dDoc = a.doctor ? String(a.doctor).toLowerCase() : "";
-                return dName.includes(name) || dDoc.includes(name);
-            });
-            setAppointments(myAppts);
-        } catch (error) { console.error(error); }
-    }, [currentUserEmail, navigate]);
-
-    useEffect(() => {
-        let results = [...appointments];
-        if (searchTerm) {
-            const lowerSearch = searchTerm.toLowerCase();
-            results = results.filter(a => {
-                const pName = a.patientName ? String(a.patientName).toLowerCase() : "";
-                const status = a.status ? String(a.status).toLowerCase() : "";
-                return pName.includes(lowerSearch) || status.includes(lowerSearch);
-            });
-        }
-        results.sort((a, b) => {
-            const dateA = new Date(a.date || Date.now());
-            const dateB = new Date(b.date || Date.now());
-            return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
-        });
-        setFilteredAppts(results);
-    }, [searchTerm, appointments, sortOrder]);
-
-    // --- HANDLERS ---
+    // --- HANDLERS (CONNECTED TO API) ---
 
     const initiateCancel = (appt) => { setSelectedAppt(appt); setShowCancelModal(true); };
 
-    const confirmCancel = () => {
+    const confirmCancel = async () => {
         if (!selectedAppt) return;
-        const updatedList = appointments.map(a => a.id === selectedAppt.id ? { ...a, status: "Cancelled" } : a);
-        localStorage.setItem(DB_APPOINTMENTS_KEY, JSON.stringify(updatedList));
-        setAppointments(updatedList);
-        setShowCancelModal(false);
+        try {
+            // API Call: Update status to 'cancelled'
+            await updateAppointment(selectedAppt.id, { status: "cancelled" });
+
+            // Optimistic UI Update
+            const updatedList = appointments.map(a => 
+                a.id === selectedAppt.id ? { ...a, status: "Cancelled" } : a
+            );
+            setAppointments(updatedList);
+            setShowCancelModal(false);
+        } catch (error) {
+            alert("Failed to cancel appointment.");
+        }
     };
 
     const openReschedule = (appt) => {
         setSelectedAppt(appt);
-        setNewDate(appt.date || "");
-        setNewTime(appt.time || "");
+        // Pre-fill inputs with current data (YYYY-MM-DD)
+        const dateStr = new Date(appt.date).toISOString().split('T')[0];
+        setNewDate(dateStr);
+        setNewTime(appt.starts_at || "09:00");
         setShowReschedule(true);
     };
 
-    // --- 2. UPDATED HANDLER: Show Success Popup ---
-    const submitReschedule = () => {
-        const updatedList = appointments.map(a => a.id === selectedAppt.id ? { ...a, date: newDate, time: newTime } : a);
-        localStorage.setItem(DB_APPOINTMENTS_KEY, JSON.stringify(updatedList));
-        setAppointments(updatedList);
-        
-        setShowReschedule(false); // Close Form
-        setShowSuccessModal(true); // Open Success Popup
+    const submitReschedule = async () => {
+        if (!newDate || !newTime) return;
+        try {
+            // API Call: Update Date & Time
+            await updateAppointment(selectedAppt.id, { 
+                date: newDate,
+                starts_at: newTime,
+                status: "rescheduled"
+            });
+
+            // Optimistic UI Update
+            const updatedList = appointments.map(a => 
+                a.id === selectedAppt.id ? { 
+                    ...a, 
+                    date: newDate, 
+                    dateDisplay: new Date(newDate).toLocaleDateString('en-CA'),
+                    starts_at: newTime,
+                    timeDisplay: newTime,
+                    status: "Rescheduled"
+                } : a
+            );
+            setAppointments(updatedList);
+            
+            setShowReschedule(false); 
+            setShowSuccessModal(true); 
+        } catch (error) {
+            alert("Failed to reschedule. Please try again.");
+        }
     };
 
     const getStatusClass = (status) => {
@@ -162,8 +181,8 @@ export default function DoctorAppointments() {
             <main className="dashboard-main fade-in">
                 <header className="dashboard-header">
                     <div>
-                        <h1>Manage Appointments</h1>
-                        <p>View, reschedule, or cancel patient visits.</p>
+                        <h1>My Appointments</h1>
+                        <p>Manage your schedule and patient visits.</p>
                     </div>
                 </header>
 
@@ -172,9 +191,9 @@ export default function DoctorAppointments() {
                         <FaSearch className="search-icon"/>
                         <input 
                             type="text" 
-                            placeholder="Search patient or status..." 
-                            value={searchTerm} 
-                            onChange={e => setSearchTerm(e.target.value)}
+                            placeholder="Search patient name..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                     <div className="filter-group">
@@ -191,61 +210,67 @@ export default function DoctorAppointments() {
                         <thead>
                             <tr>
                                 <th>Date & Time</th>
-                                <th>Patient Details</th>
+                                <th>Patient</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredAppts.length > 0 ? (
-                                filteredAppts.map((appt, index) => {
-                                    if (!appt) return null;
-                                    return (
-                                        <tr key={appt.id || index} className="table-row">
-                                            <td>
-                                                <div className="date-wrapper">
-                                                    <div className="icon-box-date"><FaCalendarAlt /></div>
-                                                    <div>
-                                                        <span className="date-text">{String(appt.date || "N/A")}</span>
-                                                        <span className="time-sub"><FaClock size={10}/> {String(appt.time || "--:--")}</span>
-                                                    </div>
+                                filteredAppts.map((appt) => (
+                                    <tr key={appt.id} className="table-row">
+                                        <td>
+                                            <div className="date-wrapper">
+                                                <div className="icon-box-date"><FaCalendarAlt /></div>
+                                                <div>
+                                                    <span className="date-text">{appt.dateDisplay}</span>
+                                                    <span className="time-sub"><FaClock size={10}/> {appt.timeDisplay}</span>
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <div className="patient-wrapper">
-                                                    <div className="avatar-circle"><FaUserInjured /></div>
-                                                    <div>
-                                                        <Link to={`/doctor/patient-profile/${appt.patientEmail || "#"}`} className="patient-link">
-                                                            {String(appt.patientName || "Unknown")}
-                                                        </Link>
-                                                        <div className="reason-sub">"{String(appt.reason || "-")}"</div>
-                                                        {appt.uploadedFiles && <span className="file-badge"><FaFileAlt size={10}/> File Attached</span>}
-                                                    </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="patient-info">
+                                                <div className="avatar-small"><FaUserInjured /></div>
+                                                <div>
+                                                    <strong>{appt.patientName}</strong>
+                                                    <span className="sub-text">{appt.reason || "General Checkup"}</span>
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <span className={`status-badge ${getStatusClass(appt.status)}`}>
-                                                    {String(appt.status || "Scheduled")}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div className="action-row">
-                                                    {(appt.status === 'Scheduled' || !appt.status) && (
-                                                        <>
-                                                            <button className="icon-btn diagnose" title="Diagnose" onClick={() => navigate(`/doctor/diagnosis/${appt.id}`)}><FaStethoscope /></button>
-                                                            <button className="icon-btn reschedule" title="Reschedule" onClick={() => openReschedule(appt)}><FaEdit /></button>
-                                                            <button className="icon-btn cancel" title="Cancel" onClick={() => initiateCancel(appt)}><FaBan /></button>
-                                                        </>
-                                                    )}
-                                                    {appt.status === 'Completed' && (
-                                                        <button className="btn-text view" onClick={() => navigate(`/doctor/diagnosis/${appt.id}`)}>View Details</button>
-                                                    )}
-                                                    {appt.status === 'Cancelled' && <span className="cancelled-text">-</span>}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span className={`status-badge ${getStatusClass(appt.status)}`}>
+                                                {appt.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="action-row">
+                                                {/* Only allow actions if not cancelled/completed */}
+                                                {(appt.status !== 'Cancelled' && appt.status !== 'Completed' && appt.status !== 'Complete') && (
+                                                    <>
+                                                        <button className="icon-btn diagnose" title="Diagnose" onClick={() => navigate(`/doctor/diagnosis/${appt.id}`)}>
+                                                            <FaStethoscope />
+                                                        </button>
+                                                        <button className="icon-btn reschedule" title="Reschedule" onClick={() => openReschedule(appt)}>
+                                                            <FaEdit />
+                                                        </button>
+                                                        <button className="icon-btn cancel" title="Cancel" onClick={() => initiateCancel(appt)}>
+                                                            <FaBan />
+                                                        </button>
+                                                    </>
+                                                )}
+                                                
+                                                {/* If completed, just show View button */}
+                                                {(appt.status === 'Completed' || appt.status === 'Complete') && (
+                                                    <button className="btn-text view" onClick={() => navigate(`/doctor/diagnosis/${appt.id}`)}>
+                                                        View Details
+                                                    </button>
+                                                )}
+                                                
+                                                {appt.status === 'Cancelled' && <span className="cancelled-text">-</span>}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
                             ) : (
                                 <tr><td colSpan="4" className="empty-state">No appointments found.</td></tr>
                             )}
@@ -253,7 +278,7 @@ export default function DoctorAppointments() {
                     </table>
                 </div>
 
-                {/* MODAL 1: RESCHEDULE FORM */}
+                {/* --- MODAL 1: RESCHEDULE --- */}
                 {showReschedule && (
                     <div className="popup-overlay fade-in">
                         <div className="popup-container slide-up">
@@ -264,13 +289,7 @@ export default function DoctorAppointments() {
                             </div>
                             <div className="form-group-modal">
                                 <label>New Time</label>
-                                <select value={newTime} onChange={e => setNewTime(e.target.value)} className="modal-input">
-                                    <option>09:00 AM</option>
-                                    <option>10:30 AM</option>
-                                    <option>01:00 PM</option>
-                                    <option>03:30 PM</option>
-                                    <option>05:00 PM</option>
-                                </select>
+                                <input type="time" value={newTime} onChange={e => setNewTime(e.target.value)} className="modal-input" />
                             </div>
                             <div className="popup-actions">
                                 <button className="popup-btn secondary" onClick={() => setShowReschedule(false)}>Cancel</button>
@@ -280,7 +299,7 @@ export default function DoctorAppointments() {
                     </div>
                 )}
 
-                {/* MODAL 2: CANCEL WARNING */}
+                {/* --- MODAL 2: CANCEL WARNING --- */}
                 {showCancelModal && (
                     <div className="popup-overlay fade-in">
                         <div className="popup-container slide-up warning-mode">
@@ -295,20 +314,16 @@ export default function DoctorAppointments() {
                     </div>
                 )}
 
-                {/* --- 3. MODAL 3: SUCCESS CONFIRMATION --- */}
+                {/* --- MODAL 3: SUCCESS --- */}
                 {showSuccessModal && (
                     <div className="popup-overlay fade-in">
                         <div className="popup-container slide-up">
                             <div className="popup-icon-container">
                                 <FaCheckCircle className="popup-icon success" />
                             </div>
-                            <h3 className="popup-title">Rescheduled!</h3>
-                            <p className="popup-message">
-                                The appointment has been successfully moved to <strong>{newDate}</strong> at <strong>{newTime}</strong>.
-                            </p>
-                            <button className="popup-btn primary" onClick={() => setShowSuccessModal(false)}>
-                                Done
-                            </button>
+                            <h3 className="popup-title">Success!</h3>
+                            <p className="popup-message">The appointment has been updated.</p>
+                            <button className="popup-btn primary" onClick={() => setShowSuccessModal(false)}>Done</button>
                         </div>
                     </div>
                 )}
