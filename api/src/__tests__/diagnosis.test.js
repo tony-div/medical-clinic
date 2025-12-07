@@ -3,22 +3,22 @@ import app from '../index.js';
 
 const USERS = [
     {
-        id: 3,
-        email: "charlie.brown@patient.com",
-        password: "strongpass",
+        id: 2,
+        email: "patient1@gmail.com",
+        password: "123123",
         role:"patient"
     },
     {
         id:1,
-        email:"alice.smith@clinic.com",
-        password:"strongpass",
+        email:"doc1@mail.com",
+        password:"123123",
         role:"doctor"
     }
 
 ]
 const AP = [
     {
-        id: 10,
+        id: 1,
         status:"complete"
     },
     {

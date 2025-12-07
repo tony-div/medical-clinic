@@ -3,6 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { DB_APPOINTMENTS_KEY, DB_DOCTORS_KEY } from '../../../../data/initDB'; // Import Doctors Key to lookup IDs
 import './Appointments.css';
 
+import{
+    getAppointments
+} from '../../../../services/appointment.js'
+
+import {
+    getDoctors
+
+} from '../../../../services/doctors.js'
+
 const Appointments = () => {
     const navigate = useNavigate();
     
@@ -18,16 +27,23 @@ const Appointments = () => {
     const [dateRange, setDateRange] = useState('');
 
     // --- 2. Load Data ---
-    const refreshData = () => {
-        const dbAppts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
-        const dbDoctors = JSON.parse(localStorage.getItem(DB_DOCTORS_KEY) || "[]");
-        
-        // Sort by Date (Newest first)
-        dbAppts.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        setAppointments(dbAppts);
-        setFilteredAppointments(dbAppts);
-        setDoctorsList(dbDoctors); // Save doctors list for lookup
+    const refreshData =async () => {
+        try{
+            const res = await getAppointments();
+            const appts = res.data.appointments || [];
+            const res2 = await getDoctors();
+            const docs = res2.data.data || [];
+
+            // Sort by Date (Newest first)
+            appts.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            setAppointments(appts);
+            setFilteredAppointments(appts);
+            setDoctorsList(docs); // Save doctors list for lookup
+
+        } catch (error){
+            console.error("Failed to load appointments list", err);
+        }
     };
 
     useEffect(() => {
