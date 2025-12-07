@@ -165,28 +165,27 @@ export default function BookingPage() {
             if (!appointmentId) {
                 throw new Error("Failed to retrieve appointment ID.");
             }
-
-            const testPayload = {
-                appointment_id: appointmentId,
-                description: "N/A",
-                test_date: null
-            };
-
-            const testRes = await createMedicalTest(testPayload);
-            const medicalTestId = testRes?.data?.medical_test?.id;
-
-            if (!medicalTestId) {
-                throw new Error("Failed to create medical test.");
-            }
-
             if (selectedFile) {
+                const testPayload = {
+                    appointment_id: appointmentId,
+                    description: reason.trim(),
+                    test_date: null
+                };
+
+                const testRes = await createMedicalTest(testPayload);
+                const medicalTestId = testRes?.data?.medical_test?.id;
+
+                if (!medicalTestId) {
+                    throw new Error("Failed to create medical test.");
+                }
+
                 await uploadMedicalTestFile(medicalTestId, selectedFile);
             }
 
             Swal.fire({
                 icon: "success",
                 title: "Success!",
-                text: "Your appointment has been booked and the medical test was created.",
+                text: "Your appointment has been booked.",
                 confirmButtonText: "Go to Dashboard",
                 confirmButtonColor: "#27AE60"
             }).then(() => navigate("/patient/dashboard"));
