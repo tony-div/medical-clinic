@@ -14,6 +14,8 @@ import { getAppointmentById } from '../../services/appointment';
 import { getDoctorById } from '../../services/doctors';
 import { getDiagnosisByAppointmentId } from '../../services/diagnosis';
 import { createReview } from '../../services/reviews';
+// ✅ CHANGE 1: Import the new Medical Test service
+import { getMedicalTestByAppointmentId } from '../../services/medical-tests';
 
 export default function AppointmentDetails() {
     const { id } = useParams(); 
@@ -72,11 +74,26 @@ export default function AppointmentDetails() {
                     }
                 }
 
-                // 4. Handle File URL (Medical Test)
-                // We check the fields the same way your MedicalRecords page does
-                let fileUrl = apptData.uploadedFiles || apptData.file_path || apptData.medical_test_path || "";
-                if (fileUrl && !fileUrl.startsWith('http')) {
-                    fileUrl = `${API_BASE_URL}${fileUrl}`;
+                // ✅ CHANGE 2: Fetch Medical Test using the new endpoint
+                let testFileUrl = "";
+                try {
+                    // We use the ID from the URL (appointment ID)
+                    const testRes = await getMedicalTestByAppointmentId(id);
+                    // The controller returns { message: "...", medicalTest: [...] }
+                    const tests = testRes.data.medicalTest;
+                    
+                    if (Array.isArray(tests) && tests.length > 0) {
+                        const file_path = tests[0].file_path;
+                        if (file_path) {
+                            // Format the URL
+                            testFileUrl = file_path.startsWith('http') 
+                                ? file_path 
+                                : `${API_BASE_URL}${file_path}`;
+                        }
+                    }
+                } catch (err) {
+                    // It's okay if no test is found (404), just log it gently
+                    console.log("No medical test uploaded for this appointment.");
                 }
 
                 setAppointment({
@@ -85,7 +102,7 @@ export default function AppointmentDetails() {
                     specialty: doctorInfo.specialty,
                     formattedDate: new Date(apptData.date).toLocaleDateString(),
                     formattedTime: apptData.starts_at || apptData.time,
-                    testFile: fileUrl // Store the file URL here
+                    testFile: testFileUrl // ✅ CHANGE 3: Store the result here
                 });
                 setDiagnosis(diagnosisData);
                 setLoading(false);
@@ -209,7 +226,7 @@ export default function AppointmentDetails() {
                     {/* Right Column: Stacked Cards */}
                     <div className="right-column-stack">
                         
-                        {/* 1. Medical Test Card (NEW) */}
+                        {/* 1. Medical Test Card */}
                         <div className="medical-card">
                             <h3><FaFileMedical /> Medical Test / Attachments</h3>
                             {appointment.testFile ? (
@@ -263,7 +280,7 @@ export default function AppointmentDetails() {
                     </div>
                 </div>
 
-                {/* Review Modal & Success Popup (Same as before) */}
+                {/* Review Modal & Success Popup */}
                 {showReviewModal && (
                     <div className="popup-overlay fade-in">
                         <div className="popup-container slide-up">
