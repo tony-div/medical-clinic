@@ -7,7 +7,7 @@ import './DoctorDashboard.css'; // New dedicated CSS file
 
 export default function DoctorDashboard() {
     const navigate = useNavigate();
-    const currentUserEmail = localStorage.getItem("activeUserEmail");
+    const currentUser = localStorage.getItem("currentUser");
     
     const [stats, setStats] = useState({ pendingToday: 0, totalCompleted: 0 });
     const [todayAppts, setTodayAppts] = useState([]);
@@ -16,19 +16,19 @@ export default function DoctorDashboard() {
     const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
-        if (!currentUserEmail) {
+        if (!currentUser) {
             navigate('/login');
             return;
         }
         
         // Set Doctor Name
-        const rawName = currentUserEmail.split('@')[0];
+        const rawName = currentUser.split('@')[0];
         const prettyName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
         setDoctorName(prettyName);
 
         // Fetch Data
         const allAppts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
-        const nameKey = currentUserEmail.split('@')[0].toLowerCase();
+        const nameKey = currentUser.split('@')[0].toLowerCase();
 
         // Filter for this doctor
         const myAppts = allAppts.filter(a => 
@@ -53,7 +53,7 @@ export default function DoctorDashboard() {
         setTodayAppts(todaysList);
         setFilteredAppts(todaysList);
 
-    }, [currentUserEmail, navigate]);
+    }, [currentUser, navigate]);
 
     useEffect(() => {
         const results = todayAppts.filter(appt => 
