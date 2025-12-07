@@ -212,3 +212,68 @@
 
 .popup-btn.danger { background: #ef4444; color: white; }
 .popup-btn.danger:hover { background: #dc2626; }
+
+/* --- Controls Bar & Inputs --- */
+.controls-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.filters-wrapper {
+    display: flex;
+    gap: 15px;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.search-box, .select-box {
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px 15px;
+    flex: 1;
+    max-width: 300px;
+}
+
+.search-box input, .select-box select {
+    border: none;
+    background: transparent;
+    outline: none;
+    margin-left: 10px;
+    width: 100%;
+    color: #334155;
+    font-size: 0.9rem;
+}
+
+.search-icon, .select-icon {
+    color: #94a3b8;
+}
+
+.sort-btn {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #2563eb;
+    border-radius: 10px;
+    padding: 0 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sort-btn:hover {
+    background: #2563eb;
+    color: white;
+}

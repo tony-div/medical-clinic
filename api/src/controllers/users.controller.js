@@ -99,9 +99,9 @@ export const updateUser = async (req, res) => {
       const { error } = updateUserSchema.validate(req.body);
       if (error) {
         console.log(error.message);
-       return res.status(code.BAD_REQUEST).json({
+      return res.status(code.BAD_REQUEST).json({
           error: error.message.replace(/"/g, '')
-       });
+      });
       }
 
       const { email, password, name, phone_number, address, gender, birth_date, role } = req.body;
