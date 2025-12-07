@@ -14,7 +14,7 @@ export const getAllUsers = async (req, res) => {
     if (req.user.role === "admin") {
       const [users] = await db.query(query.SELECT_ALL_USERS);
       return res.status(code.SUCCESS).json({ message: "success", users: users });
-      
+
     } else {
       return res.status(code.FORBIDDEN).json({ error: "Admin access required" });
     }
@@ -79,7 +79,7 @@ const addDoctorSchema = Joi.object({
   waiting_time: Joi.number().optional(),
   about_doctor: Joi.string().max(255).allow("", null).optional(),
   education_and_experience: Joi.string().max(255).allow("", null).optional(),
-  status: Joi.string().valid("active", "inactive")
+  status: Joi.string().valid("active", "inactive", "Active", "Inactive").optional()
 }).unknown(true);
 export const updateUser = async (req, res) => {
   let docFlag = false;
@@ -156,8 +156,9 @@ export const updateUser = async (req, res) => {
       updatedUser.password = await bcrypt.hash(updatedUser.password, 10);
     }
     if (updatedUser.email) {
+      // [FIX] - Check if email exists AND belongs to a DIFFERENT u
       const [existing] = await db.query(query.SELECT_USER_BY_EMAIL, [email]);
-      if (existing.length > 0) {
+      if (existing.length > 0 && existing[0].id !== parseInt(userId)) {
         return res.status(code.CONFLICT).json({ error: "Email already in use" });
       }
     }
@@ -420,7 +421,7 @@ export const createDoctor = async (req, res) => {
     const {
       email, password, name, phone_number, address,
       gender, birth_date, specialty_id, consultation_fees,
-      waiting_time, about_doctor, education_and_experience
+      waiting_time, about_doctor, education_and_experience, profile_pic_path
     } = req.body;
 
     const [existing] = await db.query(query.SELECT_USER_BY_EMAIL, [email]);

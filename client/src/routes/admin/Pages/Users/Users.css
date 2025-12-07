@@ -59,7 +59,6 @@
 .tableContainer {
     background-color: #fff;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     border: 1px solid #eee;
 }
@@ -67,49 +66,110 @@
 .table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
+/* Fixed column widths for consistent layout */
+.table th:nth-child(1),
+.table td:nth-child(1) {
+    width: 8%;
+}
+
+/* ID */
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+    width: 30%;
+}
+
+/* Name */
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+    width: 15%;
+}
+
+/* Role */
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+    width: 32%;
+}
+
+/* Email */
+
+.table th:nth-child(5),
+.table td:nth-child(5) {
+    width: 15%;
+}
+
+/* Actions */
+
 .tableHeadRow {
-    background-color: #f8f9fa;
+    background-color: #f9fafb;
     text-align: left;
 }
 
 .th {
     padding: 16px;
-    font-size: 14px;
-    color: #666;
+    font-size: 13px;
     font-weight: 600;
-    border-bottom: 1px solid #eee;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .tableBodyRow {
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.tableBodyRow:hover {
+    background-color: #f9fafb;
 }
 
 .td {
     padding: 16px;
     font-size: 14px;
-    color: #333;
+    color: #1f2937;
+    vertical-align: middle;
 }
 
+/* User info with avatar - clean circle styling */
 .userInfo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .avatar {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: none;
+}
+
+.avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 13px;
+    flex-shrink: 0;
+    box-shadow: none;
 }
 
 .roleTag {
-    padding: 6px 14px;
-    border-radius: 20px;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 9999px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .actionBtn {
@@ -240,9 +300,11 @@
         font-size: 13px;
     }
 
-    .avatar {
-        width: 30px;
-        height: 30px;
+    .avatar,
+    .avatar-placeholder {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
     }
 
     .actionBtn {
@@ -271,11 +333,18 @@
     }
 
     .userInfo {
-        gap: 8px;
+        gap: 6px;
+    }
+
+    .avatar,
+    .avatar-placeholder {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
     }
 
     .roleTag {
-        padding: 4px 10px;
+        padding: 3px 10px;
         font-size: 11px;
     }
 

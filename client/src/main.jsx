@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './index.css';
 import { initializeDB } from './data/initDB';
+import PrivateRoute from './components/PrivateRoute';
 import Login from './routes/auth/login.jsx';
 import Register from './routes/auth/register.jsx';
 import Home from './routes/public/home.jsx';
@@ -26,30 +27,82 @@ import AdminAppointmentDetails from './routes/admin/Pages/Appointments/AdminAppo
 initializeDB();
 
 const router = createBrowserRouter([
-    { path: "/", element: <Home /> },
-    { path: "/login", element: <Login /> },
-    { path: "/register", element: <Register /> },
-    { path: "/doctors", element: <DoctorsList /> },
-    { path: "/doctor/:id", element: <DoctorProfile /> },
-    { path: "/book/:doctorId", element: <BookingPage /> },
-    { path: "/patient/dashboard", element: <PatientDashboard /> },
-    { path: "/patient/appointments", element: <MyAppointments /> },
-    { path: "/doctor/diagnosis/:appointmentId", element: <Diagnosis /> },
-    { path: "/doctor/appointments", element: <DoctorAppointments /> },
-    { path: "/doctor/dashboard", element: <DoctorDashboard /> },
-    { path: "/doctor/schedule", element: <DoctorSchedule /> },
-    { path: "/doctor/appointments", element: <DoctorAppointments /> },
-    { path: "/patient/appointment/:id", element: <AppointmentDetails /> },
-    { path: "/doctor/patient-profile/:patientEmail", element: <DoctorPatientProfile /> },
-    { path: "/patient/records", element: <MedicalRecords /> },
-    { path: "/patient/profile", element: <PatientProfile /> },
-    { path: "/doctor/profile", element: <DoctorPrivateProfile /> },
-    { path: "/admin/dashboard", element: <AdminApp /> },
-    { path: "/admin/doctor-details/:id", element: <DoctorPrivateProfile /> },
-    { path: "/admin/patient-details/:email", element: <PatientProfile /> },
-    { path: "/admin/appointment/:id", element: <AdminAppointmentDetails /> }, 
-    {path: "/patient/appointment/:id", element: <AppointmentDetails /> },
-    {path: "/patient/appointments", element: <MyAppointments /> },
+  // Public routes
+  { path: "/", element: <Home /> },
+  { path: "/login", element: <Login /> },
+  { path: "/register", element: <Register /> },
+  { path: "/doctors", element: <DoctorsList /> },
+  { path: "/doctor/:id", element: <DoctorProfile /> },
+
+  // Patient routes (require login + patient/admin role)
+  {
+    path: "/book/:doctorId",
+    element: <PrivateRoute allowedRoles={['patient', 'admin']}><BookingPage /></PrivateRoute>
+  },
+  {
+    path: "/patient/dashboard",
+    element: <PrivateRoute allowedRoles={['patient']}><PatientDashboard /></PrivateRoute>
+  },
+  {
+    path: "/patient/appointments",
+    element: <PrivateRoute allowedRoles={['patient']}><MyAppointments /></PrivateRoute>
+  },
+  {
+    path: "/patient/appointment/:id",
+    element: <PrivateRoute allowedRoles={['patient', 'admin']}><AppointmentDetails /></PrivateRoute>
+  },
+  {
+    path: "/patient/records",
+    element: <PrivateRoute allowedRoles={['patient']}><MedicalRecords /></PrivateRoute>
+  },
+  {
+    path: "/patient/profile",
+    element: <PrivateRoute allowedRoles={['patient', 'admin']}><PatientProfile /></PrivateRoute>
+  },
+
+  // Doctor routes (require login + doctor/admin role)
+  {
+    path: "/doctor/dashboard",
+    element: <PrivateRoute allowedRoles={['doctor']}><DoctorDashboard /></PrivateRoute>
+  },
+  {
+    path: "/doctor/appointments",
+    element: <PrivateRoute allowedRoles={['doctor']}><DoctorAppointments /></PrivateRoute>
+  },
+  {
+    path: "/doctor/schedule",
+    element: <PrivateRoute allowedRoles={['doctor']}><DoctorSchedule /></PrivateRoute>
+  },
+  {
+    path: "/doctor/diagnosis/:appointmentId",
+    element: <PrivateRoute allowedRoles={['doctor']}><Diagnosis /></PrivateRoute>
+  },
+  {
+    path: "/doctor/profile",
+    element: <PrivateRoute allowedRoles={['doctor', 'admin']}><DoctorPrivateProfile /></PrivateRoute>
+  },
+  {
+    path: "/doctor/patient-profile/:patientEmail",
+    element: <PrivateRoute allowedRoles={['doctor']}><DoctorPatientProfile /></PrivateRoute>
+  },
+
+  // Admin routes (require login + admin role)
+  {
+    path: "/admin/dashboard",
+    element: <PrivateRoute allowedRoles={['admin']}><AdminApp /></PrivateRoute>
+  },
+  {
+    path: "/admin/doctor-details/:id",
+    element: <PrivateRoute allowedRoles={['admin']}><DoctorPrivateProfile /></PrivateRoute>
+  },
+  {
+    path: "/admin/patient-details/:email",
+    element: <PrivateRoute allowedRoles={['admin']}><PatientProfile /></PrivateRoute>
+  },
+  {
+    path: "/admin/appointment/:id",
+    element: <PrivateRoute allowedRoles={['admin']}><AdminAppointmentDetails /></PrivateRoute>
+  },
 ]);
 
 createRoot(document.getElementById('root')).render(
