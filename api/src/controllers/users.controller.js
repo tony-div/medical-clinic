@@ -141,7 +141,7 @@ export const updateUser = async (req, res) => {
     if (updatedUser.password) {
       updatedUser.password = await bcrypt.hash(updatedUser.password, 10);
     }
-    if(updateUser[email]){
+    if(updatedUser.email){
       const [existing] = await db.query(query.SELECT_USER_BY_EMAIL, [email]);
       if (existing.length > 0) {
         return res.status(code.CONFLICT).json({ error: "Email already in use" });
