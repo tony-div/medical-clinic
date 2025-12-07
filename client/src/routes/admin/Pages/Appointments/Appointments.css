@@ -99,7 +99,52 @@
     width: 100%;
     border-collapse: collapse;
     text-align: left;
+    /* [FIX] - Prevent column width changes between pages */
+    table-layout: fixed;
 }
+
+/* [ADDED] - Fixed column widths to prevent shifting */
+.appointments-table th:nth-child(1),
+.appointments-table td:nth-child(1) {
+    width: 12%;
+}
+
+/* Date */
+
+.appointments-table th:nth-child(2),
+.appointments-table td:nth-child(2) {
+    width: 10%;
+}
+
+/* Time */
+
+.appointments-table th:nth-child(3),
+.appointments-table td:nth-child(3) {
+    width: 20%;
+}
+
+/* Patient */
+
+.appointments-table th:nth-child(4),
+.appointments-table td:nth-child(4) {
+    width: 20%;
+}
+
+/* Doctor */
+
+.appointments-table th:nth-child(5),
+.appointments-table td:nth-child(5) {
+    width: 15%;
+}
+
+/* Status */
+
+.appointments-table th:nth-child(6),
+.appointments-table td:nth-child(6) {
+    width: 23%;
+}
+
+/* Actions */
 
 .appointments-table th {
     background-color: #f9fafb;
@@ -118,6 +163,10 @@
     font-size: 14px;
     color: #1f2937;
     vertical-align: middle;
+    /* [FIX] - Handle text overflow */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .appointments-table tr:last-child td {
@@ -131,6 +180,42 @@
 .fw-bold {
     font-weight: 600;
     color: #111827;
+}
+
+/* [ADDED] - Modern User Cell with Avatar */
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-cell:hover .user-name {
+    text-decoration: underline;
+}
+
+.avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.user-name {
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.patient-name {
+    color: #0288d1;
+}
+
+.doctor-name {
+    color: #137333;
 }
 
 /* Status Badges */
@@ -161,6 +246,43 @@
 .actions-cell {
     display: flex;
     gap: 8px;
+}
+
+/* [ADDED] - Pagination (same style as Users.jsx) */
+.paginationContainer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 1rem;
+    gap: 1rem;
+    border-top: 1px solid #eee;
+}
+
+.pageBtn {
+    padding: 8px 16px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #374151;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.pageBtn:hover:not(:disabled) {
+    background-color: #f3f4f6;
+    border-color: #bbb;
+}
+
+.pageBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f9fafb;
+}
+
+.pageInfo {
+    font-size: 14px;
+    color: #6b7280;
 }
 
 /* ==================== MOBILE RESPONSIVE ==================== */
@@ -202,6 +324,17 @@
         padding: 5px 10px;
         font-size: 12px;
     }
+
+    .paginationContainer {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .avatar-circle {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -227,5 +360,20 @@
     .btn-primary {
         padding: 8px 16px;
         font-size: 13px;
+    }
+
+    .pageBtn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+    .avatar-circle {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+    }
+
+    .user-cell {
+        gap: 6px;
     }
 }

@@ -2,40 +2,58 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { FaUserMd, FaStethoscope, FaDollarSign, FaInfoCircle, FaEnvelope, FaPhone, FaMapMarkerAlt, FaBirthdayCake, FaLock, FaGlobeAmericas, FaArrowLeft, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import DoctorSidebar from '../../components/DoctorSidebar'; 
-import { DB_DOCTORS_KEY } from '../../data/initDB';
 import './DoctorProfile.css';
+import { getUser } from '../../services/users';
 
 export default function DoctorPrivateProfile() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { id } = useParams(); // If ID exists, we are in Admin Mode
-    const currentUserEmail = localStorage.getItem("activeUserEmail");
-    
-    const [doctorData, setDoctorData] = useState(null);
-
+    const { id } = useParams();
+    const { currentUser } = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    const [doctor, setDoctorData] = useState(null);
+    const [age, setAge] = useState(0);
+    const [notFound, setNotFound] = useState(false);
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     useEffect(() => {
-        if (!currentUserEmail) { navigate('/login'); return; }
-
-        const allDoctors = JSON.parse(localStorage.getItem(DB_DOCTORS_KEY) || "[]");
-        let myProfile = null;
-
-        if (id) {
-            // A. ADMIN MODE
-            myProfile = allDoctors.find(d => d.id === Number(id));
-        } else {
-            // B. DOCTOR MODE
-            myProfile = allDoctors.find(d => d.email === currentUserEmail);
-        }
-
-        if (myProfile) {
-            setDoctorData(myProfile);
-        } else {
-            if (!id && !myProfile) {
-                // navigate('/'); // Uncomment to enforce redirect
+        console.log("currentUser:"+currentUser);
+        if (!currentUser) { navigate('/login'); return; }
+        const fetchData = async () => {
+            try{
+                const res = await getUser(id ? id : currentUser.id);
+                console.log("doctor id ", currentUser.id);
+                console.log("id sent ", id);
+                const doc = res.data.doctor?.[0] || res.data.data?.[0] || null;
+                if (doc) {
+                    setDoctorData({
+                        ...doc,
+                        phone: doc.phone,
+                        address: doc.address || "Not Visible, Contact an admin",
+                        birth_date: doc.birth_date ? doc.birth_date.split('T')[0] : ""
+                    });
+                    console.log("bd before: ",doc.birth_date);
+                    const cleanedBirth = doc.birth_date ? doc.birth_date.split("T")[0] : "";
+                    console.log("bd after :", cleanedBirth);
+                    calculateAge(cleanedBirth);
+                } else {
+                    setNotFound(true);
+                }
+            } catch (err) {
+                console.error("Failed to load user", err);
+                setNotFound(true);
             }
-        }
-    }, [currentUserEmail, id, navigate]);
+        }; fetchData();
 
+    }, [id, currentUser, navigate]);
+    const calculateAge = (dob) => {
+        if (!dob) return;
+        const birthDate = new Date(dob);
+        const diff = Date.now() - birthDate.getTime();
+        const ageDate = new Date(diff);
+        setAge(Math.abs(ageDate.getUTCFullYear() - 1970));
+    };
+    const getInitials = (name) => {
+        return name ? name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : "DR";
+    };
     const handleBack = () => {
         if (location.state?.returnTab) {
             navigate('/admin/dashboard', { state: { activePage: location.state.returnTab } });
@@ -43,14 +61,53 @@ export default function DoctorPrivateProfile() {
             navigate(-1);
         }
     };
-
-    if (!doctorData) return <div className="loading-state">Loading Profile...</div>;
-
-    // Helper for Initials
-    const getInitials = (name) => {
-        return name ? name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : "DR";
-    };
-
+    // const handleSave = async (e) => {
+    //         e.preventDefault();
+            
+    //         if (!doctor.phone || doctor.phone.length !== 11 || !doctor.phone.startsWith('01')) {
+    //             Swal.fire({
+    //                 icon: 'warning',
+    //                 title: 'Invalid Phone Number',
+    //                 text: 'Phone number must be exactly 11 digits and start with 01 (e.g., 01xxxxxxxxx).'
+    //             });
+    //             return; 
+    //         }
+    
+    //         try {
+    //             const payload = {
+    //                 name: doctor.name,
+    //                 email: doctor.email,
+    //                 phone_number: doctor.phone,
+    //                 address: doctor.address,
+    //                 gender: doctor.gender === "" ? null : doctor.gender,
+    //                 birth_date: doctor.birth_date === "" ? null : doctor.birth_date
+    //             };
+    
+    //             if (doctor.password && doctor.password.trim() !== "") {
+    //                 payload.password = doctor.password;
+    //             }
+    
+    //             await updateUser(currentUser.id, payload);
+    
+    //             const updatedCache = { ...currentUser, ...doctor };
+    //             localStorage.setItem("currentUser", JSON.stringify(updatedCache));
+    //             localStorage.setItem("userName", doctor.name); 
+    
+    //             setShowSuccessPopup(true);
+    
+    //         } catch (error) {
+    //             const errorMsg = error.response?.data?.error || "Failed to update profile.";
+    //             Swal.fire({
+    //                 icon: 'error',
+    //                 title: 'Update Failed',
+    //                 text: errorMsg,
+    //                 confirmButtonColor: '#d33'
+    //             });
+    //         }
+    //     };
+    
+    if (notFound) return <div className="error-state">User not found.</div>;
+    if (!doctor) return <div className="loading-state">Loading Profile...</div>;
     return (
         <div className="dashboard-layout">
             {!id && <DoctorSidebar />} 
@@ -62,6 +119,20 @@ export default function DoctorPrivateProfile() {
                     width: id ? '100%' : 'calc(100% - 260px)'
                 }}
             >
+                {/* {showSuccessPopup && (
+                    <div className="popup-overlay fade-in">
+                        <div className="popup-container slide-up">
+                            <div className="popup-icon-container">
+                                <FaCheckCircle className="popup-icon success" />
+                            </div>
+                            <h3 className="popup-title">Success!</h3>
+                            <p className="popup-message">Your profile has been updated successfully.</p>
+                            <button className="popup-btn" onClick={() => setShowSuccessPopup(false)}>
+                                Continue
+                            </button>
+                        </div>
+                    </div>
+                )} */}
                 <header className="dashboard-header">
                     <div>
                         <h1>{id ? "Doctor Details (Admin View)" : "My Doctor Profile"}</h1>
@@ -82,16 +153,16 @@ export default function DoctorPrivateProfile() {
                         <div className="card-header-row">
                             <div className="user-intro">
                                 <div className="avatar-placeholder doctor-avatar">
-                                    {getInitials(doctorData.name)}
+                                    {getInitials(doctor.name)}
                                 </div>
                                 <div>
-                                    <h2>{doctorData.name}</h2>
-                                    <span className="user-role">{doctorData.specialty} Specialist</span>
+                                    <h2>{doctor.name}</h2>
+                                    <span className="user-role">{doctor.specialty} Specialist</span>
                                 </div>
                             </div>
-                            <div className={`status-badge-large ${doctorData.status === 'Active' ? 'active' : 'inactive'}`}>
-                                {doctorData.status === 'Active' ? <FaCheckCircle/> : <FaTimesCircle/>}
-                                {doctorData.status || "Active"}
+                            <div className={`status-badge-large ${doctor.status === 'Active' ? 'active' : 'inactive'}`}>
+                                {doctor.status === 'Active' ? <FaCheckCircle/> : <FaTimesCircle/>}
+                                {doctor.status || "Active"}
                             </div>
                         </div>
 
@@ -106,22 +177,22 @@ export default function DoctorPrivateProfile() {
                             <div className="form-grid">
                                 <div className="input-group">
                                     <label><FaUserMd className="icon"/> Full Name</label>
-                                    <div className="read-only-field">{doctorData.name}</div>
+                                    <div className="read-only-field">{doctor.name}</div>
                                 </div>
                                 <div className="input-group">
                                     <label><FaStethoscope className="icon"/> Specialty</label>
-                                    <div className="read-only-field">{doctorData.specialty}</div>
+                                    <div className="read-only-field">{doctor.specialty}</div>
                                 </div>
                             </div>
 
                             <div className="form-grid three-col">
                                 <div className="input-group">
                                     <label><FaDollarSign className="icon"/> Consultation Fees</label>
-                                    <div className="read-only-field">{doctorData.fees} EGP</div>
+                                    <div className="read-only-field">{doctor.fees} EGP</div>
                                 </div>
                                 <div className="input-group">
                                     <label>Gender</label>
-                                    <div className="read-only-field capitalize">{doctorData.gender || "-"}</div>
+                                    <div className="read-only-field capitalize">{doctor.gender || "-"}</div>
                                 </div>
                                 <div className="input-group">
                                     <label>Experience</label>
@@ -132,7 +203,7 @@ export default function DoctorPrivateProfile() {
                             <div className="input-group full-width">
                                 <label><FaInfoCircle className="icon"/> Bio / About</label>
                                 <div className="read-only-field bio-box">
-                                    {doctorData.bio || "No biography provided."}
+                                    {doctor.bio || "No biography provided."}
                                 </div>
                             </div>
 
@@ -147,22 +218,22 @@ export default function DoctorPrivateProfile() {
                             <div className="form-grid">
                                 <div className="input-group">
                                     <label><FaEnvelope className="icon"/> Email (Login)</label>
-                                    <div className="read-only-field locked">{doctorData.email}</div>
+                                    <div className="read-only-field locked">{doctor.email}</div>
                                 </div>
                                 <div className="input-group">
                                     <label><FaPhone className="icon"/> Phone Number</label>
-                                    <div className="read-only-field">{doctorData.phone || "-"}</div>
+                                    <div className="read-only-field">{doctor.phone || "-"}</div>
                                 </div>
                             </div>
 
                             <div className="form-grid">
                                 <div className="input-group">
                                     <label><FaMapMarkerAlt className="icon"/> Address</label>
-                                    <div className="read-only-field">{doctorData.address || "-"}</div>
+                                    <div className="read-only-field">{doctor.address || "-"}</div>
                                 </div>
                                 <div className="input-group">
                                     <label><FaBirthdayCake className="icon"/> Birth Date</label>
-                                    <div className="read-only-field">{doctorData.birth_date || "-"}</div>
+                                    <div className="read-only-field">{doctor.birth_date || "-"}</div>
                                 </div>
                             </div>
 

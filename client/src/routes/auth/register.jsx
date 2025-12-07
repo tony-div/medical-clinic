@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { DB_PATIENTS_KEY } from '../../data/initDB';
 import './register.css';
-import api from "../../services/api";
+import { createPatient } from '../../services/users';
 
 export default function Register() {
     const navigate = useNavigate();
@@ -72,15 +72,15 @@ export default function Register() {
         }
 
         try {
-            const res = await api.post("/users", {
+            const newUser = {
                 name: formData.name,
                 email: formData.email,
                 phone_number: formData.phone,
                 password: formData.password,
                 gender: formData.gender,
                 birth_date: formData.birth_date,
-                address: ""
-            });
+                address: ""};
+            const res = await createPatient(newUser);
 
             Swal.fire({
                 icon: "success",
@@ -90,7 +90,12 @@ export default function Register() {
             }).then(() => navigate("/login"));
 
         } catch (err) {
-            const message = err.response?.data?.error || "Registration failed.";
+            const message =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.response?.data?.details ||
+        err.message ||
+        "Registration failed.";
 
             Swal.fire({
                 icon: "error",
