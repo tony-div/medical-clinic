@@ -92,7 +92,7 @@ export const getDoctorByDocId = async (req, res) => {
     D.status
     FROM DOCTOR AS D
     JOIN User ON D.user_id = User.id 
-    JOIN Specialty ON D.specialty_id = Specialty.id
+    LEFT JOIN Specialty ON D.specialty_id = Specialty.id
     JOIN DoctorRating ON D.rating_id = DoctorRating.id
     WHERE D.id = ?;
     `
@@ -251,6 +251,7 @@ export const updateSchedule = async (req, res) => {
     }
     const { error } = updateScheduleSchema.validate(newSchedule);
     if (error) {
+      console.log("bad request bec :", error);
       return res.status(code.BAD_REQUEST).json({
         error: "Invalid entered data: " + error.message
       });
