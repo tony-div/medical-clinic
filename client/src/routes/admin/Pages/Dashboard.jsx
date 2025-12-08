@@ -5,6 +5,7 @@ import { MdPeople, MdMedicalServices, MdEventAvailable } from 'react-icons/md';
 import { getAllUsers } from '../../../services/users';
 import { getDoctors } from '../../../services/doctors';
 import { getAppointments } from '../../../services/appointment';
+import './Dashboard.css';
 
 // [MODIFIED] - Accept refreshKey prop to trigger re-fetch when data changes
 const Dashboard = ({ refreshKey }) => {
@@ -51,7 +52,7 @@ const Dashboard = ({ refreshKey }) => {
 
   return (
     <div>
-      <h2 style={{ marginBottom: '24px', color: '#333' }}>Dashboard</h2>
+      <h2 className="dashboard-title">Dashboard</h2>
       {loading ? (
         <p style={{ color: '#666' }}>Loading stats...</p>
       ) : (
