@@ -76,7 +76,7 @@ function Nav() {
                 {/* Departments Dropdown */}
                 <div className="dropdown">
                     <a href="/#departments" className="dropbtn" onClick={(e) => e.preventDefault()}>
-                        Departments <span className="arrow">▼</span>
+                       Departments <i className="arrow down"></i>
                     </a>
                     <div className="dropdown-content">
                         {specialties.length > 0 ? (

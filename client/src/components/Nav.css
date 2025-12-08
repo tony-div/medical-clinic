@@ -56,37 +56,110 @@
 
 .navbar-center a:hover, .dropbtn:hover { color: #0ea5e9; }
 
-/* Dropdown */
-.dropdown { position: relative; height: 100%; display: flex; align-items: center; }
+/* --- DROPDOWN --- */
+.dropdown { 
+    position: relative; 
+    height: 100%; 
+    display: flex; 
+    align-items: center; 
+}
 
 .dropbtn { 
-    cursor: pointer; display: flex; align-items: center; gap: 6px;
-    color: #334155; font-weight: 600; font-size: 1.05rem;
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    gap: 6px;
+    color: #334155; 
+    font-weight: 600; 
+    font-size: 1.05rem;
+    padding: 10px 0; /* Add padding to increase hit area */
 }
-.arrow { font-size: 0.7rem; color: #94a3b8; transition: transform 0.3s; }
-.dropdown:hover .arrow { transform: rotate(180deg); color: #0ea5e9; }
+
+.arrow { 
+    font-size: 0.7rem; 
+    color: #94a3b8; 
+    transition: transform 0.3s; 
+}
+
+.dropdown:hover .arrow { 
+    transform: rotate(180deg); 
+    color: #0ea5e9; 
+}
 
 .dropdown-content { 
-    display: none; position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
-    background-color: white; min-width: 240px; 
+    display: none; 
+    position: absolute; 
+    top: 100%; /* Starts exactly at the bottom of the parent */
+    left: 50%; 
+    transform: translateX(-50%);
+    
+    background-color: white; 
+    min-width: 240px; 
     box-shadow: 0px 15px 35px rgba(0, 0, 0, 0.1); 
-    border-radius: 16px; padding: 10px;
+    border-radius: 16px; 
+    padding: 10px;
     border: 1px solid #f1f5f9;
+    
+    /* Animation */
     animation: fadeIn 0.2s ease-out;
+    
+    /* Margin to push it down slightly visually, but kept safe by the bridge */
+    margin-top: 10px; 
 }
 
-.dropdown:hover .dropdown-content { display: block; }
+/* This creates an invisible block between the link and the menu */
+.dropdown-content::before {
+    content: "";
+    position: absolute;
+    top: -20px; /* Covers the gap above the menu */
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background: transparent;
+}
+
+.dropdown:hover .dropdown-content { 
+    display: block; 
+}
 
 .dropdown-content a { 
-    display: block; padding: 14px 20px; color: #334155; 
-    border-radius: 10px; font-size: 1rem; text-align: left;
+    display: block; 
+    padding: 14px 20px; 
+    color: #334155; 
+    border-radius: 10px; 
+    font-size: 1rem; 
+    text-align: left;
+    text-decoration: none;
+    transition: background 0.2s;
 }
-.dropdown-content a:hover { background-color: #f0f9ff; color: #0ea5e9; }
+
+.dropdown-content a:hover { 
+    background-color: #f0f9ff; 
+    color: #0ea5e9; 
+}
 
 .dropdown-content .view-all {
-    color: #0ea5e9; font-weight: 700; border-top: 1px solid #f1f5f9; margin-top: 5px;
+    color: #0ea5e9; 
+    font-weight: 700; 
+    border-top: 1px solid #f1f5f9; 
+    margin-top: 5px;
 }
 
+.arrow {
+    border: solid #64748b;
+    border-width: 0 2px 2px 0;
+    display: inline-block;
+    padding: 3px;
+    margin-left: 8px;
+    margin-bottom: 2px;
+    transform: rotate(45deg);
+    transition: all 0.3s;
+}
+
+.dropdown:hover .arrow {
+    border-color: #0ea5e9;
+    transform: rotate(-135deg);
+}
 /* --- RIGHT: BUTTONS --- */
 .navbar-right { display: flex; gap: 15px; align-items: center; }
 
