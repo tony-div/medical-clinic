@@ -6,7 +6,8 @@ import DoctorSidebar from "../../components/DoctorSidebar";
 import {
     getDoctorScheduleByDocId,
     createSchedule,
-    deleteSchedule
+    deleteSchedule,
+    updateSchedule
 } from "../../services/doctors";
 
 import "./DoctorSchedule.css";
@@ -14,10 +15,13 @@ import "./DoctorSchedule.css";
 export default function DoctorSchedule() {
     const navigate = useNavigate();
     const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-
+    const [isLoading, setIsLoading] = useState(false);
     const [doctorId, setDoctorId] = useState(null);
     const [schedule, setSchedule] = useState([]);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [originalSchedule, setOriginalSchedule] = useState([]);
+    const [showErrorPopup, setShowErrorPopup] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     // Frontend → readable days
     const daysOfWeek = [
@@ -51,37 +55,27 @@ export default function DoctorSchedule() {
             const res = await getDoctorScheduleByDocId(docId);
             const backendSchedule = res.data.schedule;
 
-            if (!backendSchedule || backendSchedule.length === 0) {
-                // No schedule → default blank week
-                setSchedule(
-                    daysOfWeek.map((day) => ({
-                        label: day.label,
-                        key: day.key,
-                        isActive: false,
-                        start: "09:00",
-                        end: "17:00"
-                    }))
-                );
-                return;
-            }
-
             const fullWeek = daysOfWeek.map((d) => {
-                const saved = backendSchedule.find((s) => s.day === d.key);
+                const saved = backendSchedule?.find((s) => s.day === d.key);
 
                 return {
                     label: d.label,
                     key: d.key,
+                    id: saved ? saved.id : null,        // <-- IMPORTANT
                     isActive: !!saved,
                     start: saved ? saved.starts_at.slice(0, 5) : "09:00",
-                    end: saved ? saved.ends_at.slice(0, 5) : "17:00"
+                    end: saved ? saved.ends_at.slice(0, 5) : "17:00",
+                    slot_duration: saved ? saved.slot_duration : 30
                 };
             });
 
             setSchedule(fullWeek);
+            setOriginalSchedule(backendSchedule);
         } catch (err) {
             console.error("Error loading schedule:", err);
         }
     };
+
 
     const handleToggleDay = (index) => {
         const updated = [...schedule];
@@ -97,29 +91,118 @@ export default function DoctorSchedule() {
 
     const saveSchedule = async () => {
         try {
-            // 1. Delete all existing schedule rows for this doctor
-            await deleteSchedule(doctorId);
+            setIsLoading(true);
+            // Validate: end time must be later than start time
+            for (const d of schedule) {
+                if (d.isActive) {
+                    if (d.end <= d.start) {
+                        setErrorMessage(`Invalid time range on ${d.label}: End time must be later than start time.`);
+                        setShowErrorPopup(true);
+                        setTimeout(() => setShowErrorPopup(false), 2500);
+                        setIsLoading(false);
+                        return; // Stop saving completely
+                    }
+                }
+            }
 
-            // 2. Recreate each active schedule row
-            const activeDays = schedule.filter((d) => d.isActive);
+            const oldMap = {};
+            originalSchedule.forEach((s) => {
+                oldMap[s.day] = {
+                    id: s.id,
+                    day: s.day,
+                    starts_at: s.starts_at.slice(0, 5),
+                    ends_at: s.ends_at.slice(0, 5),
+                    slot_duration: s.slot_duration
+                };
+            });
+            const newMap = {};
+            schedule.forEach((d) => {
+                if (d.isActive) {
+                    newMap[d.key] = {
+                        day: d.key,
+                        starts_at: d.start,
+                        ends_at: d.end,
+                        slot_duration: 30
+                    };
+                }
+            });
 
-            for (const d of activeDays) {
-                await createSchedule({
-                    day: d.key,
-                    starts_at: d.start,
-                    ends_at: d.end,
-                    slot_duration: 30
+            const updates = [];
+            const deletes = [];
+            const creates = [];
+
+            // 1. For each old item → update or delete
+            for (const day in oldMap) {
+                const oldItem = oldMap[day];
+
+                if (newMap[day]) {
+                    const newItem = newMap[day];
+                        console.log("COMPARE:", {
+                            old_start: oldItem.starts_at,
+                            new_start: newItem.starts_at,
+                            old_end: oldItem.ends_at,
+                            new_end: newItem.ends_at
+                        });
+
+                    if (
+                        oldItem.starts_at !== newItem.starts_at ||
+                        oldItem.ends_at !== newItem.ends_at
+                    ) {
+                        console.log("added new one to update list", newItem);
+                        updates.push({
+                            id: oldItem.id,
+                            ...newItem
+                        });
+                    }
+
+                } else {
+                    deletes.push(oldItem.id);
+                }
+            }
+
+            // 2. For each new item → create if it didn’t exist before
+            for (const day in newMap) {
+                if (!oldMap[day]) {
+                    creates.push(newMap[day]);
+                }
+            }
+
+            // DELETE
+            for (const id of deletes) {
+                console.log("DELETE schedule id:", id);
+                await deleteSchedule(id);
+            }
+
+            // UPDATE
+            for (const upd of updates) {
+                console.log("UPDATE schedule:", upd.id, upd);
+                await updateSchedule(upd.id, {
+                    starts_at: upd.starts_at,
+                    ends_at: upd.ends_at,
+                    slot_duration: upd.slot_duration
                 });
             }
 
+            // CREATE
+            for (const newItem of creates) {
+                console.log("CREATE schedule:", newItem);
+                await createSchedule(newItem);
+            }
+
+            setIsLoading(false);
             setShowSuccessPopup(true);
             setTimeout(() => setShowSuccessPopup(false), 2000);
 
             loadSchedule(doctorId);
+
         } catch (err) {
-            console.error("Failed to save schedule:", err);
+            setIsLoading(false);
+            setErrorMessage(msg);
+            setShowErrorPopup(true);
+            setTimeout(() => setShowErrorPopup(false), 2500);
         }
     };
+
 
     return (
         <div className="dashboard-layout">
@@ -197,6 +280,19 @@ export default function DoctorSchedule() {
                         <FaCheckCircle /> Schedule Updated Successfully!
                     </div>
                 )}
+                {isLoading && (
+                    <div className="loading-overlay">
+                        <div className="spinner"></div>
+                        <p>Please wait…</p>
+                    </div>
+                )}
+                {showErrorPopup && (
+                    <div className="toast-notification error slide-up">
+                        <FaCheckCircle style={{ transform: "rotate(45deg)" }} />
+                        {errorMessage}
+                    </div>
+                )}
+
             </main>
         </div>
     );
