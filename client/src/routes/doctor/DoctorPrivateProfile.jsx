@@ -6,7 +6,7 @@ import './DoctorProfile.css';
 
 // Import Services
 import { getUser, getAllUsers } from '../../services/users'; // Ensure getAllUsers exists or we handle it
-import { getDoctors } from '../../services/doctors';
+import { getDoctors, getDoctorById } from '../../services/doctors';
 
 export default function DoctorPrivateProfile() {
     const navigate = useNavigate();
@@ -51,7 +51,7 @@ export default function DoctorPrivateProfile() {
                 }
 
                 // A. Fetch User Data
-                const userRes = await getUser(finalId);
+                const userRes = await getDoctorById(finalId);
                 const userData = userRes.data.user || userRes.data || {};
 
                 // B. Fetch Doctor Specifics
