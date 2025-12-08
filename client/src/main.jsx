@@ -96,7 +96,7 @@ const router = createBrowserRouter([
     element: <PrivateRoute allowedRoles={['admin']}><DoctorPrivateProfile /></PrivateRoute>
   },
   {
-    path: "/admin/patient-details/:email",
+    path: "/admin/patient-details/:id",
     element: <PrivateRoute allowedRoles={['admin']}><PatientProfile /></PrivateRoute>
   },
   {

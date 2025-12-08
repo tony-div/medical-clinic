@@ -12,7 +12,6 @@ export default function PatientProfile() {
     const { id } = useParams(); 
     
     const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    let targetId = storedUser.id;
     
     const [userData, setUserData] = useState(null);
     const [age, setAge] = useState(0);
@@ -20,6 +19,7 @@ export default function PatientProfile() {
     const [notFound, setNotFound] = useState(false);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
+    // --- 1. FIXED: Added 'id' to dependency array so it detects URL changes ---
     useEffect(() => {
         if (!storedUser.id && !id) { 
             navigate('/login'); 
@@ -29,15 +29,15 @@ export default function PatientProfile() {
         const fetchProfile = async () => {
             try {
                 let profileData = null;
-                if (storedUser.role === "patient") {
-                    const response = await getUser(storedUser.id);
-                    profileData = response.data.user || response.data;
-                    targetId = storedUser.id;
-                    } else if (storedUser.role === "admin") {
-                    const response = await getUser(id);
-                    profileData = response.data.user || response.data;
-                    targetId.id = storedUser.id;
-                }
+                
+                // Logic to determine which ID to fetch
+                const idToFetch = (storedUser.role === 'admin' && id) ? id : storedUser.id;
+
+                const response = await getUser(idToFetch);
+                profileData = response.data.user || response.data;
+                console.log("Fetched Data:", profileData);
+
+                // --- 2. FIXED: Removed the crashing 'targetId.id' line ---
 
                 if (profileData) {
                     setUserData({
@@ -55,7 +55,9 @@ export default function PatientProfile() {
                     }
                 }
             } catch (error) {
-                if (storedUser.email) {
+                console.error("Error fetching profile:", error);
+                // Only fallback to stored user if we are NOT trying to view a specific ID
+                if (storedUser.email && !id) {
                     setUserData({ ...storedUser, phone: "", address: "" });
                 } else {
                     setNotFound(true);
@@ -64,7 +66,7 @@ export default function PatientProfile() {
         };
 
         fetchProfile();
-    }, [storedUser.id, navigate]);
+    }, [storedUser.id, navigate, id]); // Added 'id' here
 
     const calculateAge = (dob) => {
         if (!dob) return;
@@ -99,10 +101,14 @@ export default function PatientProfile() {
         }
 
         try {
+            // --- 3. FIXED: Calculate Target ID correctly here ---
+            // If admin and viewing a profile (id exists), update that ID. Otherwise update self.
+            const targetId = (storedUser.role === 'admin' && id) ? id : storedUser.id;
+
             const payload = {
                 name: userData.name,
                 email: userData.email,
-                phone_number: userData.phone_number,
+                phone_number: userData.phone, // Ensure this matches backend expected field
                 address: userData.address,
                 gender: userData.gender === "" ? null : userData.gender,
                 birth_date: userData.birth_date === "" ? null : userData.birth_date
@@ -114,9 +120,12 @@ export default function PatientProfile() {
 
             await updateUser(targetId, payload);
 
-            const updatedCache = { ...storedUser, ...userData };
-            localStorage.setItem("currentUser", JSON.stringify(updatedCache));
-            localStorage.setItem("userName", userData.name); 
+            // Only update local storage if updating OWN profile
+            if (targetId == storedUser.id) {
+                const updatedCache = { ...storedUser, ...userData };
+                localStorage.setItem("currentUser", JSON.stringify(updatedCache));
+                localStorage.setItem("userName", userData.name); 
+            }
 
             setIsEditing(false);
             setShowSuccessPopup(true);
@@ -163,7 +172,7 @@ export default function PatientProfile() {
                                 <FaCheckCircle className="popup-icon success" />
                             </div>
                             <h3 className="popup-title">Success!</h3>
-                            <p className="popup-message">Your profile has been updated successfully.</p>
+                            <p className="popup-message">Profile updated successfully.</p>
                             <button className="popup-btn" onClick={() => setShowSuccessPopup(false)}>
                                 Continue
                             </button>
@@ -197,7 +206,8 @@ export default function PatientProfile() {
                                 </div>
                             </div>
 
-                            {!isEditing && !isAdminView && (
+                            {/* Allow editing if it's my profile OR I am an admin */}
+                            {!isEditing && (
                                 <button className="edit-btn" onClick={() => setIsEditing(true)}>
                                     <FaPen size={12}/> Edit Profile
                                 </button>
@@ -215,33 +225,34 @@ export default function PatientProfile() {
                                         type="email" 
                                         value={userData.email} 
                                         onChange={handleChange} 
-                                        disabled={!isEditing || isAdminView} 
+                                        disabled={!isEditing} 
                                         className={`input-field ${isEditing ? 'editable' : 'locked'}`}
                                     />
                                 </div>
                                 <div className="input-group">
                                     <label><FaLock className="icon"/> Password</label>
-                                    <input name="password" type="text" value={userData.password || ''} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : 'locked'}`}/>
+                                    <input name="password" type="text" value={userData.password || ''} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : 'locked'}`}/>
                                 </div>
                             </div>
 
                             <h4 className="section-title">Personal Details</h4>
                             <div className="input-group">
                                 <label><FaUser className="icon"/> Full Name</label>
-                                <input name="name" value={userData.name} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : ''}`}/>
+                                <input name="name" value={userData.name} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`}/>
                             </div>
 
                             <div className="form-grid three-col">
                                 <div className="input-group">
                                     <label><FaVenusMars className="icon"/> Gender</label>
-                                    <select name="gender" value={userData.gender} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : ''}`}>
+                                    <select name="gender" value={userData.gender || ''} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`}>
+                                        <option value="">Select</option>
                                         <option value="male">Male</option>
                                         <option value="female">Female</option>
                                     </select>
                                 </div>
                                 <div className="input-group">
                                     <label><FaBirthdayCake className="icon"/> Birth Date</label>
-                                    <input name="birth_date" type="date" value={userData.birth_date} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : ''}`}/>
+                                    <input name="birth_date" type="date" value={userData.birth_date} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`}/>
                                 </div>
                                 <div className="input-group">
                                     <label>Age</label>
@@ -253,11 +264,11 @@ export default function PatientProfile() {
                             <div className="form-grid">
                                 <div className="input-group">
                                     <label><FaPhone className="icon"/> Phone Number</label>
-                                    <input name="phone" value={userData.phone} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : ''}`} placeholder="01xxxxxxxxx"/>
+                                    <input name="phone" value={userData.phone} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`} placeholder="01xxxxxxxxx"/>
                                 </div>
                                 <div className="input-group">
                                     <label><FaMapMarkerAlt className="icon"/> Address</label>
-                                    <input name="address" value={userData.address} onChange={handleChange} disabled={!isEditing || isAdminView} className={`input-field ${isEditing ? 'editable' : ''}`} placeholder="City, Street..."/>
+                                    <input name="address" value={userData.address} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`} placeholder="City, Street..."/>
                                 </div>
                             </div>
 
