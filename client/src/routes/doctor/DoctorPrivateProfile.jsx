@@ -4,7 +4,7 @@ import { FaUserMd, FaStethoscope, FaDollarSign, FaInfoCircle, FaEnvelope, FaPhon
 import DoctorSidebar from '../../components/DoctorSidebar'; 
 import './DoctorProfile.css';
 
-import { getDoctorByUserId } from '../../services/doctors';
+import { getDoctorByUserId, getDoctorByDocId } from '../../services/doctors';
 
 export default function DoctorPrivateProfile() {
     const navigate = useNavigate();
@@ -27,7 +27,7 @@ export default function DoctorPrivateProfile() {
         const fetchData = async () => {
             try {
                 if(storedUser.role === "admin"){
-                    const userRes = await getDoctorByUserId(id);
+                    const userRes = await getDoctorByDocId(id);
                     const userData = userRes.data?.data?.[0] || {};
                     setProfileData({
                         ...userData,
