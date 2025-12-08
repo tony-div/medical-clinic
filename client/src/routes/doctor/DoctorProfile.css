@@ -5,7 +5,16 @@
     min-height: 100vh;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
-
+.profile-img.placeholder {
+    /* Style for the initials div */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white; /* Text color */
+    font-size: 2.5rem; /* Large font size for initials */
+    font-weight: bold;
+    /* profile-img already sets width/height/border-radius */
+}
 .dashboard-main {
     margin-left: 260px;
     width: calc(100% - 260px);

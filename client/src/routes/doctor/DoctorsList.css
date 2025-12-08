@@ -103,7 +103,37 @@
     object-fit: cover;
     border: 3px solid #EBF5FB;
 }
+.doctor-card .img-box {
+    /* Define a fixed size for the container, ensuring uniformity */
+    width: 80px; 
+    height: 80px;
+    border-radius: 50%; /* Makes the container round */
+    overflow: hidden; /* Important for clean look if image overflows slightly */
+    flex-shrink: 0; /* Prevents the box from shrinking */
+    
+    /* Ensure image fits within the box */
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
 
+/* Styles specifically for the image element */
+.doctor-card .img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures the image covers the entire circular area */
+    display: block;
+}
+.doctor-card .img-box.placeholder {
+    /* Background color is set dynamically via inline style: style={{ backgroundColor: color }} */
+    
+    /* Text styling */
+    color: white; /* Ensures high contrast text */
+    font-size: 1.5rem; 
+    font-weight: bold;
+    text-align: center;
+    line-height: 80px; /* Vertically center single-line text in an 80px tall container */
+}
 .header-info h3 {
     font-size: 1.2rem;
     margin: 0 0 5px 0;

@@ -96,8 +96,35 @@ export default function DoctorProfile() {
         navigate(`/book/${doctor.id}`);
     };
 
-    const status = doctor.status === "inactive" ? "Inactive" : "Active";
+    const getInitials = (name) => {
+        if (!name) return '?';
+        const cleanName = name.replace(/(dr\.|prof\.|ms\.|mr\.|mrs\.)\s*/i, '').trim();
+        const parts = cleanName.split(/[\s-]+/).filter(p => p.length > 0);
+        if (parts.length === 1) return parts[0][0].toUpperCase();
+        if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        
+        return cleanName.substring(0, 1).toUpperCase();
+    };
+    const getStableColor = (name) => {
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+            // Simple hash calculation to map the name to a number
+            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        let color = '#';
+        for (let i = 0; i < 3; i++) {
+            // Use a bit mask to generate an RGB component between 50 and 200 (for good contrast)
+            const value = (hash >> (i * 8)) & 0xFF;
+            const component = 50 + (value % 150); // Ensures it's not too dark or too light
+            color += ('00' + component.toString(16)).substr(-2);
+        }
+        return color;
+    };
 
+    const status = doctor.status === "inactive" ? "Inactive" : "Active";
+    const hasProfilePic = doctor.profile_pic_path && doctor.profile_pic_path !== "";
+    const initials = getInitials(doctor.name);
+    const color = getStableColor(doctor.name);
     return (
         <div className="page-container">
             <Nav />
@@ -108,11 +135,20 @@ export default function DoctorProfile() {
                     {/* LEFT CARD */}
                     <div className="profile-card left-card">
                         <div className="profile-main-info">
-                            <img 
-                                src={doctor.profile_pic_path || "/default-doctor.png"} 
-                                alt={doctor.name}
-                                className="profile-img" 
-                            />
+                            {hasProfilePic ? (
+                                <img 
+                                    src={doctor.profile_pic_path} 
+                                    alt={doctor.name}
+                                    className="profile-img" 
+                                />
+                            ) : (
+                                <div 
+                                    className="profile-img placeholder" 
+                                    style={{ backgroundColor: color }}
+                                >
+                                    {initials}
+                                </div>
+                            )}
 
                             <div className="profile-text">
                                 <div style={{ display:'flex', alignItems:'center', gap:'15px' }}>

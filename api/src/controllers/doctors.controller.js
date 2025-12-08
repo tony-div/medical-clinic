@@ -251,6 +251,7 @@ export const updateSchedule = async (req, res) => {
     }
     const { error } = updateScheduleSchema.validate(newSchedule);
     if (error) {
+      console.log("bad request bec :", error);
       return res.status(code.BAD_REQUEST).json({
         error: "Invalid entered data: " + error.message
       });
