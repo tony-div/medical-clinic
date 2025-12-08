@@ -144,24 +144,22 @@ export default function PatientDashboard() {
                         )}
                     </div>
 
-                    <div className="widget-card stats-card hover-lift">
-                        <div className="card-header">
-                            <h3><FaFileMedicalAlt className="icon-purple"/> Activity Summary</h3>
-                        </div>
-                        <div className="stats-row">
-                            <div className="stat-item">
-                                <span className="stat-val">{stats.total}</span>
-                                <span className="stat-label">Total Visits</span>
-                            </div>
-                            <div className="stat-divider"></div>
-                            <div className="stat-item">
-                                <span className="stat-val">{stats.completed}</span>
-                                <span className="stat-label">Completed</span>
-                            </div>
-                        </div>
-                        <div className="stats-footer">
-                            <Link to="/patient/records" className="secondary-link">View Medical Records &rarr;</Link>
-                        </div>
+                   <div className="widget-card stats-card hover-lift">
+    <div className="card-header">
+        <h3><FaFileMedicalAlt className="icon-purple"/> Activity Summary</h3>
+    </div>
+    
+    <div className="stats-row">
+        <div className="stat-item">
+            <span className="stat-val">{stats.total}</span>
+            <span className="stat-label">Total Visits</span>
+        </div>
+        <div className="stat-divider"></div>
+        <div className="stat-item">
+            <span className="stat-val">{stats.completed}</span>
+            <span className="stat-label">Completed</span>
+        </div>
+    </div>
                     </div>
                 </div>
 

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { DB_PATIENTS_KEY } from '../../data/initDB';
-import './register.css';
+import { FaArrowLeft, FaEye, FaEyeSlash } from 'react-icons/fa'; // Only Eye icons kept
 import { createPatient } from '../../services/users';
+import './register.css';
 
 export default function Register() {
     const navigate = useNavigate();
@@ -14,24 +14,18 @@ export default function Register() {
     });
 
     const [showPassword, setShowPassword] = useState(false);
-    // NEW: State for live error messages
     const [errors, setErrors] = useState({ phone: '', passwordMatch: '' });
+    const [loading, setLoading] = useState(false);
 
     const maxDate = new Date().toISOString().split('T')[0];
 
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        // --- 1. LIVE PHONE VALIDATION ---
+        // Phone Validation
         if (name === 'phone') {
-            // Check if value is numeric only
-            if (!/^\d*$/.test(value)) return; // Prevent typing non-digits
-
-            // Check length (Limit to 11)
-            if (value.length > 11) return; // Stop typing after 11
-
-            // Set Error if length is wrong (e.g. user leaves it at 10 digits)
-            // We check length > 0 so empty field doesn't show error immediately
+            if (!/^\d*$/.test(value)) return;
+            if (value.length > 11) return;
             if (value.length > 0 && value.length !== 11) {
                 setErrors(prev => ({ ...prev, phone: 'Phone must be exactly 11 digits' }));
             } else {
@@ -39,13 +33,9 @@ export default function Register() {
             }
         }
 
-        // --- 2. LIVE PASSWORD MATCH CHECK ---
+        // Password Match Validation
         if (name === 'confirmPassword' || name === 'password') {
-            // We need the latest values to compare
             const otherPass = name === 'password' ? formData.confirmPassword : formData.password;
-            const currentPass = value;
-
-            // Check if they match (only if confirm field isn't empty)
             if (name === 'confirmPassword' && value !== formData.password) {
                 setErrors(prev => ({ ...prev, passwordMatch: 'Passwords do not match' }));
             } else if (name === 'password' && formData.confirmPassword && value !== formData.confirmPassword) {
@@ -60,14 +50,16 @@ export default function Register() {
 
     const handleRegister = async (e) => {
         e.preventDefault();
+        setLoading(true);
 
-        // Final Validation Check before submitting
         if (formData.phone.length !== 11) {
             Swal.fire('Error', 'Phone number must be exactly 11 digits.', 'error');
+            setLoading(false);
             return;
         }
         if (formData.password !== formData.confirmPassword) {
             Swal.fire('Error', 'Passwords do not match.', 'error');
+            setLoading(false);
             return;
         }
 
@@ -79,45 +71,44 @@ export default function Register() {
                 password: formData.password,
                 gender: formData.gender,
                 birth_date: formData.birth_date,
-                address: ""};
-            const res = await createPatient(newUser);
+                address: ""
+            };
+            await createPatient(newUser);
 
             Swal.fire({
                 icon: "success",
                 title: "Account Created!",
                 text: "You can now login to your portal.",
-                confirmButtonColor: "#27AE60"
+                confirmButtonColor: "#0ea5e9"
             }).then(() => navigate("/login"));
 
         } catch (err) {
-            const message =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.response?.data?.details ||
-        err.message ||
-        "Registration failed.";
-
+            setLoading(false);
+            const message = err.response?.data?.error || "Registration failed.";
             Swal.fire({
                 icon: "error",
                 title: "Error",
                 text: message,
-                confirmButtonColor: "#E74C3C",
+                confirmButtonColor: "#ef4444",
             });
         }
     }
 
-
     return (
         <div className="auth-container">
-            <div className="auth-box register-box">
-                <button onClick={() => navigate('/')} style={{ border: 'none', background: 'none', cursor: 'pointer', float: 'left', fontSize: '1.2rem', color: '#7F8C8D' }}>
-                    ← Back
+            <div className="auth-card slide-up">
+                
+                <button onClick={() => navigate('/')} className="back-home-btn">
+                    <FaArrowLeft /> Back to Home
                 </button>
 
-                <h2>Create Account</h2>
-                <p>Join us to book appointments and view your history.</p>
+                <div className="auth-header">
+                    <h2>Create Account</h2>
+                    <p>Join us to manage your health journey.</p>
+                </div>
 
-                <form onSubmit={handleRegister}>
+                <form onSubmit={handleRegister} className="auth-form">
+                    
                     <div className="form-group">
                         <label>Full Name</label>
                         <input name="name" type="text" placeholder="John Doe" onChange={handleChange} required />
@@ -125,7 +116,7 @@ export default function Register() {
 
                     <div className="form-group">
                         <label>Email Address</label>
-                        <input name="email" type="email" placeholder="name@domain.com" onChange={handleChange} required />
+                        <input name="email" type="email" placeholder="name@example.com" onChange={handleChange} required />
                     </div>
 
                     <div className="form-group">
@@ -134,12 +125,11 @@ export default function Register() {
                             name="phone"
                             type="tel"
                             placeholder="01xxxxxxxxx"
-                            value={formData.phone} // Controlled input needed for masking
+                            value={formData.phone}
                             onChange={handleChange}
                             required
                             className={errors.phone ? 'input-error' : ''}
                         />
-                        {/* Live Error Text */}
                         {errors.phone && <span className="error-text">{errors.phone}</span>}
                     </div>
 
@@ -169,7 +159,7 @@ export default function Register() {
                                 required
                             />
                             <button type="button" className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
-                                {showPassword ? "🙈" : "👁️"}
+                                {showPassword ? <FaEyeSlash /> : <FaEye />}
                             </button>
                         </div>
                     </div>
@@ -184,18 +174,15 @@ export default function Register() {
                             required
                             className={errors.passwordMatch ? 'input-error' : ''}
                         />
-                        {/* Live Error Text */}
                         {errors.passwordMatch && <span className="error-text">{errors.passwordMatch}</span>}
                     </div>
 
                     <button
                         type="submit"
-                        className="auth-btn"
-                        // Disable if there are active errors
-                        disabled={!!errors.phone || !!errors.passwordMatch}
-                        style={{ opacity: (errors.phone || errors.passwordMatch) ? 0.5 : 1 }}
+                        className="auth-btn primary"
+                        disabled={loading || !!errors.phone || !!errors.passwordMatch}
                     >
-                        Register
+                        {loading ? "Creating Account..." : "Register"}
                     </button>
                 </form>
 
