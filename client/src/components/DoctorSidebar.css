@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.sidebar {
+    width: 260px;
+    height: 100vh;
+    background: #ffffff;
+    border-right: 1px solid #f1f5f9;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 1000;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
+}
+
+/* --- HEADER --- */
+.sidebar-header {
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    font-size: 1.8rem;
+    color: #0ea5e9; /* Blue match */
+    filter: drop-shadow(0 4px 6px rgba(14, 165, 233, 0.2));
+}
+
+.sidebar-header h2 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0;
+    color: #1e293b;
+    letter-spacing: -0.5px;
+}
+
+/* --- MENU --- */
+.sidebar-menu {
+    list-style: none;
+    padding: 0 15px;
+    margin: 0;
+    flex-grow: 1; /* Pushes footer down */
+}
+
+.sidebar-menu li {
+    margin-bottom: 8px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    text-decoration: none;
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border-radius: 12px;
+    transition: all 0.2s ease-in-out;
+}
+
+.menu-icon {
+    font-size: 1.1rem;
+    transition: transform 0.2s;
+}
+
+/* Hover State */
+.menu-item:hover {
+    background-color: #f0f9ff;
+    color: #0ea5e9;
+    transform: translateX(5px);
+}
+
+.menu-item:hover .menu-icon {
+    transform: scale(1.1);
+}
+
+/* Active State (The Blue Gradient) */
+.menu-item.active {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.menu-item.active .menu-icon {
+    color: white;
+}
+
+/* --- FOOTER --- */
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    background: #fff1f2; /* Light Red bg */
+    color: #e11d48;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.logout-btn:hover {
+    background: #fee2e2;
+    color: #be123c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(225, 29, 72, 0.1);
+}

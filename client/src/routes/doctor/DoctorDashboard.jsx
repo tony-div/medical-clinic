@@ -126,7 +126,7 @@ export default function DoctorDashboard() {
                 {/* HEADER */}
                 <header className="dashboard-header">
                     <div>
-                        <h1>Welcome, {doctorName}</h1>
+                        <h1>Welcome, <span className="highlight-name">{doctorName}</span></h1>
                         <p>Here is your daily activity overview.</p>
                     </div>
                     <div className="date-badge">

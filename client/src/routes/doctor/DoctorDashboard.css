@@ -18,31 +18,65 @@
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* --- HEADER --- */
-.dashboard-header {
+..dashboard-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 40px;
 }
-.dashboard-header h1 {
-    font-size: 1.8rem;
-    color: #1e293b;
-    margin: 0 0 5px 0;
-    font-weight: 700;
-}
-.dashboard-header p { color: #64748b; margin: 0; }
 
+.dashboard-header h1 {
+    font-size: 2.2rem;
+    margin: 0 0 5px 0;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #1e293b; 
+}
+
+.highlight-name {
+    background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 15px rgba(14, 165, 233, 0.25));
+}
+
+.dashboard-header p { 
+    color: #64748b; 
+    margin: 0; 
+    font-size: 1.05rem; 
+}
 .date-badge {
     background: white;
-    padding: 10px 20px;
-    border-radius: 30px;
-    color: #334155;
-    font-weight: 600;
-    display: flex; align-items: center; gap: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    border: 1px solid #e2e8f0;
+    padding: 12px 24px;
+    border-radius: 50px; /* Pill shape */
+    
+    color: #475569;
+    font-weight: 700;
+    font-size: 0.95rem;
+    font-family: 'Inter', monospace; /* Monospace numbers look cooler */
+    
+    display: flex; 
+    align-items: center; 
+    gap: 12px;
+    
+    /* Soft Lifted Look */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    border: 1px solid white; /* Blend border */
+    transition: all 0.3s ease;
 }
 
+.date-badge:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(14, 165, 233, 0.15);
+    color: #0ea5e9;
+}
+
+/* Style the Calendar Icon inside */
+.date-badge svg {
+    color: #0ea5e9;
+    font-size: 1.2rem;
+    filter: drop-shadow(0 2px 4px rgba(14, 165, 233, 0.2));
+}
 /* --- WIDGETS --- */
 .dashboard-widgets {
     display: grid;

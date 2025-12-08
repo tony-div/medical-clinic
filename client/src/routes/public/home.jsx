@@ -47,7 +47,7 @@ export default function Home() {
         
         <div className="hero-image-container fade-in-right">
              {/* Ensure this image exists in public/assets or use a URL */}
-             <img src="/assets/home.png" alt="Medical Team" className="hero-img" onError={(e) => e.target.src='https://img.freepik.com/free-photo/team-young-specialist-doctors-standing-corridor-hospital_1303-21199.jpg'}/>
+             <img src="/assets/home.png" alt="Medical Team" className="hero-img" onError={(e) => e.target.src='/assets/home.png'}/>
         </div>
       </section>
 
@@ -104,7 +104,7 @@ export default function Home() {
       <section id="about" className="section about-section">
         <div className="about-container">
             <div className="about-image">
-                <img src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Hospital Interior" />
+                <img src="/assets/interior.png" alt="Hospital Interior" />
                 <div className="experience-badge">
                     <span className="years">15+</span>
                     <span className="text">Years of Experience</span>
