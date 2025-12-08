@@ -46,6 +46,7 @@ export const createSpecialty = async (req,res) => {
       specialty_id: result.insertId
     })
   }catch(error){
+    console.log(error);
     return res.status(code.SERVER_ERROR).json({
       error: 'Internal server error',
     })
@@ -71,5 +72,39 @@ export const getSpecialtyByID = async (req, res) => {
     return res.status(code.SERVER_ERROR).json({
       error: 'Internal server error',
     })
+  }
+};
+
+export const deleteSpecialtyById = async (req, res) => {
+  try {
+    const loggedUser = req.user;
+
+    if (loggedUser.role !== "admin") {
+      return res.status(code.FORBIDDEN).json({
+        error: "Admin access required"
+      });
+    }
+
+    const specialty_id = req.params.specialty_id;
+    const [specialty] = await db.query(query.GET_SPECIALTY_BY_ID, [specialty_id]);
+
+    if (specialty.length === 0) {
+      return res.status(code.BAD_REQUEST).json({
+        error: "Invalid specialty_id: specialty does not exist"
+      });
+    }
+
+    const [result] = await db.query(query.DELETE_SPECIALTY_BY_ID, [specialty_id]);
+
+    return res.status(code.SUCCESS).json({
+      message: "Specialty deleted successfully",
+      deleted_id: specialty_id
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(code.SERVER_ERROR).json({
+      error: "Internal server error"
+    });
   }
 };

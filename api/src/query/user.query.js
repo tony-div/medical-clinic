@@ -46,5 +46,6 @@ export const query = {
     CREATE_SPECIALTY: `INSERT INTO Specialty (name) VALUES (?)`,
     GET_RATING_BY_ID: `SELECT * FROM DoctorRating WHERE id = ?`,
     SELECT_MEDICAL_TEST_BY_APPOINTMENT_ID: `SELECT * FROM MedicalTest WHERE appointment_id = ?;`,
-    SELECT_ALL_USERS_SIMPLE: `SELECT * FROM User;`
+    SELECT_ALL_USERS_SIMPLE: `SELECT * FROM User;`,
+    DELETE_SPECIALTY_BY_ID: `DELETE FROM Specialty WHERE id = ?`, 
 }

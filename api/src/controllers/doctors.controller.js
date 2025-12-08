@@ -92,7 +92,7 @@ export const getDoctorByDocId = async (req, res) => {
     D.status
     FROM DOCTOR AS D
     JOIN User ON D.user_id = User.id 
-    JOIN Specialty ON D.specialty_id = Specialty.id
+    LEFT JOIN Specialty ON D.specialty_id = Specialty.id
     JOIN DoctorRating ON D.rating_id = DoctorRating.id
     WHERE D.id = ?;
     `
