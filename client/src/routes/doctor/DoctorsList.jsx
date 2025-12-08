@@ -83,6 +83,15 @@ export default function DoctorsList() {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        const deptParam = searchParams.get('dept');
+        if (deptParam) {
+            setActiveDept(deptParam);
+        } else {
+            setActiveDept('All');
+        }
+    }, [searchParams]);
+    
     // filtering / sorting
     useEffect(() => {
         let results = [...doctors];
