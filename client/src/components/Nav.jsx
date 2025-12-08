@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { FaBars, FaTimes } from 'react-icons/fa'; 
 
 import "./Nav.css";
-import logoImage from '/assets/logo.png';
+import logoImage from '/assets/logo.png'; 
 
-// Import your API service:
+// API Service
 import { getDoctors } from "../services/doctors.js";
 
 function Nav() {
@@ -19,27 +20,21 @@ function Nav() {
         const storedUser = localStorage.getItem("currentUser");
         if (storedUser) {
             const userObj = JSON.parse(storedUser);
-            setUserRole(userObj.role);  // "patient" or "doctor" or "admin"
+            setUserRole(userObj.role); 
         }
 
-        // 2. Load specialties via API
+        // 2. Load specialties
         loadSpecialties();
     }, []);
 
     const loadSpecialties = async () => {
         try {
-            const res = await getDoctors(); // API call
-            const doctors = res.data.data || res.data; // in case your API wraps it differently
-
-            // Extract unique specialties
-            const uniqueSpecs = [
-                ...new Set(doctors.map(d => d.specialty_name))
-            ];
-
-            setSpecialties(uniqueSpecs);
+            const res = await getDoctors(); 
+            const doctors = res.data.data || res.data; 
+            const uniqueSpecs = [...new Set(doctors.map(d => d.specialty_name || d.specialty))];
+            setSpecialties(uniqueSpecs.slice(0, 6)); 
         } catch (err) {
-            console.error("Error loading specialties:", err);
-            setSpecialties([]); // fallback
+            setSpecialties([]); 
         }
     };
 
@@ -47,91 +42,85 @@ function Nav() {
     const closeMenu = () => setIsMenuOpen(false);
 
     const handleLogout = () => {
-        localStorage.removeItem("currentUser");
+        localStorage.clear(); // Wipe everything
         setUserRole(null);
-        navigate('/');
+        navigate('/login');
         closeMenu();
+    };
+
+    const getPortalLink = () => {
+        if (userRole === 'doctor') return '/doctor/dashboard';
+        if (userRole === 'admin') return '/admin/dashboard';
+        return '/patient/dashboard';
     };
 
     return (
         <nav className="navbar">
+            {/* LEFT: LOGO */}
             <div className="navbar-left">
-                <img src={logoImage} alt="Clinic Logo" className="logo-img" />
+                <Link to="/">
+                    <img src={logoImage} alt="Clinic Logo" className="logo-img" onError={(e) => e.target.style.display='none'}/>
+                    
+                </Link>
             </div>
 
-            {/* Hamburger */}
-            <div className={`hamburger ${isMenuOpen ? "active" : ""}`} onClick={toggleMenu}>
-                <span className="bar"></span>
-                <span className="bar"></span>
-                <span className="bar"></span>
+            {/* MOBILE TOGGLE */}
+            <div className="hamburger" onClick={toggleMenu}>
+                {isMenuOpen ? <FaTimes /> : <FaBars />}
             </div>
 
-            {/* Center Menu */}
+            {/* CENTER: LINKS */}
             <div className={`navbar-center ${isMenuOpen ? "active" : ""}`}>
                 <a href="/#home" onClick={closeMenu}>Home</a>
 
-                {/* Departments dropdown */}
+                {/* Departments Dropdown */}
                 <div className="dropdown">
-                    <a href="/#departments" className="dropbtn">
-                        Departments <span className="arrow">▼</span>
+                    <a href="/#departments" className="dropbtn" onClick={(e) => e.preventDefault()}>
+                       Departments <i className="arrow down"></i>
                     </a>
                     <div className="dropdown-content">
                         {specialties.length > 0 ? (
-                            specialties.map(spec => (
-                                // <Link 
-                                //     key={spec} 
-                                //     to={`/doctors?dept=${spec}`} 
-                                //     onClick={closeMenu}
-                                // >
-                                //     {spec}
-                                // </Link>
-                                <Link
-                                to={`/doctors?dept=${spec}`}
-                                onClick={() => {
-                                    setTimeout(() => window.location.reload(), 0);
-                                }}
-                                >
+                            specialties.map((spec, i) => (
+                                <Link key={i} to={`/doctors?dept=${spec}`} onClick={closeMenu}>
                                     {spec}
                                 </Link>
-
                             ))
                         ) : (
-                            <span style={{ padding: '12px 20px', display: 'block', color: '#999' }}>
-                                No Departments
-                            </span>
+                            <span>No Departments</span>
                         )}
+                        <Link to="/doctors" className="view-all" onClick={closeMenu}>View All</Link>
                     </div>
                 </div>
 
                 <a href="/#about" onClick={closeMenu}>About Us</a>
-                <a href="/#contact" onClick={closeMenu}>Contact Us</a>
+                <a href="/#contact" onClick={closeMenu}>Contact</a>
 
-                {/* Mobile Buttons */}
+                {/* Mobile Buttons (Only show in hamburger) */}
                 <div className="mobile-buttons">
                     {userRole ? (
                         <>
-                            <Link to={`/${userRole}/dashboard`}  className="btn primary" onClick={closeMenu}>My Portal</Link>
-                            <button className="btn" onClick={handleLogout}>Logout</button>
+                            <Link to={getPortalLink()} className="btn primary" onClick={closeMenu}>My Portal</Link>
+                            <button className="btn logout" onClick={handleLogout}>Logout</button>
                         </>
                     ) : (
                         <>
                             <Link to="/login" className="btn" onClick={closeMenu}>Login</Link>
-                            <Link to="/doctors" className="btn primary" onClick={closeMenu}>Book Appointment</Link>
+                            <Link to="/doctors" className="btn primary" onClick={closeMenu}>Book Now</Link>
                         </>
                     )}
                 </div>
             </div>
 
-            {/* Desktop Buttons */}
+            {/* RIGHT: BUTTONS (Desktop) */}
             <div className="navbar-right">
                 {userRole ? (
                     <>
-                        <Link to={`/${userRole}/dashboard`}  className="btn primary">My Portal</Link>
-                        <button className="btn" onClick={handleLogout}>Logout</button>
+                        <Link to={getPortalLink()} className="btn primary">My Portal</Link>
+                        <button className="btn logout" onClick={handleLogout}>Logout</button>
                     </>
                 ) : (
                     <>
-                        <Link to="/login" className="btn">Login</Link>
+                        <Link to="/login" className="btn login">Login</Link>
                         <Link to="/doctors" className="btn primary">Book Appointment</Link>
                     </>
                 )}
