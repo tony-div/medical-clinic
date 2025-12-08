@@ -197,6 +197,7 @@ slot_duration: Joi.number().integer().required(),
 export const createSchedule = async (req, res) => {
   try{
     const loggedUser = req.user;
+    console.log("from api, logged user ", loggedUser);
     if(loggedUser.role !== "doctor"){
       return res.status(code.FORBIDDEN).json({error:"only doctors may add schedules"});
     }
@@ -279,6 +280,7 @@ export const updateSchedule = async (req, res) => {
 export const deleteSchedule = async (req, res) => {
   try {
     const loggedUser = req.user;
+    console.log("from api, logged user delete ", loggedUser);
     if (loggedUser.role !== "doctor") {
       return res.status(code.FORBIDDEN).json({
         error: "Only doctors may delete schedules"

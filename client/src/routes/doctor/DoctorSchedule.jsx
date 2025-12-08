@@ -1,182 +1,3 @@
-// import React, { useState, useEffect } from 'react';
-// import { useNavigate } from 'react-router-dom';
-// import { FaClock, FaCheckCircle, FaSave, FaCalendarAlt } from 'react-icons/fa';
-// import DoctorSidebar from '../../components/DoctorSidebar';
-// import { DB_SCHEDULES_KEY } from '../../data/initDB'; 
-// import { doctorsData } from '../../data/doctors'; 
-// import './DoctorSchedule.css'; 
-
-// export default function DoctorSchedule() {
-//     const navigate = useNavigate();
-//     const currentUserEmail = localStorage.getItem("activeUserEmail");
-    
-//     const [doctorId, setDoctorId] = useState(null);
-//     const [schedule, setSchedule] = useState([]);
-//     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-
-//     useEffect(() => {
-//         if (!currentUserEmail) { navigate('/login'); return; }
-
-//         const nameKey = currentUserEmail.split('@')[0].toLowerCase();
-//         const doc = doctorsData.find(d => d.name.toLowerCase().includes(nameKey));
-        
-//         if (doc) {
-//             setDoctorId(doc.id);
-//             loadSchedule(doc.id);
-//         }
-//     }, [currentUserEmail, navigate]);
-
-//     const loadSchedule = (id) => {
-//         const allSchedules = JSON.parse(localStorage.getItem(DB_SCHEDULES_KEY) || "[]");
-//         const mySchedule = allSchedules.find(s => s.doctorId === id);
-
-//         const daysOfWeek = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-
-//         if (mySchedule) {
-//             const fullWeek = daysOfWeek.map(day => {
-//                 const savedDay = mySchedule.days.find(d => d.day === day);
-//                 return {
-//                     day,
-//                     isActive: !!savedDay,
-//                     start: savedDay?.start || "09:00",
-//                     end: savedDay?.end || "17:00"
-//                 };
-//             });
-//             setSchedule(fullWeek);
-//         } else {
-//             setSchedule(daysOfWeek.map(day => ({ day, isActive: false, start: "09:00", end: "17:00" })));
-//         }
-//     };
-
-//     const handleToggleDay = (index) => {
-//         const newSchedule = [...schedule];
-//         newSchedule[index].isActive = !newSchedule[index].isActive;
-//         setSchedule(newSchedule);
-//     };
-
-//     const handleTimeChange = (index, field, value) => {
-//         const newSchedule = [...schedule];
-//         newSchedule[index][field] = value;
-//         setSchedule(newSchedule);
-//     };
-
-//     const saveSchedule = () => {
-//         if (!doctorId) return;
-
-//         const allSchedules = JSON.parse(localStorage.getItem(DB_SCHEDULES_KEY) || "[]");
-        
-//         const activeDays = schedule.filter(s => s.isActive).map(s => ({
-//             day: s.day,
-//             start: s.start,
-//             end: s.end
-//         }));
-
-//         const existingIndex = allSchedules.findIndex(s => s.doctorId === doctorId);
-//         if (existingIndex >= 0) {
-//             allSchedules[existingIndex].days = activeDays;
-//         } else {
-//             allSchedules.push({ doctorId, days: activeDays });
-//         }
-
-//         localStorage.setItem(DB_SCHEDULES_KEY, JSON.stringify(allSchedules));
-//         setShowSuccessPopup(true);
-//         setTimeout(() => setShowSuccessPopup(false), 2000); // Auto hide after 2s
-//     };
-
-//     return (
-//         <div className="dashboard-layout">
-//             <DoctorSidebar />
-            
-//             <main className="dashboard-main fade-in">
-//                 {/* HEADER */}
-//                 <header className="dashboard-header">
-//                     <div>
-//                         <h1>Manage Schedule</h1>
-//                         <p>Set your weekly availability for patient bookings.</p>
-//                     </div>
-//                 </header>
-
-//                 <div className="schedule-container">
-                    
-//                     {/* SCHEDULE TABLE HEADER */}
-//                     <div className="schedule-header-row">
-//                         <div className="col-day">Day</div>
-//                         <div className="col-status">Status</div>
-//                         <div className="col-time">Working Hours</div>
-//                     </div>
-
-//                     {/* DAYS LIST */}
-//                     <div className="days-list">
-//                         {schedule.map((daySlot, index) => (
-//                             <div key={daySlot.day} className={`day-row ${daySlot.isActive ? 'active' : 'inactive'}`}>
-                                
-//                                 {/* Day Name */}
-//                                 <div className="col-day">
-//                                     <div className="day-name">{daySlot.day}</div>
-//                                 </div>
-
-//                                 {/* Toggle Switch */}
-//                                 <div className="col-status">
-//                                     <label className="switch">
-//                                         <input 
-//                                             type="checkbox" 
-//                                             checked={daySlot.isActive} 
-//                                             onChange={() => handleToggleDay(index)}
-//                                         />
-//                                         <span className="slider round"></span>
-//                                     </label>
-//                                     <span className={`status-label ${daySlot.isActive ? 'text-green' : 'text-gray'}`}>
-//                                         {daySlot.isActive ? "Available" : "Off"}
-//                                     </span>
-//                                 </div>
-
-//                                 {/* Time Inputs */}
-//                                 <div className="col-time">
-//                                     {daySlot.isActive ? (
-//                                         <div className="time-group">
-//                                             <div className="time-input-wrapper">
-//                                                 <input 
-//                                                     type="time" 
-//                                                     value={daySlot.start}
-//                                                     onChange={(e) => handleTimeChange(index, 'start', e.target.value)}
-//                                                 />
-//                                             </div>
-//                                             <span className="separator">to</span>
-//                                             <div className="time-input-wrapper">
-//                                                 <input 
-//                                                     type="time" 
-//                                                     value={daySlot.end}
-//                                                     onChange={(e) => handleTimeChange(index, 'end', e.target.value)}
-//                                                 />
-//                                             </div>
-//                                         </div>
-//                                     ) : (
-//                                         <span className="unavailable-text">No Slots Available</span>
-//                                     )}
-//                                 </div>
-//                             </div>
-//                         ))}
-//                     </div>
-
-//                     {/* ACTIONS */}
-//                     <div className="schedule-footer">
-//                         <button className="btn-primary-action save-btn" onClick={saveSchedule}>
-//                             <FaSave /> Save Changes
-//                         </button>
-//                     </div>
-//                 </div>
-
-//                 {/* SUCCESS TOAST */}
-//                 {showSuccessPopup && (
-//                     <div className="toast-notification slide-up">
-//                         <FaCheckCircle /> Schedule Updated Successfully!
-//                     </div>
-//                 )}
-
-//             </main>
-//         </div>
-//     );
-// }
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaCheckCircle, FaSave } from "react-icons/fa";
@@ -185,57 +6,57 @@ import DoctorSidebar from "../../components/DoctorSidebar";
 import {
     getDoctorScheduleByDocId,
     createSchedule,
-    updateSchedule,
     deleteSchedule
-} from "../../services/doctors.js"; 
+} from "../../services/doctors";
 
 import "./DoctorSchedule.css";
 
 export default function DoctorSchedule() {
     const navigate = useNavigate();
+    const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
     const [doctorId, setDoctorId] = useState(null);
-    const [scheduleId, setScheduleId] = useState(null); // backend schedule ID
     const [schedule, setSchedule] = useState([]);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
+    // Frontend → readable days
     const daysOfWeek = [
-        "Saturday",
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday"
+        { label: "Saturday", key: "Sat" },
+        { label: "Sunday", key: "Sun" },
+        { label: "Monday", key: "Mon" },
+        { label: "Tuesday", key: "Tue" },
+        { label: "Wednesday", key: "Wed" },
+        { label: "Thursday", key: "Thur" },
+        { label: "Friday", key: "Fri" }
     ];
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
+        console.log(storedUser);
         if (!storedUser) {
             navigate("/login");
             return;
         }
 
-        const parsed = JSON.parse(storedUser);
-
-        if (!parsed.doctor_id) {
-            console.warn("Logged user is not a doctor");
+        if (storedUser.role !== "doctor") {
             navigate("/");
             return;
         }
-
-        setDoctorId(parsed.doctor_id);
-        loadSchedule(parsed.doctor_id);
+        console.log("doc id : ", storedUser.doctor_id);
+        setDoctorId(storedUser.doctor_id);
+        loadSchedule(storedUser.doctor_id);
     }, []);
 
     const loadSchedule = async (docId) => {
         try {
             const res = await getDoctorScheduleByDocId(docId);
+            const backendSchedule = res.data.schedule;
 
-            if (!res.data.schedule) {
-                // doctor has no saved schedule → create empty one
+            if (!backendSchedule || backendSchedule.length === 0) {
+                // No schedule → default blank week
                 setSchedule(
                     daysOfWeek.map((day) => ({
-                        day,
+                        label: day.label,
+                        key: day.key,
                         isActive: false,
                         start: "09:00",
                         end: "17:00"
@@ -244,18 +65,18 @@ export default function DoctorSchedule() {
                 return;
             }
 
-            const backendSchedule = res.data.schedule;
-            setScheduleId(backendSchedule.id);
+            const fullWeek = daysOfWeek.map((d) => {
+                const saved = backendSchedule.find((s) => s.day === d.key);
 
-            const fullWeek = daysOfWeek.map((day) => {
-                const saved = backendSchedule.days.find((d) => d.day === day);
                 return {
-                    day,
+                    label: d.label,
+                    key: d.key,
                     isActive: !!saved,
-                    start: saved?.start || "09:00",
-                    end: saved?.end || "17:00"
+                    start: saved ? saved.starts_at.slice(0, 5) : "09:00",
+                    end: saved ? saved.ends_at.slice(0, 5) : "17:00"
                 };
             });
+
             setSchedule(fullWeek);
         } catch (err) {
             console.error("Error loading schedule:", err);
@@ -275,30 +96,28 @@ export default function DoctorSchedule() {
     };
 
     const saveSchedule = async () => {
-        const activeDays = schedule
-            .filter((d) => d.isActive)
-            .map((d) => ({
-                day: d.day,
-                start: d.start,
-                end: d.end
-            }));
-
         try {
-            let res;
+            // 1. Delete all existing schedule rows for this doctor
+            await deleteSchedule(doctorId);
 
-            if (!scheduleId) {
-                // first time creating schedule
-                res = await createSchedule({ days: activeDays });
-                setScheduleId(res.data.schedule_id);
-            } else {
-                // updating existing schedule
-                await updateSchedule(scheduleId, { days: activeDays });
+            // 2. Recreate each active schedule row
+            const activeDays = schedule.filter((d) => d.isActive);
+
+            for (const d of activeDays) {
+                await createSchedule({
+                    day: d.key,
+                    starts_at: d.start,
+                    ends_at: d.end,
+                    slot_duration: 30
+                });
             }
 
             setShowSuccessPopup(true);
             setTimeout(() => setShowSuccessPopup(false), 2000);
+
+            loadSchedule(doctorId);
         } catch (err) {
-            console.error("Failed to save schedule", err);
+            console.error("Failed to save schedule:", err);
         }
     };
 
@@ -307,7 +126,6 @@ export default function DoctorSchedule() {
             <DoctorSidebar />
 
             <main className="dashboard-main fade-in">
-                {/* HEADER */}
                 <header className="dashboard-header">
                     <div>
                         <h1>Manage Schedule</h1>
@@ -316,26 +134,19 @@ export default function DoctorSchedule() {
                 </header>
 
                 <div className="schedule-container">
-                    {/* HEADER ROW */}
                     <div className="schedule-header-row">
                         <div className="col-day">Day</div>
                         <div className="col-status">Status</div>
                         <div className="col-time">Working Hours</div>
                     </div>
 
-                    {/* DAYS */}
                     <div className="days-list">
                         {schedule.map((daySlot, index) => (
-                            <div
-                                key={daySlot.day}
-                                className={`day-row ${daySlot.isActive ? "active" : "inactive"}`}
-                            >
-                                {/* Day Name */}
+                            <div key={daySlot.key} className={`day-row ${daySlot.isActive ? "active" : "inactive"}`}>
                                 <div className="col-day">
-                                    <div className="day-name">{daySlot.day}</div>
+                                    <div className="day-name">{daySlot.label}</div>
                                 </div>
 
-                                {/* Toggle */}
                                 <div className="col-status">
                                     <label className="switch">
                                         <input
@@ -346,33 +157,24 @@ export default function DoctorSchedule() {
                                         <span className="slider round"></span>
                                     </label>
 
-                                    <span
-                                        className={`status-label ${
-                                            daySlot.isActive ? "text-green" : "text-gray"
-                                        }`}
-                                    >
+                                    <span className={`status-label ${daySlot.isActive ? "text-green" : "text-gray"}`}>
                                         {daySlot.isActive ? "Available" : "Off"}
                                     </span>
                                 </div>
 
-                                {/* Time Controls */}
                                 <div className="col-time">
                                     {daySlot.isActive ? (
                                         <div className="time-group">
                                             <input
                                                 type="time"
                                                 value={daySlot.start}
-                                                onChange={(e) =>
-                                                    handleTimeChange(index, "start", e.target.value)
-                                                }
+                                                onChange={(e) => handleTimeChange(index, "start", e.target.value)}
                                             />
                                             <span className="separator">to</span>
                                             <input
                                                 type="time"
                                                 value={daySlot.end}
-                                                onChange={(e) =>
-                                                    handleTimeChange(index, "end", e.target.value)
-                                                }
+                                                onChange={(e) => handleTimeChange(index, "end", e.target.value)}
                                             />
                                         </div>
                                     ) : (
@@ -383,7 +185,6 @@ export default function DoctorSchedule() {
                         ))}
                     </div>
 
-                    {/* Save */}
                     <div className="schedule-footer">
                         <button className="btn-primary-action save-btn" onClick={saveSchedule}>
                             <FaSave /> Save Changes
@@ -391,7 +192,6 @@ export default function DoctorSchedule() {
                     </div>
                 </div>
 
-                {/* SUCCESS TOAST */}
                 {showSuccessPopup && (
                     <div className="toast-notification slide-up">
                         <FaCheckCircle /> Schedule Updated Successfully!
