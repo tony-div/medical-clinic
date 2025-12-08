@@ -29,8 +29,11 @@ export default function PatientProfile() {
         const fetchProfile = async () => {
             try {
                 let profileData = null;
-                if (currentUserId && !email) {
+                if (storedUser.role === 'patient') {
                     const response = await getUser(currentUserId);
+                    profileData = response.data.user || response.data;
+                } else if(storedUser.role === 'admin'){
+                    const response = await getUser(email);
                     profileData = response.data.user || response.data;
                 }
 
