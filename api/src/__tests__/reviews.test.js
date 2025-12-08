@@ -4,7 +4,7 @@ import app from '../index.js';
 USERS = [
 {
     id: 2,
-    email: "patient@gmail.com",
+    email: "patient2@gmail.com",
     password: "123123"
     },
 {
@@ -34,11 +34,12 @@ describe("doctor attempts to create review", () => {
 
     test("return 403 forbidden", async () => {
         const response = await request(app)
-            .post(`/reviews/${USERS[1].id}`)
+            .post(`/reviews`)
             .set('Authorization', `Bearer ${authToken}`)
             .send({
+                doctor_id: USERS[1].id,
                 rating: 5,
-                comment: null
+                comment: "good"
             });
 
         expect(response.statusCode).toBe(403);
@@ -66,23 +67,23 @@ describe("user attempts to review a doctor twice", () => {
 
     test("return 201 for first review and 400 for second", async () => {
         const firstResponse = await request(app)
-            .post(`/reviews/${USERS[1].id}`)
+            .post(`/reviews`)
             .set('Authorization', `Bearer ${authToken}`)
             .send({
                 doctor_id:USERS[1].id,
-                rating: 5,
-                comment: null
+                rating: 1,
+                comment: "bad"
             });
             
             expect(firstResponse.statusCode).toBe(201);
             
             const secondResponse = await request(app)
-            .post(`/reviews/${USERS[1].id}`)
+            .post(`/reviews`)
             .set('Authorization', `Bearer ${authToken}`)
             .send({
                 doctor_id:USERS[1].id,
-                rating: 5,
-                comment: null
+                rating: 1,
+                comment: "worst"
             });
 
         expect(secondResponse.statusCode).toBe(400);

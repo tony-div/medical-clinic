@@ -3,9 +3,9 @@ import app from '../index.js';
 
 USERS = [
 {
-    id: 5,
-    email: "charlie.punk@patient.com",
-    password: "strongpass"
+    id: 2,
+    email: "patient1@patient.com",
+    password: "123123"
     }
 ]
 
