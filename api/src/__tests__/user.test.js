@@ -3,9 +3,9 @@ import app from '../index.js';
 
 USERS = [
 {
-    id: 5,
-    email: "charlie.punk@patient.com",
-    password: "strongpass"
+    id: 2,
+    email: "patient1@gmail.com",
+    password: "123123"
     }
 ]
 
@@ -58,7 +58,7 @@ describe("non admin user attempts to update a user", () => {
 
     test("return 403 forbidden", async () => {
         const response = await request(app)
-            .patch('/users/2')
+            .patch('/users/3')
             .set('Authorization', `Bearer ${authToken}`)
             .send({
                 password: "12345678",

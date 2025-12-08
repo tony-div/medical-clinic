@@ -2,8 +2,8 @@ import request from "supertest";
 import app from '../index.js';
 
 DATE = {
-    date:"2025-12-01",
-    day:"Mon"
+    date:"2025-12-09",
+    day:"Tue"
 }
 
 
