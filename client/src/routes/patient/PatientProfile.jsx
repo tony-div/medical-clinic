@@ -9,10 +9,10 @@ import './PatientProfile.css';
 export default function PatientProfile() {
     const navigate = useNavigate();
     const location = useLocation(); 
-    const { email } = useParams(); 
+    const { id } = useParams(); 
     
     const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    const currentUserId = storedUser.id;
+    let targetId = storedUser.id;
     
     const [userData, setUserData] = useState(null);
     const [age, setAge] = useState(0);
@@ -21,7 +21,7 @@ export default function PatientProfile() {
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
     useEffect(() => {
-        if (!currentUserId && !email) { 
+        if (!storedUser.id && !id) { 
             navigate('/login'); 
             return; 
         }
@@ -29,9 +29,14 @@ export default function PatientProfile() {
         const fetchProfile = async () => {
             try {
                 let profileData = null;
-                if (currentUserId && !email) {
-                    const response = await getUser(currentUserId);
+                if (storedUser.role === "patient") {
+                    const response = await getUser(storedUser.id);
                     profileData = response.data.user || response.data;
+                    targetId = storedUser.id;
+                    } else if (storedUser.role === "admin") {
+                    const response = await getUser(id);
+                    profileData = response.data.user || response.data;
+                    targetId.id = storedUser.id;
                 }
 
                 if (profileData) {
@@ -51,7 +56,7 @@ export default function PatientProfile() {
                 }
             } catch (error) {
                 if (storedUser.email) {
-                     setUserData({ ...storedUser, phone: "", address: "" });
+                    setUserData({ ...storedUser, phone: "", address: "" });
                 } else {
                     setNotFound(true);
                 }
@@ -59,7 +64,7 @@ export default function PatientProfile() {
         };
 
         fetchProfile();
-    }, [currentUserId, email, navigate]);
+    }, [storedUser.id, navigate]);
 
     const calculateAge = (dob) => {
         if (!dob) return;
@@ -97,7 +102,7 @@ export default function PatientProfile() {
             const payload = {
                 name: userData.name,
                 email: userData.email,
-                phone_number: userData.phone,
+                phone_number: userData.phone_number,
                 address: userData.address,
                 gender: userData.gender === "" ? null : userData.gender,
                 birth_date: userData.birth_date === "" ? null : userData.birth_date
@@ -107,7 +112,7 @@ export default function PatientProfile() {
                 payload.password = userData.password;
             }
 
-            await updateUser(currentUserId, payload);
+            await updateUser(targetId, payload);
 
             const updatedCache = { ...storedUser, ...userData };
             localStorage.setItem("currentUser", JSON.stringify(updatedCache));
@@ -138,7 +143,7 @@ export default function PatientProfile() {
     if (notFound) return <div className="error-state">User not found.</div>;
     if (!userData) return <div className="loading-state">Loading Profile...</div>;
 
-    const isAdminView = !!email;
+    const isAdminView = storedUser.role === "admin";
 
     return (
         <div className="dashboard-layout">

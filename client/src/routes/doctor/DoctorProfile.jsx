@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Nav from '../../components/Nav.jsx';
 
 import { 
-    getDoctorById, 
+    getDoctorByDocId, 
     getDoctorScheduleByDocId 
 } from '../../services/doctors.js';
 
@@ -36,7 +36,7 @@ export default function DoctorProfile() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const docRes = await getDoctorById(id);
+                const docRes = await getDoctorByDocId(id);
                 const doctorData = docRes.data.doctor?.[0] || docRes.data.data?.[0] || null;
 
                 if (!doctorData) return;
