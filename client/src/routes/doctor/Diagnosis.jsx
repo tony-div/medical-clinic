@@ -5,19 +5,16 @@ import { FaArrowLeft, FaUserInjured, FaStethoscope, FaPrescriptionBottleAlt, FaN
 import DoctorSidebar from '../../components/DoctorSidebar';
 import './DoctorProfile.css'; 
 import './Diagnosis.css'; 
-
-// ✅ IMPORT SERVICES
 import { getAppointmentById } from '../../services/appointment';
 import { createDiagnosis, getDiagnosisByAppointmentId } from '../../services/diagnosis';
 import { getUser } from '../../services/users';
+import { getMedicalTestByAppointmentId } from '../../services/medical-tests';
 
 export default function Diagnosis() {
-    // ✅ MATCHES YOUR ROUTE: /doctor/diagnosis/:appointmentId
     const { appointmentId } = useParams(); 
     const navigate = useNavigate();
     
     const [appt, setAppt] = useState(null);
-    const [patient, setPatient] = useState(null);
     const [formData, setFormData] = useState({ description: "", prescription: "", treatment_plan: "" });
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -43,10 +40,28 @@ export default function Diagnosis() {
                     } catch (e) { console.error("Patient fetch failed", e); }
                 }
 
-                setAppt({ ...current, ...patientData });
-                setPatient(patientData);
+                let fileUrl = null;
+                try {
+                    const testRes = await getMedicalTestByAppointmentId(appointmentId);
+                    const tests = testRes.data.medicalTest;
+                    
+                    if (Array.isArray(tests) && tests.length > 0) {
+                        fileUrl = tests[0].file_path;
+                        // Prepend API URL if it's a relative path
+                        if (fileUrl && !fileUrl.startsWith('http')) {
+                            fileUrl = `${API_BASE_URL}${fileUrl}`;
+                        }
+                    }
+                } catch (e) { /* No test attached, ignore error */ }
 
-                // 3. Pre-fill Diagnosis if Completed
+                // Combine all data
+                setAppt({ 
+                    ...current, 
+                    ...patientData,
+                    attachedFile: fileUrl // Store it here
+                });
+
+                // 4. Pre-fill Diagnosis if Completed
                 if (current.status === 'Complete' || current.status === 'complete' || current.status === 'Completed') {
                     try {
                         const diagRes = await getDiagnosisByAppointmentId(appointmentId);
@@ -82,7 +97,6 @@ export default function Diagnosis() {
         }
 
         try {
-            // ✅ API CALL: Create Diagnosis & Complete Appointment
             await createDiagnosis(appointmentId, {
                 description: formData.description,
                 prescription: formData.prescription,
@@ -103,12 +117,6 @@ export default function Diagnosis() {
     // Normalize status for check
     const status = (appt.status || "").toLowerCase();
     const isReadOnly = status === 'completed' || status === 'complete' || status === 'cancelled';
-
-    // Handle File URL
-    let fileUrl = appt.file_path || appt.uploadedFiles;
-    if (fileUrl && !fileUrl.startsWith('http')) {
-        fileUrl = `${API_BASE_URL}${fileUrl}`;
-    }
 
     return (
         <div className="dashboard-layout">
@@ -161,8 +169,8 @@ export default function Diagnosis() {
                             
                             <div className="file-section" style={{marginTop:'25px'}}>
                                 <strong>Attached Documents:</strong>
-                                {fileUrl && fileUrl !== "N/A" ? (
-                                    <a href={fileUrl} target="_blank" rel="noreferrer" className="file-download-btn" style={{marginTop:'10px'}}>
+                                {appt.attachedFile ? (
+                                    <a href={appt.attachedFile} target="_blank" rel="noreferrer" className="file-download-btn" style={{marginTop:'10px'}}>
                                         <FaFileAlt /> View Patient File
                                     </a>
                                 ) : (

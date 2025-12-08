@@ -72,11 +72,15 @@ export const getDoctorsBySpecialty = async (req, res) => {
   }
 };
 
-export const getDoctorById = async (req, res) => {
+export const getDoctorByDocId = async (req, res) => {
   const doctorId = req.params.doctorId;
   const query = `
     Select D.id, 
-    User.name AS name, 
+    User.name AS name,
+    User.email,
+    User.phone_number,
+    User.gender,
+    User.birth_date,
     Specialty.name AS specialty, 
     D.profile_pic_path, 
     DoctorRating.avg_rating,
@@ -84,7 +88,8 @@ export const getDoctorById = async (req, res) => {
     D.consultation_fees, 
     D.waiting_time, 
     D.about_doctor, 
-    D.education_and_experience
+    D.education_and_experience,
+    D.status
     FROM DOCTOR AS D
     JOIN User ON D.user_id = User.id 
     JOIN Specialty ON D.specialty_id = Specialty.id
@@ -94,6 +99,49 @@ export const getDoctorById = async (req, res) => {
   
   try{
   const [rows] = await db.query(query, [doctorId]);
+
+  res.status(200).json({
+    message: 'ok',
+    data: rows
+  })
+
+  } catch(error){
+    console.error('error',error);
+    res.status(500).json({
+      message: 'Internal server error',
+      'error':error.message
+    })
+
+  }
+};
+
+export const getDoctorByUserId = async (req, res) => {
+  const userId = req.params.userId;
+  const query = `
+    Select D.id, 
+    User.name AS name,
+    User.email,
+    User.phone_number,
+    User.gender,
+    User.birth_date,
+    Specialty.name AS specialty, 
+    D.profile_pic_path, 
+    DoctorRating.avg_rating,
+    DoctorRating.reviews_count,
+    D.consultation_fees, 
+    D.waiting_time, 
+    D.about_doctor, 
+    D.education_and_experience,
+    D.status
+    FROM DOCTOR AS D
+    JOIN User ON D.user_id = User.id 
+    JOIN Specialty ON D.specialty_id = Specialty.id
+    JOIN DoctorRating ON D.rating_id = DoctorRating.id
+    WHERE D.user_id = ?;
+    `
+  
+  try{
+  const [rows] = await db.query(query, [userId]);
 
   res.status(200).json({
     message: 'ok',
@@ -149,6 +197,7 @@ slot_duration: Joi.number().integer().required(),
 export const createSchedule = async (req, res) => {
   try{
     const loggedUser = req.user;
+    console.log("from api, logged user ", loggedUser);
     if(loggedUser.role !== "doctor"){
       return res.status(code.FORBIDDEN).json({error:"only doctors may add schedules"});
     }
@@ -231,6 +280,7 @@ export const updateSchedule = async (req, res) => {
 export const deleteSchedule = async (req, res) => {
   try {
     const loggedUser = req.user;
+    console.log("from api, logged user delete ", loggedUser);
     if (loggedUser.role !== "doctor") {
       return res.status(code.FORBIDDEN).json({
         error: "Only doctors may delete schedules"

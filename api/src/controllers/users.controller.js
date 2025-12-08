@@ -32,7 +32,7 @@ export const getUserById = async (req, res) => {
     if (loggedUser.id !== Number(id) && loggedUser.role === "patient") {
       return res.status(401).json({ error: "Unauthorized" })
     }
-    if (loggedUser.role !== "admin") {
+    if (loggedUser.role !== "admin" && loggedUser.id !== Number(id)) {
       limitedFlag = true;
     }
     const [user] = await db.query(query.SELECT_USER_BY_ID, [id])

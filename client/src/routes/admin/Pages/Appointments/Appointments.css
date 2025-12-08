@@ -1,12 +1,19 @@
+/* ============================================
+   APPOINTMENTS PAGE - Mobile-First Responsive
+   ============================================ */
+
+/* Page Header */
 .page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: clamp(16px, 4vw, 24px);
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .page-header h2 {
-    font-size: 24px;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
     font-weight: 700;
     color: #1f2937;
     margin: 0;
@@ -16,16 +23,28 @@
 .btn-primary {
     background-color: #3b82f6;
     color: white;
-    padding: 10px 20px;
+    padding: clamp(8px, 2vw, 10px) clamp(16px, 3vw, 20px);
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 500;
-    transition: background-color 0.2s;
+    font-size: 14px;
+    min-height: 44px;
+    transition: background-color 0.2s, transform 0.2s;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-primary:hover {
     background-color: #2563eb;
+}
+
+.btn-primary:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
 }
 
 .btn-outline {
@@ -36,7 +55,9 @@
     border-radius: 6px;
     font-size: 13px;
     cursor: pointer;
+    min-height: 36px;
     transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-outline:hover {
@@ -44,16 +65,21 @@
     border-color: #9ca3af;
 }
 
-/* Filters */
+.btn-outline:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/*  s */
 .filters-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: clamp(12px, 3vw, 16px);
     background: white;
-    padding: 20px;
+    padding: clamp(16px, 3vw, 20px);
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    margin-bottom: 24px;
+    margin-bottom: clamp(16px, 4vw, 24px);
     align-items: end;
 }
 
@@ -64,27 +90,50 @@
 }
 
 .filter-group label {
-    font-size: 14px;
+    font-size: clamp(13px, 2vw, 14px);
     font-weight: 500;
     color: #6b7280;
 }
 
 .filter-select,
 .filter-input {
-    padding: 10px 12px;
+    padding: clamp(8px, 2vw, 10px) 12px;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     font-size: 14px;
     outline: none;
     background-color: #fff;
-    transition: border-color 0.2s;
+    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
     width: 100%;
+    min-height: 44px;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.filter-select {
+    padding-right: 36px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+}
+
+.filter-select:hover,
+.filter-input:hover {
+    background-color: #f5f5f5;
+    border-color: #d1d5db;
 }
 
 .filter-select:focus,
 .filter-input:focus {
     border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background-color: #fff;
+}
+
+.filter-select:focus-visible,
+.filter-input:focus-visible {
+    outline-offset: 2px;
 }
 
 /* Table */
@@ -93,77 +142,65 @@
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .appointments-table {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
-    /* [FIX] - Prevent column width changes between pages */
     table-layout: fixed;
 }
 
-/* [ADDED] - Fixed column widths to prevent shifting */
+/* Fixed column widths */
 .appointments-table th:nth-child(1),
 .appointments-table td:nth-child(1) {
     width: 12%;
 }
-
-/* Date */
 
 .appointments-table th:nth-child(2),
 .appointments-table td:nth-child(2) {
     width: 10%;
 }
 
-/* Time */
-
 .appointments-table th:nth-child(3),
 .appointments-table td:nth-child(3) {
     width: 20%;
 }
-
-/* Patient */
 
 .appointments-table th:nth-child(4),
 .appointments-table td:nth-child(4) {
     width: 20%;
 }
 
-/* Doctor */
-
 .appointments-table th:nth-child(5),
 .appointments-table td:nth-child(5) {
     width: 15%;
 }
-
-/* Status */
 
 .appointments-table th:nth-child(6),
 .appointments-table td:nth-child(6) {
     width: 23%;
 }
 
-/* Actions */
-
 .appointments-table th {
     background-color: #f9fafb;
-    padding: 16px;
-    font-size: 13px;
+    padding: clamp(12px, 2vw, 16px);
+    font-size: clamp(11px, 2vw, 13px);
     font-weight: 600;
     color: #6b7280;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
 }
 
 .appointments-table td {
-    padding: 16px;
+    padding: clamp(12px, 2vw, 16px);
     border-bottom: 1px solid #e5e7eb;
-    font-size: 14px;
+    font-size: clamp(13px, 2vw, 14px);
     color: #1f2937;
     vertical-align: middle;
-    /* [FIX] - Handle text overflow */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -182,11 +219,12 @@
     color: #111827;
 }
 
-/* [ADDED] - Modern User Cell with Avatar */
+/* User Cell with Avatar */
 .user-cell {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: clamp(8px, 2vw, 10px);
+    min-width: 0;
 }
 
 .user-cell:hover .user-name {
@@ -208,6 +246,9 @@
 .user-name {
     font-weight: 500;
     transition: color 0.2s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .patient-name {
@@ -225,6 +266,7 @@
     border-radius: 9999px;
     font-size: 12px;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .status-scheduled {
@@ -246,9 +288,10 @@
 .actions-cell {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
-/* [ADDED] - Pagination (same style as Users.jsx) */
+/* Pagination */
 .paginationContainer {
     display: flex;
     justify-content: flex-end;
@@ -256,6 +299,7 @@
     padding: 1rem;
     gap: 1rem;
     border-top: 1px solid #eee;
+    flex-wrap: wrap;
 }
 
 .pageBtn {
@@ -266,12 +310,20 @@
     cursor: pointer;
     color: #374151;
     font-size: 14px;
+    min-height: 44px;
+    min-width: 44px;
     transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .pageBtn:hover:not(:disabled) {
     background-color: #f3f4f6;
     border-color: #bbb;
+}
+
+.pageBtn:focus-visible {
+    outline: 2px solid #1e4b8f;
+    outline-offset: 2px;
 }
 
 .pageBtn:disabled {
@@ -285,11 +337,37 @@
     color: #6b7280;
 }
 
-/* ==================== MOBILE RESPONSIVE ==================== */
+
+/* ==================== TABLET RESPONSIVE (1024px) ==================== */
+@media (max-width: 1024px) {
+    .filters-container {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+    }
+
+    .appointments-table th,
+    .appointments-table td {
+        padding: 14px 12px;
+    }
+
+    /* Adjust column widths for tablet */
+    .appointments-table th:nth-child(3),
+    .appointments-table td:nth-child(3) {
+        width: 18%;
+    }
+
+    .appointments-table th:nth-child(4),
+    .appointments-table td:nth-child(4) {
+        width: 18%;
+    }
+}
+
+
+/* ==================== MOBILE RESPONSIVE (768px) ==================== */
 @media (max-width: 768px) {
     .page-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         gap: 12px;
     }
 
@@ -308,6 +386,10 @@
         -webkit-overflow-scrolling: touch;
     }
 
+    .appointments-table {
+        min-width: 700px;
+    }
+
     .appointments-table th,
     .appointments-table td {
         padding: 12px 10px;
@@ -321,7 +403,7 @@
     }
 
     .btn-outline {
-        padding: 5px 10px;
+        padding: 6px 10px;
         font-size: 12px;
     }
 
@@ -335,11 +417,19 @@
         height: 28px;
         font-size: 11px;
     }
+
+    .btn-primary {
+        width: 100%;
+        text-align: center;
+    }
 }
 
+
+/* ==================== SMALL MOBILE (480px) ==================== */
 @media (max-width: 480px) {
     .filters-container {
         grid-template-columns: 1fr;
+        padding: 12px;
     }
 
     .page-header h2 {
@@ -358,12 +448,12 @@
     }
 
     .btn-primary {
-        padding: 8px 16px;
+        padding: 10px 16px;
         font-size: 13px;
     }
 
     .pageBtn {
-        padding: 6px 12px;
+        padding: 8px 12px;
         font-size: 13px;
     }
 
@@ -375,5 +465,40 @@
 
     .user-cell {
         gap: 6px;
+    }
+
+    .paginationContainer {
+        padding: 12px 8px;
+    }
+}
+
+
+/* ==================== ACCESSIBILITY ==================== */
+@media (prefers-reduced-motion: reduce) {
+
+    .btn-primary,
+    .btn-outline,
+    .filter-select,
+    .filter-input,
+    .user-name {
+        transition: none;
+    }
+}
+
+@media (prefers-contrast: high) {
+    .table-wrapper {
+        border: 2px solid #000;
+    }
+
+    .appointments-table td {
+        border-bottom: 2px solid #000;
+    }
+
+    .btn-primary {
+        background-color: #000;
+    }
+
+    .status-badge {
+        border: 1px solid currentColor;
     }
 }

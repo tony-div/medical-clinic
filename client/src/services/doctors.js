@@ -4,8 +4,12 @@ export const getDoctors = () => {
     return api.get('/doctors');
 };
 
-export const getDoctorById = async (doctorId) => {
-    return api.get(`/doctors/profile/${doctorId}`);
+export const getDoctorByUserId = async (userId) => {
+    return api.get(`/doctors/profile-user-id/${userId}`);
+};
+
+export const getDoctorByDocId = async (doctorId) => {
+    return api.get(`/doctors/profile-doctor-id/${doctorId}`);
 };
 
 export const getDoctorsBySpecialty = async (specialtyId) => {

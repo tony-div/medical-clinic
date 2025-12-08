@@ -29,7 +29,7 @@
 
 /* 3. Logo Image - Better containment */
 .sidebar-logo {
-  height: 40px; /* Reduced slightly to give breathing room inside 64px box */
+  height: 50px; /* Reduced slightly to give breathing room inside 64px box */
   max-width: 80%;
   object-fit: contain;
 }

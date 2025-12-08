@@ -2,7 +2,8 @@ import express from 'express';
 import { authenticate } from "../middleware/auth.middleware.js";
 import {
   getDoctors,
-  getDoctorById,
+  getDoctorByDocId,
+  getDoctorByUserId,
   getDoctorsBySpecialty,
   getDoctorScheduleByDocId,
   createSchedule,
@@ -14,7 +15,8 @@ const doctorsRouter = express.Router();
 
 doctorsRouter.get('/', getDoctors);
 
-doctorsRouter.get('/profile/:doctorId', getDoctorById);
+doctorsRouter.get('/profile-doctor-id/:doctorId', getDoctorByDocId);
+doctorsRouter.get('/profile-user-id/:userId', getDoctorByUserId);
 
 doctorsRouter.get('/specialty/:specialtyId', getDoctorsBySpecialty);
 

@@ -4,18 +4,15 @@ import { FaUserMd, FaStethoscope, FaDollarSign, FaInfoCircle, FaEnvelope, FaPhon
 import DoctorSidebar from '../../components/DoctorSidebar'; 
 import './DoctorProfile.css';
 
-// Import Services
-import { getUser, getAllUsers } from '../../services/users'; // Ensure getAllUsers exists or we handle it
-import { getDoctors, getDoctorById } from '../../services/doctors';
+import { getDoctorByUserId } from '../../services/doctors';
 
 export default function DoctorPrivateProfile() {
     const navigate = useNavigate();
     const location = useLocation();
     const { id } = useParams(); // Only exists if Admin is viewing
     
-    // --- 1. ROBUST ID RETRIEVAL ---
     const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    const storedEmail = localStorage.getItem("activeUserEmail"); // Fallback
+    // const storedEmail = localStorage.getItem("activeUserEmail"); // Fallback
     
     // Determine which ID to look up (Url Param OR Logged In User)
     const [targetUserId, setTargetUserId] = useState(id || storedUser.id || null);
@@ -25,60 +22,63 @@ export default function DoctorPrivateProfile() {
     const [error, setError] = useState(false);
 
     useEffect(() => {
-        console.log("🔍 DEBUG: Profile Init", { id, storedID: storedUser.id, storedEmail, targetUserId });
+        console.log("🔍 DEBUG: Profile Init", { id, storedID: storedUser.id, email: storedUser.email });
 
         const fetchData = async () => {
             try {
-                let finalId = targetUserId;
-
-                // EMERGENCY FIX: If we have no ID but we have an email, find the ID!
-                if (!finalId && storedEmail) {
-                    console.warn("⚠️ ID missing, searching by Email:", storedEmail);
-                    // Fetch all users to find the ID (Temporary fix for sync issues)
-                    // Note: Ideally create a 'getUserByEmail' service, but this works for now
-                    try {
-                        // Assuming you don't have getAllUsers exported, we might fail here.
-                        // If you do, great. If not, this block skips.
-                        // For now, let's rely on the dashboard having set 'currentUser' correctly.
-                    } catch (e) {}
-                }
-
-                if (!finalId) {
-                    console.error("❌ No User ID found. Please Login again.");
-                    // navigate('/login'); // <--- DISABLED AUTO-LOGOUT SO YOU CAN DEBUG
+                if(storedUser.role === "admin"){
+                    const userRes = await getDoctorByUserId(id);
+                    const userData = userRes.data?.data?.[0] || {};
+                    setProfileData({
+                        ...userData,
+                        name: userData.name || "DR.", 
+                        email: userData.email || "-",
+                        phone: userData.phone_number || "-",
+                        address: userData.address || "-",
+                        birth_date: userData.birth_date ? userData.birth_date.split('T')[0] : "-",
+                        fees: userData.consultation_fees || "0",
+                        bio: userData.about_doctor || "No biography provided.",
+                        specialty: userData.specialty || "General",
+                        status: userData.status || "Active"
+                    });
+                } else if(storedUser.role === "doctor"){
+                    const userRes = await getDoctorByUserId(storedUser.id);
+                    console.log("my id : ", storedUser.id);
+                    console.log("i'm doctor result !", userRes);
+                    const userData = userRes.data?.data?.[0] || {};
+                    console.log("I'm a doctor!! : ", userData);
+                    setProfileData({
+                        ...userData,
+                        name: userData.name || "DR.", 
+                        email: userData.email || "-",
+                        phone: userData.phone_number || "-",
+                        address: userData.address || "-",
+                        birth_date: userData.birth_date ? userData.birth_date.split('T')[0] : "-",
+                        fees: userData.consultation_fees || "0",
+                        bio: userData.about_doctor || "No biography provided.",
+                        specialty: userData.specialty || "General",
+                        status: userData.status || "Active"
+                    });
+                } else {
+                    console.error("No User ID found. Please Login again.");
+                    // navigate('/login'); // <--- DISABLED AUTO-LOGOUT SO we CAN DEBUG
                     setLoading(false);
                     return;
                 }
-
-                // A. Fetch User Data
-                const userRes = await getDoctorById(finalId);
-                const userData = userRes.data.user || userRes.data || {};
-
-                // B. Fetch Doctor Specifics
-                const doctorsRes = await getDoctors();
-                const allDoctors = Array.isArray(doctorsRes.data) 
-                    ? doctorsRes.data 
-                    : (doctorsRes.data.doctors || doctorsRes.data.data || []);
-
-                const doctorInfo = allDoctors.find(d => 
-                    String(d.user_id) === String(finalId) || 
-                    String(d.id) === String(finalId)
-                ) || {};
-
-                // C. Merge Data
-                setProfileData({
-                    ...userData,
-                    ...doctorInfo,
-                    name: userData.name || doctorInfo.name, 
-                    email: userData.email,
-                    phone: userData.phone_number || userData.phone || doctorInfo.phone || "-",
-                    address: userData.address || doctorInfo.address || "-",
-                    birth_date: userData.birth_date ? userData.birth_date.split('T')[0] : "-",
-                    fees: doctorInfo.consultation_fees || doctorInfo.fees || "0",
-                    bio: doctorInfo.about_doctor || doctorInfo.bio || "No biography provided.",
-                    specialty: doctorInfo.specialty || "General",
-                    status: doctorInfo.status || "Active"
-                });
+                // // C. Merge Data
+                // setProfileData({
+                //     ...userData,
+                //     ...doctorInfo,
+                //     name: userData.name || doctorInfo.name, 
+                //     email: userData.email,
+                //     phone: userData.phone_number || userData.phone || doctorInfo.phone || "-",
+                //     address: userData.address || doctorInfo.address || "-",
+                //     birth_date: userData.birth_date ? userData.birth_date.split('T')[0] : "-",
+                //     fees: doctorInfo.consultation_fees || doctorInfo.fees || "0",
+                //     bio: doctorInfo.about_doctor || doctorInfo.bio || "No biography provided.",
+                //     specialty: doctorInfo.specialty || "General",
+                //     status: doctorInfo.status || "Active"
+                // });
 
                 setLoading(false);
 
@@ -90,7 +90,7 @@ export default function DoctorPrivateProfile() {
         }; 
         
         fetchData();
-    }, [targetUserId, storedEmail, navigate]);
+    }, []);
 
     const getInitials = (name) => {
         return name ? name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : "DR";
@@ -154,8 +154,8 @@ export default function DoctorPrivateProfile() {
                                     <span className="user-role">{profileData.specialty} Specialist</span>
                                 </div>
                             </div>
-                            <div className={`status-badge-large ${profileData.status === 'Active' ? 'active' : 'inactive'}`}>
-                                {profileData.status === 'Active' ? <FaCheckCircle/> : <FaTimesCircle/>}
+                            <div className={`status-badge-large ${profileData.status === 'active' ? 'active' : 'inactive'}`}>
+                                {profileData.status === 'active' ? <FaCheckCircle/> : <FaTimesCircle/>}
                                 {profileData.status}
                             </div>
                         </div>
@@ -181,7 +181,7 @@ export default function DoctorPrivateProfile() {
                             <div className="form-grid three-col">
                                 <div className="input-group">
                                     <label><FaDollarSign className="icon"/> Consultation Fees</label>
-                                    <div className="read-only-field">{profileData.fees} EGP</div>
+                                    <div className="read-only-field">{profileData.consultation_fees} EGP</div>
                                 </div>
                                 <div className="input-group">
                                     <label>Gender</label>
@@ -196,7 +196,7 @@ export default function DoctorPrivateProfile() {
                             <div className="input-group full-width">
                                 <label><FaInfoCircle className="icon"/> Bio / About</label>
                                 <div className="read-only-field bio-box">
-                                    {profileData.bio}
+                                    {profileData.education_and_experience}
                                 </div>
                             </div>
 
@@ -214,7 +214,7 @@ export default function DoctorPrivateProfile() {
                                 </div>
                                 <div className="input-group">
                                     <label><FaPhone className="icon"/> Phone Number</label>
-                                    <div className="read-only-field">{profileData.phone}</div>
+                                    <div className="read-only-field">{profileData.phone_number}</div>
                                 </div>
                             </div>
 

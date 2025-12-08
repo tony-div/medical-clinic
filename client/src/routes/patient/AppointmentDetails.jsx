@@ -11,7 +11,7 @@ import './AppointmentDetails.css';
 
 // Import Services
 import { getAppointmentById } from '../../services/appointment';
-import { getDoctorById } from '../../services/doctors';
+import { getDoctorByDocId } from '../../services/doctors';
 import { getDiagnosisByAppointmentId } from '../../services/diagnosis';
 import { createReview } from '../../services/reviews';
 import { getMedicalTestByAppointmentId } from '../../services/medical-tests';
@@ -23,7 +23,7 @@ export default function AppointmentDetails() {
     // Auth Check
     const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
     const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
-
+    const [isLoading, setIsLoading] = useState(false);
     const [appointment, setAppointment] = useState(null);
     const [diagnosis, setDiagnosis] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -49,7 +49,7 @@ export default function AppointmentDetails() {
                 let doctorInfo = { name: "Unknown Doctor", specialty: "General" };
                 if (apptData.doctor_id) {
                     try {
-                        const docRes = await getDoctorById(apptData.doctor_id);
+                        const docRes = await getDoctorByDocId(apptData.doctor_id);
                         const docData = Array.isArray(docRes.data) 
                             ? docRes.data[0] 
                             : (docRes.data?.data?.[0] || docRes.data?.[0]);
@@ -121,15 +121,17 @@ export default function AppointmentDetails() {
         }
 
         try {
+            setIsLoading(true); 
             await createReview({
                 doctor_id: appointment.doctor_id,
                 rating: rating,
                 comment: reviewText
             });
-
             setShowReviewModal(false);
             setShowSuccessPopup(true);
+            setIsLoading(false); 
         } catch (error) {
+            setIsLoading(false); 
             console.error("Review Error:", error);
             // Show the exact error from the server if available
             const msg = error.response?.data?.error || "Failed to submit review. Please try again.";
@@ -325,13 +327,19 @@ export default function AppointmentDetails() {
                 {showSuccessPopup && (
                     <div className="popup-overlay fade-in">
                         <div className="popup-container slide-up success-mode">
-                             <div className="popup-icon-container"><FaCheckCircle className="popup-icon success" /></div>
+                            <div className="popup-icon-container"><FaCheckCircle className="popup-icon success" /></div>
                             <h3 className="popup-title">Review Submitted!</h3>
                             <button className="popup-btn primary" onClick={() => setShowSuccessPopup(false)}>Close</button>
                         </div>
                     </div>
                 )}
             </main>
+            {isLoading && (
+            <div className="loading-overlay">
+                <div className="spinner"></div>
+                <p>Please wait…</p>
+            </div>
+        )}
         </div>
     );
 }

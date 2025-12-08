@@ -24,7 +24,8 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  flex-grow: 1; /* Allows left side to take space if needed */
+  flex-grow: 1;
+  /* Allows left side to take space if needed */
 }
 
 .admin-menu-toggle {
@@ -36,8 +37,12 @@
   padding: 5px;
   border-radius: 4px;
   transition: background 0.2s;
+
 }
-.admin-menu-toggle:hover { background-color: #f1f5f9; }
+
+.admin-menu-toggle:hover {
+  background-color: #f1f5f9;
+}
 
 /* Breadcrumbs */
 .admin-breadcrumbs {
@@ -68,7 +73,7 @@
   height: 100%;
   display: flex;
   align-items: center;
-  margin-left: auto; /* SAFETY: Forces this element to the far right */
+  justify-content: center;
 }
 
 .profile-btn {
@@ -79,27 +84,47 @@
   border-radius: 30px;
   transition: background-color 0.2s;
 }
-.profile-btn:hover { background-color: #f0f4f8; }
+
+.profile-btn:hover {
+  background-color: #f0f4f8;
+}
 
 .avatar-circle {
-  width: 36px; height: 36px;
+  width: 36px;
+  height: 36px;
   background-color: #e8f0fe;
   border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.avatar-icon { font-size: 16px; color: #1e4b8f; }
 
-.profile-name { font-size: 14px; font-weight: 500; color: #333; }
+.avatar-icon {
+  font-size: 16px;
+  color: #1e4b8f;
+}
+
+.profile-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
 
 .arrow-icon {
-  color: #666; font-size: 18px; transition: transform 0.2s ease;
+  color: #666;
+  font-size: 18px;
+  transition: transform 0.2s ease;
 }
-.arrow-icon.rotate { transform: rotate(180deg); }
+
+.arrow-icon.rotate {
+  transform: rotate(180deg);
+}
 
 /* Dropdown Menu */
 .dropdown-menu {
   position: absolute;
-  top: 60px; /* Adjusted slightly */
+  top: 60px;
+  /* Adjusted slightly */
   right: 0;
   width: 180px;
   background-color: #fff;
@@ -114,11 +139,18 @@
 
 .dropdown-item {
   padding: 12px 20px;
-  display: flex; align-items: center; gap: 12px;
-  font-size: 14px; color: #4b5563; cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #4b5563;
+  cursor: pointer;
   transition: background-color 0.2s;
 }
-.dropdown-item:hover { background-color: #f9fafb; }
+
+.dropdown-item:hover {
+  background-color: #f9fafb;
+}
 
 .dropdown-item.logout {
   color: #dc2626;

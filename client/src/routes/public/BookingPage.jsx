@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 import Nav from '../../components/Nav';
 import './BookingPage.css';
 
-import { getDoctorById } from '../../services/doctors';
+import { getDoctorByDocId } from '../../services/doctors';
 import { getTimeSlots } from '../../services/time-slots';
 import { createAppointment } from '../../services/appointment';
 import { createMedicalTest, uploadMedicalTestFile  } from "../../services/medical-tests";
@@ -32,7 +32,7 @@ export default function BookingPage() {
     useEffect(() => {
         async function loadDoctor() {
             try {
-                const res = await getDoctorById(doctorId);
+                const res = await getDoctorByDocId(doctorId);
                 const doc = res.data.data?.[0] || null;
 
                 if (!doc) {

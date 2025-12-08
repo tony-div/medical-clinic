@@ -4,14 +4,14 @@ import { FaCalendarAlt, FaSearch, FaFilter, FaUserInjured, FaClock, FaStethoscop
 import DoctorSidebar from '../../components/DoctorSidebar';
 import './DoctorAppointments.css'; 
 
-// ✅ IMPORT SERVICES
+
 import { getAppointments, updateAppointment } from '../../services/appointment';
 import { getUser } from '../../services/users';
 
 export default function DoctorAppointments() {
     const navigate = useNavigate();
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    
+    const [isLoading, setIsLoading] = useState(false);
     const [appointments, setAppointments] = useState([]);
     const [filteredAppts, setFilteredAppts] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -117,6 +117,7 @@ export default function DoctorAppointments() {
         if (!selectedAppt) return;
         try {
             // API Call: Update status to 'cancelled'
+            setIsLoading(true); 
             await updateAppointment(selectedAppt.id, { status: "cancelled" });
 
             // Optimistic UI Update
@@ -124,8 +125,10 @@ export default function DoctorAppointments() {
                 a.id === selectedAppt.id ? { ...a, status: "Cancelled" } : a
             );
             setAppointments(updatedList);
+            setIsLoading(false); 
             setShowCancelModal(false);
         } catch (error) {
+            setIsLoading(false); 
             alert("Failed to cancel appointment.");
         }
     };
@@ -142,6 +145,7 @@ export default function DoctorAppointments() {
     const submitReschedule = async () => {
         if (!newDate || !newTime) return;
         try {
+            setIsLoading(true); 
             // API Call: Update Date & Time
             await updateAppointment(selectedAppt.id, { 
                 date: newDate,
@@ -161,10 +165,11 @@ export default function DoctorAppointments() {
                 } : a
             );
             setAppointments(updatedList);
-            
+            setIsLoading(false); 
             setShowReschedule(false); 
             setShowSuccessModal(true); 
         } catch (error) {
+            setIsLoading(false); 
             alert("Failed to reschedule. Please try again.");
         }
     };
@@ -325,6 +330,12 @@ export default function DoctorAppointments() {
                             <p className="popup-message">The appointment has been updated.</p>
                             <button className="popup-btn primary" onClick={() => setShowSuccessModal(false)}>Done</button>
                         </div>
+                    </div>
+                )}
+                {isLoading && (
+                    <div className="loading-overlay">
+                        <div className="spinner"></div>
+                        <p>Please wait…</p>
                     </div>
                 )}
 
