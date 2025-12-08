@@ -9,6 +9,7 @@
   top: 0;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   transition: width 0.3s ease;
   overflow: hidden;
   padding: 0;
@@ -18,18 +19,21 @@
 
 /* 2. Logo Container - FIXED HEIGHT */
 .logo-container {
-  height: 64px; /* MATCHES NAVBAR HEIGHT EXACTLY */
+  height: 64px;
+  /* MATCHES NAVBAR HEIGHT EXACTLY */
   background-color: #1e4b8f;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 20px;
-  box-sizing: border-box; /* Ensures padding doesn't increase height */
+  box-sizing: border-box;
+  /* Ensures padding doesn't increase height */
 }
 
 /* 3. Logo Image - Better containment */
 .sidebar-logo {
-  height: 50px; /* Reduced slightly to give breathing room inside 64px box */
+  height: 50px;
+  /* Reduced slightly to give breathing room inside 64px box */
   max-width: 80%;
   object-fit: contain;
 }
@@ -41,6 +45,7 @@
   margin: 0;
   display: flex;
   flex-direction: column;
+  `n justify-content: flex-start;
   gap: 8px;
 }
 
@@ -56,7 +61,8 @@
   font-weight: 500;
   border-radius: 12px;
   margin-bottom: 2px;
-  white-space: nowrap; /* Prevents text wrap when collapsing */
+  white-space: nowrap;
+  /* Prevents text wrap when collapsing */
 }
 
 /* Hover */
@@ -83,12 +89,18 @@
   font-size: 1.2rem;
   display: flex;
   align-items: center;
-  min-width: 24px; /* Ensures icon alignment when collapsed */
+  min-width: 24px;
+  /* Ensures icon alignment when collapsed */
   justify-content: center;
 }
 
-.sidebar.open { width: 260px; }
-.sidebar.closed { width: 80px; }
+.sidebar.open {
+  width: 260px;
+}
+
+.sidebar.closed {
+  width: 80px;
+}
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
@@ -97,10 +109,21 @@
     z-index: 1100;
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
   }
-  .sidebar.open { transform: translateX(0); }
-  .sidebar.closed { transform: translateX(-100%); }
-  
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar.closed {
+    transform: translateX(-100%);
+  }
+
   /* On mobile, navbar is often smaller, so we adjust logo container too */
-  .logo-container { height: 56px; }
-  .sidebar-logo { height: 35px; }
+  .logo-container {
+    height: 56px;
+  }
+
+  .sidebar-logo {
+    height: 35px;
+  }
 }
