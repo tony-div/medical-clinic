@@ -12,14 +12,15 @@ export default function PatientProfile() {
     const { id } = useParams(); 
     
     const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    
+    // Define this EARLY so we can render the layout even while loading
+    const isAdminView = storedUser.role === "admin";
+
     const [userData, setUserData] = useState(null);
     const [age, setAge] = useState(0);
     const [isEditing, setIsEditing] = useState(false);
     const [notFound, setNotFound] = useState(false);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
-    // --- 1. FIXED: Added 'id' to dependency array so it detects URL changes ---
     useEffect(() => {
         if (!storedUser.id && !id) { 
             navigate('/login'); 
@@ -29,15 +30,10 @@ export default function PatientProfile() {
         const fetchProfile = async () => {
             try {
                 let profileData = null;
-                
-                // Logic to determine which ID to fetch
                 const idToFetch = (storedUser.role === 'admin' && id) ? id : storedUser.id;
 
                 const response = await getUser(idToFetch);
                 profileData = response.data.user || response.data;
-                console.log("Fetched Data:", profileData);
-
-                // --- 2. FIXED: Removed the crashing 'targetId.id' line ---
 
                 if (profileData) {
                     setUserData({
@@ -56,7 +52,6 @@ export default function PatientProfile() {
                 }
             } catch (error) {
                 console.error("Error fetching profile:", error);
-                // Only fallback to stored user if we are NOT trying to view a specific ID
                 if (storedUser.email && !id) {
                     setUserData({ ...storedUser, phone: "", address: "" });
                 } else {
@@ -66,7 +61,7 @@ export default function PatientProfile() {
         };
 
         fetchProfile();
-    }, [storedUser.id, navigate, id]); // Added 'id' here
+    }, [storedUser.id, navigate, id]);
 
     const calculateAge = (dob) => {
         if (!dob) return;
@@ -78,12 +73,10 @@ export default function PatientProfile() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        
         if (name === 'phone') {
             if (!/^\d*$/.test(value)) return; 
             if (value.length > 11) return;    
         }
-        
         setUserData({ ...userData, [name]: value });
         if (name === 'birth_date') calculateAge(value);
     };
@@ -95,20 +88,18 @@ export default function PatientProfile() {
             Swal.fire({
                 icon: 'warning',
                 title: 'Invalid Phone Number',
-                text: 'Phone number must be exactly 11 digits and start with 01 (e.g., 01xxxxxxxxx).'
+                text: 'Phone number must be exactly 11 digits and start with 01.'
             });
             return; 
         }
 
         try {
-            // --- 3. FIXED: Calculate Target ID correctly here ---
-            // If admin and viewing a profile (id exists), update that ID. Otherwise update self.
             const targetId = (storedUser.role === 'admin' && id) ? id : storedUser.id;
 
             const payload = {
                 name: userData.name,
                 email: userData.email,
-                phone_number: userData.phone, // Ensure this matches backend expected field
+                phone_number: userData.phone,
                 address: userData.address,
                 gender: userData.gender === "" ? null : userData.gender,
                 birth_date: userData.birth_date === "" ? null : userData.birth_date
@@ -120,7 +111,6 @@ export default function PatientProfile() {
 
             await updateUser(targetId, payload);
 
-            // Only update local storage if updating OWN profile
             if (targetId == storedUser.id) {
                 const updatedCache = { ...storedUser, ...userData };
                 localStorage.setItem("currentUser", JSON.stringify(updatedCache));
@@ -149,13 +139,10 @@ export default function PatientProfile() {
         }
     };
 
-    if (notFound) return <div className="error-state">User not found.</div>;
-    if (!userData) return <div className="loading-state">Loading Profile...</div>;
-
-    const isAdminView = storedUser.role === "admin";
-
+    // --- FIX: RENDER LAYOUT ALWAYS ---
     return (
         <div className="dashboard-layout">
+            {/* Sidebar is now always present, preventing the 'flash' */}
             {!isAdminView && <PatientSidebar />}
             
             <main 
@@ -165,27 +152,12 @@ export default function PatientProfile() {
                     width: isAdminView ? '100%' : 'calc(100% - 260px)'
                 }}
             >
-                {showSuccessPopup && (
-                    <div className="popup-overlay fade-in">
-                        <div className="popup-container slide-up">
-                            <div className="popup-icon-container">
-                                <FaCheckCircle className="popup-icon success" />
-                            </div>
-                            <h3 className="popup-title">Success!</h3>
-                            <p className="popup-message">Profile updated successfully.</p>
-                            <button className="popup-btn" onClick={() => setShowSuccessPopup(false)}>
-                                Continue
-                            </button>
-                        </div>
-                    </div>
-                )}
-
+                {/* --- HEADER --- */}
                 <header className="dashboard-header">
                     <div>
                         <h1>{isAdminView ? "Patient Details" : "My Profile"}</h1>
                         <p>{isAdminView ? "View and manage patient information" : "Manage your personal information"}</p>
                     </div>
-                    
                     {isAdminView && (
                         <button className="back-btn" onClick={handleBack}>
                             <FaArrowLeft /> Back to Dashboard
@@ -193,98 +165,125 @@ export default function PatientProfile() {
                     )}
                 </header>
 
-                <div className="profile-container">
-                    <div className="profile-card">
-                        <div className="card-header-row">
-                            <div className="user-intro">
-                                <div className="avatar-placeholder">
-                                    {userData.name ? userData.name.charAt(0).toUpperCase() : "U"}
-                                </div>
-                                <div>
-                                    <h2>{userData.name}</h2>
-                                    <span className="user-role">Patient Account</span>
-                                </div>
-                            </div>
-
-                            {/* Allow editing if it's my profile OR I am an admin */}
-                            {!isEditing && (
-                                <button className="edit-btn" onClick={() => setIsEditing(true)}>
-                                    <FaPen size={12}/> Edit Profile
-                                </button>
-                            )}
-                        </div>
-
-                        <form className="profile-form" onSubmit={handleSave}>
-                            
-                            <h4 className="section-title">Account Information</h4>
-                            <div className="form-grid">
-                                <div className="input-group">
-                                    <label><FaEnvelope className="icon"/> Email Address</label>
-                                    <input 
-                                        name="email" 
-                                        type="email" 
-                                        value={userData.email} 
-                                        onChange={handleChange} 
-                                        disabled={!isEditing} 
-                                        className={`input-field ${isEditing ? 'editable' : 'locked'}`}
-                                    />
-                                </div>
-                                <div className="input-group">
-                                    <label><FaLock className="icon"/> Password</label>
-                                    <input name="password" type="text" value={userData.password || ''} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : 'locked'}`}/>
-                                </div>
-                            </div>
-
-                            <h4 className="section-title">Personal Details</h4>
-                            <div className="input-group">
-                                <label><FaUser className="icon"/> Full Name</label>
-                                <input name="name" value={userData.name} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`}/>
-                            </div>
-
-                            <div className="form-grid three-col">
-                                <div className="input-group">
-                                    <label><FaVenusMars className="icon"/> Gender</label>
-                                    <select name="gender" value={userData.gender || ''} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`}>
-                                        <option value="">Select</option>
-                                        <option value="male">Male</option>
-                                        <option value="female">Female</option>
-                                    </select>
-                                </div>
-                                <div className="input-group">
-                                    <label><FaBirthdayCake className="icon"/> Birth Date</label>
-                                    <input name="birth_date" type="date" value={userData.birth_date} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`}/>
-                                </div>
-                                <div className="input-group">
-                                    <label>Age</label>
-                                    <input value={`${age} Years`} disabled className="input-field locked center-text" />
-                                </div>
-                            </div>
-
-                            <h4 className="section-title">Contact Information</h4>
-                            <div className="form-grid">
-                                <div className="input-group">
-                                    <label><FaPhone className="icon"/> Phone Number</label>
-                                    <input name="phone" value={userData.phone} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`} placeholder="01xxxxxxxxx"/>
-                                </div>
-                                <div className="input-group">
-                                    <label><FaMapMarkerAlt className="icon"/> Address</label>
-                                    <input name="address" value={userData.address} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`} placeholder="City, Street..."/>
-                                </div>
-                            </div>
-
-                            {isEditing && (
-                                <div className="form-actions slide-up">
-                                    <button type="button" className="cancel-btn" onClick={() => {setIsEditing(false); window.location.reload();}}>
-                                        <FaTimes/> Cancel
-                                    </button>
-                                    <button type="submit" className="save-btn">
-                                        <FaSave/> Save Changes
-                                    </button>
-                                </div>
-                            )}
-                        </form>
+                {/* --- CONTENT AREA: Handle Loading/Error/Success Here --- */}
+                
+                {notFound ? (
+                    <div className="error-state">User not found.</div>
+                ) : !userData ? (
+                    /* The loading spinner now appears INSIDE the layout */
+                    <div className="loading-container" style={{textAlign: 'center', padding: '50px'}}>
+                        <div className="loading-state">Loading Profile...</div>
                     </div>
-                </div>
+                ) : (
+                    /* --- ACTUAL PROFILE CONTENT --- */
+                    <>
+                        {showSuccessPopup && (
+                            <div className="popup-overlay fade-in">
+                                <div className="popup-container slide-up">
+                                    <div className="popup-icon-container">
+                                        <FaCheckCircle className="popup-icon success" />
+                                    </div>
+                                    <h3 className="popup-title">Success!</h3>
+                                    <p className="popup-message">Profile updated successfully.</p>
+                                    <button className="popup-btn" onClick={() => setShowSuccessPopup(false)}>
+                                        Continue
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="profile-container slide-up">
+                            <div className="profile-card">
+                                <div className="card-header-row">
+                                    <div className="user-intro">
+                                        <div className="avatar-placeholder">
+                                            {userData.name ? userData.name.charAt(0).toUpperCase() : "U"}
+                                        </div>
+                                        <div>
+                                            <h2>{userData.name}</h2>
+                                            <span className="user-role">Patient Account</span>
+                                        </div>
+                                    </div>
+
+                                    {!isEditing && (
+                                        <button className="edit-btn" onClick={() => setIsEditing(true)}>
+                                            <FaPen size={12}/> Edit Profile
+                                        </button>
+                                    )}
+                                </div>
+
+                                <form className="profile-form" onSubmit={handleSave}>
+                                    <h4 className="section-title">Account Information</h4>
+                                    <div className="form-grid">
+                                        <div className="input-group">
+                                            <label><FaEnvelope className="icon"/> Email Address</label>
+                                            <input 
+                                                name="email" 
+                                                type="email" 
+                                                value={userData.email} 
+                                                onChange={handleChange} 
+                                                disabled={!isEditing} 
+                                                className={`input-field ${isEditing ? 'editable' : 'locked'}`}
+                                            />
+                                        </div>
+                                        <div className="input-group">
+                                            <label><FaLock className="icon"/> Password</label>
+                                            <input name="password" type="text" value={userData.password || ''} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : 'locked'}`}/>
+                                        </div>
+                                    </div>
+
+                                    <h4 className="section-title">Personal Details</h4>
+                                    <div className="input-group">
+                                        <label><FaUser className="icon"/> Full Name</label>
+                                        <input name="name" value={userData.name} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`}/>
+                                    </div>
+
+                                    <div className="form-grid three-col">
+                                        <div className="input-group">
+                                            <label><FaVenusMars className="icon"/> Gender</label>
+                                            <select name="gender" value={userData.gender || ''} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`}>
+                                                <option value="">Select</option>
+                                                <option value="male">Male</option>
+                                                <option value="female">Female</option>
+                                            </select>
+                                        </div>
+                                        <div className="input-group">
+                                            <label><FaBirthdayCake className="icon"/> Birth Date</label>
+                                            <input name="birth_date" type="date" value={userData.birth_date} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`}/>
+                                        </div>
+                                        <div className="input-group">
+                                            <label>Age</label>
+                                            <input value={`${age} Years`} disabled className="input-field locked center-text" />
+                                        </div>
+                                    </div>
+
+                                    <h4 className="section-title">Contact Information</h4>
+                                    <div className="form-grid">
+                                        <div className="input-group">
+                                            <label><FaPhone className="icon"/> Phone Number</label>
+                                            <input name="phone" value={userData.phone} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`} placeholder="01xxxxxxxxx"/>
+                                        </div>
+                                        <div className="input-group">
+                                            <label><FaMapMarkerAlt className="icon"/> Address</label>
+                                            <input name="address" value={userData.address} onChange={handleChange} disabled={!isEditing} className={`input-field ${isEditing ? 'editable' : ''}`} placeholder="City, Street..."/>
+                                        </div>
+                                    </div>
+
+                                    {isEditing && (
+                                        <div className="form-actions slide-up">
+                                            <button type="button" className="cancel-btn" onClick={() => {setIsEditing(false); window.location.reload();}}>
+                                                <FaTimes/> Cancel
+                                            </button>
+                                            <button type="submit" className="save-btn">
+                                                <FaSave/> Save Changes
+                                            </button>
+                                        </div>
+                                    )}
+                                </form>
+                            </div>
+                        </div>
+                    </>
+                )}
             </main>
         </div>
     );
