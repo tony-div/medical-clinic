@@ -205,6 +205,20 @@ const Users = ({ onDataChange }) => {
     return sortConfig.direction === 'asc' ? <FaSortUp className="sortIcon" /> : <FaSortDown className="sortIcon" />;
   };
 
+  // [ADDED] - Helper function for role-based colors (similar to Appointments)
+  const getRoleColors = (role) => {
+    switch (role?.toLowerCase()) {
+      case 'admin':
+        return { background: '#f3e5f5', color: '#7b1fa2' }; // Purple
+      case 'doctor':
+        return { background: '#e6f4ea', color: '#137333' }; // Green
+      case 'patient':
+        return { background: '#e1f5fe', color: '#0288d1' }; // Blue
+      default:
+        return { background: '#f5f5f5', color: '#333' };
+    }
+  };
+
   return (
     <div>
       <AddUserModal
@@ -262,47 +276,49 @@ const Users = ({ onDataChange }) => {
           </thead>
           <tbody>
             {currentUsers.length > 0 ? (
-              currentUsers.map((user) => (
-                <tr key={`${user.role}-${user.id}`} className="tableBodyRow">
-                  <td className="td">{user.id}</td>
-                  <td className="td">
-                    <div className="userInfo">
-                      {user.image && user.image !== '' ? (
-                        <img src={user.image} alt="avatar" className="avatar" />
-                      ) : (
-                        <div
-                          className="avatar-placeholder"
-                          style={{
-                            background: user.roleColor || '#f5f5f5',
-                            color: user.roleText || '#333',
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 'bold',
-                            fontSize: '14px',
-                            marginRight: '12px',
-                            textTransform: 'uppercase'
-                          }}
-                        >
-                          {user.name.charAt(0)}
-                        </div>
-                      )}
-                      {user.name}
-                    </div>
-                  </td>
-                  <td className="td">
-                    <span className="roleTag" style={{ backgroundColor: user.roleColor || '#f5f5f5', color: user.roleText || '#333', textTransform: 'capitalize' }}>{user.role}</span>
-                  </td>
-                  <td className="td">{user.email}</td>
-                  <td className="td">
-                    <button className="actionBtn" onClick={() => handleEditClick(user)} disabled={loading}><FaEdit color="#1e4b8f" /></button>
-                    <button className="actionBtn deleteBtn" onClick={() => handleDeleteUser(user.id, user.role)} disabled={loading}><FaTrash color="#d32f2f" /></button>
-                  </td>
-                </tr>
-              ))
+              currentUsers.map((user) => {
+                const roleColors = getRoleColors(user.role);
+                return (
+                  <tr key={`${user.role}-${user.id}`} className="tableBodyRow">
+                    <td className="td">{user.id}</td>
+                    <td className="td">
+                      <div className="userInfo">
+                        {user.image && user.image !== '' ? (
+                          <img src={user.image} alt="avatar" className="avatar" />
+                        ) : (
+                          <div
+                            className="avatar-placeholder"
+                            style={{
+                              background: roleColors.background,
+                              color: roleColors.color
+                            }}
+                          >
+                            {user.name.charAt(0)}
+                          </div>
+                        )}
+                        {user.name}
+                      </div>
+                    </td>
+                    <td className="td">
+                      <span
+                        className="roleTag"
+                        style={{
+                          backgroundColor: roleColors.background,
+                          color: roleColors.color,
+                          textTransform: 'capitalize'
+                        }}
+                      >
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="td">{user.email}</td>
+                    <td className="td">
+                      <button className="actionBtn" onClick={() => handleEditClick(user)} disabled={loading}><FaEdit color="#1e4b8f" /></button>
+                      <button className="actionBtn deleteBtn" onClick={() => handleDeleteUser(user.id, user.role)} disabled={loading}><FaTrash color="#d32f2f" /></button>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr><td colSpan="5" className="emptyState">{loading ? 'Loading...' : 'No users found.'}</td></tr>
             )}

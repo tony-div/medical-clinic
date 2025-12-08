@@ -8,8 +8,15 @@ export const query = {
     INSERT INTO User (email, password, name, phone_number, address, gender, birth_date, role)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     SELECT_USER_BY_ID: `SELECT * FROM User WHERE id = ?`,
-    // [ADDED] - Query to get all users for admin panel
-    SELECT_ALL_USERS: `SELECT id, email, name, phone_number, address, gender, birth_date, role FROM User`,
+    // [FIX] - Now includes doctor fields via LEFT JOIN
+    SELECT_ALL_USERS: `
+      SELECT 
+        U.id, U.email, U.name, U.phone_number, U.address, U.gender, U.birth_date, U.role,
+        D.id AS doctor_id, D.specialty_id, D.consultation_fees, D.waiting_time, 
+        D.about_doctor, D.education_and_experience, D.status
+      FROM User U
+      LEFT JOIN Doctor D ON U.id = D.user_id
+    `,
     UPDATE_USER_BY_ID: `UPDATE User SET ? WHERE id = ?`,
     SELECT_USER_BY_EMAIL: `SELECT * FROM User WHERE email = ?`,
     DELETE_USER_BY_ID: `DELETE FROM User WHERE id = ?`,
@@ -39,6 +46,5 @@ export const query = {
     CREATE_SPECIALTY: `INSERT INTO Specialty (name) VALUES (?)`,
     GET_RATING_BY_ID: `SELECT * FROM DoctorRating WHERE id = ?`,
     SELECT_MEDICAL_TEST_BY_APPOINTMENT_ID: `SELECT * FROM MedicalTest WHERE appointment_id = ?;`,
-    SELECT_ALL_USERS: `SELECT * FROM User;`
-
+    SELECT_ALL_USERS_SIMPLE: `SELECT * FROM User;`
 }
