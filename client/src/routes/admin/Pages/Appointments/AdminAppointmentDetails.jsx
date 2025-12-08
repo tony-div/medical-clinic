@@ -1,84 +1,231 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import AdminApp from '../../AdminPage'; // Reuse the Admin Layout Wrapper
-// We can reuse the UI of AppointmentDetails but we need to fetch data independently 
-// or simpler: Just reconstruct the UI here for the Admin context.
-import { useState, useEffect } from 'react';
-import { DB_APPOINTMENTS_KEY } from '../../../../data/initDB';
-import '../../../patient/AppointmentDetails.css'; // Reuse CSS
+import './AdminAppointmentDetails.css';
+
+// API Services
+import { getAppointmentById } from '../../../../services/appointment';
+import { getDiagnosisByAppointmentId } from '../../../../services/diagnosis';
+import { getDoctorByDocId } from '../../../../services/doctors';
+import { getUser } from '../../../../services/users';
 
 export default function AdminAppointmentDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [appointment, setAppointment] = useState(null);
+    const [diagnosis, setDiagnosis] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        const allAppts = JSON.parse(localStorage.getItem(DB_APPOINTMENTS_KEY) || "[]");
-        const found = allAppts.find(a => a.id === Number(id));
-        if (found) {
-            setAppointment(found);
-        } else {
-            alert("Appointment not found");
-            navigate('/admin/dashboard');
-        }
-    }, [id, navigate]);
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
 
-    if (!appointment) return <div>Loading...</div>;
+                // 1. Fetch the appointment by ID
+                const apptRes = await getAppointmentById(id);
+                const apptData = apptRes.data.appointment || apptRes.data;
+
+                if (!apptData) {
+                    setError("Appointment not found");
+                    return;
+                }
+
+                // 2. Fetch doctor info
+                let doctorName = 'Unknown Doctor';
+                if (apptData.doctor_id) {
+                    try {
+                        const docRes = await getDoctorByDocId(apptData.doctor_id);
+                        doctorName = docRes.data?.data?.[0]?.name || docRes.data?.name || 'Unknown Doctor';
+                    } catch (e) {
+                        console.warn("Could not fetch doctor info:", e);
+                    }
+                }
+
+                // 3. Fetch patient info
+                let patientName = 'Unknown Patient';
+                let patientEmail = '';
+                if (apptData.user_id) {
+                    try {
+                        const userRes = await getUser(apptData.user_id);
+                        patientName = userRes.data?.user?.name || userRes.data?.name || 'Unknown Patient';
+                        patientEmail = userRes.data?.user?.email || userRes.data?.email || '';
+                    } catch (e) {
+                        console.warn("Could not fetch patient info:", e);
+                    }
+                }
+
+                // 4. Fetch diagnosis/prescription
+                try {
+                    const diagRes = await getDiagnosisByAppointmentId(id);
+                    const diagData = diagRes.data?.diagnosis || diagRes.data;
+                    setDiagnosis(diagData);
+                } catch (e) {
+                    console.warn("No diagnosis found for this appointment:", e);
+                    setDiagnosis(null);
+                }
+
+                // 5. Normalize status
+                const normalizeStatus = (s) => {
+                    if (!s) return 'Scheduled';
+                    const lower = s.toLowerCase();
+                    if (lower === 'complete' || lower === 'completed') return 'Completed';
+                    if (lower === 'cancel' || lower === 'cancelled') return 'Cancelled';
+                    return 'Scheduled';
+                };
+
+                // 6. Enrich appointment object
+                const enrichedAppt = {
+                    ...apptData,
+                    doctorName,
+                    patientName,
+                    patientEmail,
+                    time: apptData.starts_at ? apptData.starts_at.substring(0, 5) : '00:00',
+                    status: normalizeStatus(apptData.status),
+                    reason: apptData.reason || apptData.notes || 'No reason provided'
+                };
+
+                setAppointment(enrichedAppt);
+
+            } catch (err) {
+                console.error("Failed to load appointment details:", err);
+                setError("Failed to load appointment details");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [id]);
+
+    // Loading state
+    if (loading) {
+        return (
+            <div className="admin-appt-page">
+                <div className="admin-appt-loading">
+                    <div className="spinner"></div>
+                    <p>Loading appointment details...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (error || !appointment) {
+        return (
+            <div className="admin-appt-page">
+                <div className="admin-appt-error">
+                    <p className="error-text">{error || "Appointment not found"}</p>
+                    <button onClick={() => navigate(-1)} className="back-btn">
+                        ← Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const getStatusClass = (status) => {
+        switch (status) {
+            case 'Completed': return 'status-completed';
+            case 'Cancelled': return 'status-cancelled';
+            default: return 'status-scheduled';
+        }
+    };
+
     return (
-        <div style={{ padding: '40px', background: '#f8f9fa', minHeight: '100vh' }}>
-            <div style={{ maxWidth: '900px', margin: '0 auto', background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                <button 
-                    onClick={() => navigate(-1)} // Go back to where they came from
-                    style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', marginBottom: '20px', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '5px' }}
-                >
+        <div className="admin-appt-page">
+            <div className="admin-appt-container">
+                {/* Back Button */}
+                <button onClick={() => navigate(-1)} className="back-btn">
                     ← Back to Admin Panel
                 </button>
 
-                <header className="details-header" style={{ borderBottom: '2px solid #eee', paddingBottom: '15px', marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h1 style={{ margin: 0, color: '#2C3E50' }}>Medical Report</h1>
-                    <span className={`status-badge ${appointment.status.toLowerCase()}`}>
-                        {appointment.status}
-                    </span>
-                </header>
+                {/* Main Card */}
+                <div className="admin-appt-card">
+                    {/* Header */}
+                    <header className="admin-appt-header">
+                        <h1>Medical Report</h1>
+                        <span className={`status-badge ${getStatusClass(appointment.status)}`}>
+                            {appointment.status}
+                        </span>
+                    </header>
 
-                <div className="details-grid">
-                    {/* LEFT: INFO */}
-                    <div className="info-card">
-                        <h3 style={{ color: '#3498DB' }}>Patient & Appointment Info</h3>
-                        <p><strong>Patient:</strong> {appointment.patientName} <span style={{ color: '#777', fontSize: '0.9rem' }}>({appointment.patientEmail})</span></p>
-                        <p><strong>Doctor:</strong> {appointment.doctorName}</p>
-                        <p><strong>Date:</strong> {appointment.date} at {appointment.time}</p>
-                        <hr style={{ margin: '15px 0', border: '0', borderTop: '1px solid #eee' }} />
-                        <p><strong>Reason:</strong> "{appointment.reason}"</p>
-                        
-                        <div style={{ marginTop: '15px' }}>
-                            <strong>Uploaded Tests:</strong>
-                            {appointment.uploadedFiles ? (
-                                <div style={{ marginTop: '5px' }}>
-                                    <a href={appointment.uploadedFiles} target="_blank" rel="noreferrer" style={{ color: '#3498DB', textDecoration: 'none' }}>
-                                        📄 Open Attached File
-                                    </a>
+                    {/* Two Column Grid */}
+                    <div className="admin-appt-grid">
+                        {/* LEFT: Patient & Appointment Info */}
+                        <div className="admin-info-section">
+                            <h3 className="section-title info-title">
+                                <span className="section-icon">📋</span>
+                                Patient & Appointment Info
+                            </h3>
+
+                            <div className="info-items">
+                                <div className="info-item">
+                                    <label>Patient</label>
+                                    <p>
+                                        {appointment.patientName}
+                                        <span className="email-text">({appointment.patientEmail})</span>
+                                    </p>
                                 </div>
-                            ) : (
-                                <span style={{ color: '#999', marginLeft: '5px' }}>None</span>
-                            )}
+
+                                <div className="info-item">
+                                    <label>Doctor</label>
+                                    <p>{appointment.doctorName}</p>
+                                </div>
+
+                                <div className="info-item">
+                                    <label>Date & Time</label>
+                                    <p>
+                                        {new Date(appointment.date).toLocaleDateString('en-US', {
+                                            weekday: 'short',
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric'
+                                        })}
+                                        <span className="time-text"> at {appointment.time}</span>
+                                    </p>
+                                </div>
+
+                                <div className="info-item">
+                                    <label>Reason for Visit</label>
+                                    <p className="reason-text">"{appointment.reason}"</p>
+                                </div>
+
+                                {appointment.uploadedFiles && (
+                                    <div className="info-item attachment">
+                                        <label>Attached File</label>
+                                        <a href={appointment.uploadedFiles} target="_blank" rel="noreferrer" className="file-link">
+                                            📄 Open Attached File
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
 
-                    {/* RIGHT: DIAGNOSIS */}
-                    <div className="report-card">
-                        <h3 style={{ color: '#27AE60' }}>Doctor's Diagnosis</h3>
-                        <p style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '15px' }}>
-                            {appointment.diagnosis || "No diagnosis recorded."}
-                        </p>
+                        {/* RIGHT: Diagnosis & Treatment */}
+                        <div className="admin-diagnosis-section">
+                            <h3 className="section-title diagnosis-title">
+                                <span className="section-icon">🩺</span>
+                                Doctor's Diagnosis
+                            </h3>
 
-                        <h4 style={{ margin: '10px 0 5px', color: '#555' }}>Prescription</h4>
-                        <div className="rx-box">
-                            {appointment.prescription || "No prescription given."}
+                            <div className="diagnosis-items">
+                                <div className="diagnosis-item">
+                                    <label>Diagnosis</label>
+                                    <p>{diagnosis?.diagnosis || appointment.diagnosis || "No diagnosis recorded."}</p>
+                                </div>
+
+                                <div className="diagnosis-item prescription">
+                                    <label>💊 Prescription</label>
+                                    <p>{diagnosis?.prescription || appointment.prescription || "No prescription given."}</p>
+                                </div>
+
+                                <div className="diagnosis-item">
+                                    <label>Treatment Plan</label>
+                                    <p>{diagnosis?.treatment_plan || diagnosis?.treatmentPlan || appointment.treatmentPlan || "No additional notes."}</p>
+                                </div>
+                            </div>
                         </div>
-
-                        <h4 style={{ margin: '15px 0 5px', color: '#555' }}>Treatment Plan</h4>
-                        <p style={{ color: '#555' }}>{appointment.treatmentPlan || "No additional notes."}</p>
                     </div>
                 </div>
             </div>

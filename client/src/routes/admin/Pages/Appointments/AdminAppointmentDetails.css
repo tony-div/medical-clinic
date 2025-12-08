@@ -1,0 +1,261 @@
+/* Admin Appointment Details Page */
+
+.admin-appt-page {
+    padding: 40px;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.admin-appt-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Loading State */
+.admin-appt-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+}
+
+.admin-appt-loading .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e5e7eb;
+    border-top-color: #3498db;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.admin-appt-loading p {
+    margin-top: 16px;
+    color: #6b7280;
+    font-size: 16px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error State */
+.admin-appt-error {
+    max-width: 500px;
+    margin: 100px auto;
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.admin-appt-error .error-text {
+    color: #e74c3c;
+    font-size: 18px;
+    margin-bottom: 24px;
+}
+
+/* Back Button */
+.back-btn {
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    cursor: pointer;
+    margin-bottom: 24px;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.back-btn:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+/* Main Card */
+.admin-appt-card {
+    background: white;
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+}
+
+/* Header */
+.admin-appt-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-appt-header h1 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+/* Status Badge */
+.status-badge {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.status-scheduled {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+/* Two Column Grid */
+.admin-appt-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+}
+
+@media (max-width: 768px) {
+    .admin-appt-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Info Section */
+.admin-info-section,
+.admin-diagnosis-section {
+    background: #f8fafc;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.section-title {
+    margin: 0 0 20px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-title {
+    color: #3498DB;
+}
+
+.diagnosis-title {
+    color: #27AE60;
+}
+
+.section-icon {
+    font-size: 1.2rem;
+}
+
+/* Info Items */
+.info-items,
+.diagnosis-items {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.info-item,
+.diagnosis-item {
+    background: white;
+    padding: 14px 18px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.info-item label,
+.diagnosis-item label {
+    display: block;
+    color: #6b7280;
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.info-item p,
+.diagnosis-item p {
+    margin: 0;
+    font-weight: 500;
+    color: #1e293b;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.email-text {
+    color: #6b7280;
+    font-weight: 400;
+    font-size: 13px;
+    margin-left: 6px;
+}
+
+.time-text {
+    color: #3498DB;
+    font-weight: 600;
+}
+
+.reason-text {
+    font-style: italic;
+    color: #374151 !important;
+}
+
+/* Attachment */
+.info-item.attachment {
+    background: #f0f9ff;
+    border: 1px dashed #bae6fd;
+}
+
+.file-link {
+    color: #0ea5e9;
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.file-link:hover {
+    text-decoration: underline;
+}
+
+/* Prescription Box */
+.diagnosis-item.prescription {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+}
+
+.diagnosis-item.prescription label {
+    color: #92400e;
+}
+
+.diagnosis-item.prescription p {
+    color: #78350f;
+}
