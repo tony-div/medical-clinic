@@ -18,16 +18,17 @@ export const getReviewsByDoctorId = async (req, res) => {
   try{
     const [rows, fields] = await db.query(sqlQuery, [doctorId]);
 
-    const censoredReviews = rows.map(review => {
-      const name = review.user;
-      if(name){
-        const nameParts = name.trim().split(/\s+/);
-        const firstName = nameParts[0];
-        const lastName = nameParts[1];
-        review.user = `${firstName} ${lastName.charAt(0)}.`
-      }
-      return review
-    })
+    const censoredReviews = rows
+    // .map(review => {
+    //   const name = review.user;
+    //   if(name){
+    //     const nameParts = name.trim().split(/\s+/);
+    //     const firstName = nameParts[0];
+    //     const lastName = nameParts[1];
+    //     review.user = `${firstName} ${lastName.charAt(0)}.`
+    //   }
+    //   return review
+    // })
 
     res.status(200).json({
       message: 'ok',

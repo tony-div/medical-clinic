@@ -269,8 +269,8 @@ export const loginUser = async (req, res) => {
 
     const user = userRows[0];
 
-    //const passwordMatch = await bcrypt.compare(password, user.password);
-    const passwordMatch = password === user.password;
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    //const passwordMatch = password === user.password;
     if (!passwordMatch) {
       return res.status(code.FORBIDDEN).json({ error: "Invalid email or password" });
     }
