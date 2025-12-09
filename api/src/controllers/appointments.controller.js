@@ -304,11 +304,11 @@ export const getAppointmentById = async (req, res) => {
       });
     }
 
-    if (loggedUser.role === "admin") {
-      return res.status(code.FORBIDDEN).json({
-        error: "Admins are not meant to use this endpoint"
-      });
-    }
+    // if (loggedUser.role === "admin") {
+    //   return res.status(code.FORBIDDEN).json({
+    //     error: "Admins are not meant to use this endpoint"
+    //   });
+    // }
 
     const [rows] = await db.query(query.SELECT_APPOINTMENT_BY_ID, [appointmentId]);
     if (rows.length === 0) {
